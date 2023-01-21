@@ -3,10 +3,11 @@ use serde::Deserialize;
 use std::error::Error;
 
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug,Deserialize,Clone)]
 pub struct Init {
     pub(crate) token: String,
-    pub(crate) prefix: String
+    pub(crate) prefix: String,
+    pub(crate) err_channel: String
 }
 
 pub fn get_config()->Result<Init,Box<dyn Error>>{

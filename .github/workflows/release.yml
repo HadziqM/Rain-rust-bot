@@ -1,22 +1,38 @@
-# .github/workflows/release.yml
 on:
   release:
     types: [created]
 
 jobs:
-  release:
-    name: release ${{ matrix.target }}
-    runs-on: ubuntu-latest
+  upload-artifact:
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-musl]
-    steps:
-      - uses: actions/checkout@master
-      - name: Compile and release
-        uses: rust-build/rust-build.action@v1.4.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          RUSTTARGET: ${{ matrix.target }}
-          EXTRA_FILES: "config.json.example"
+        platform: [macos-latest, ubuntu-20.04, windows-latest]
+
+  runs-on: ${{ matrix.platform }}
+  steps:
+    - uses: actions/checkout@v3
+    - name: setup node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - name: install Rust stable
+      uses: dtolnay/rust-toolchain@stable
+    - name: build release
+      run: cargo build --release
+    - name: see exutable
+      run: cd target/release&&ls
+    - name: upload windows-artefact
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows-artifact
+        if: matrix.platform == windows-latest
+        path: target/release/discord-test.exe
+    - name: upload linux-artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux-artifact
+        if: matrix.platform == ubuntu-20.04
+        path: target/release/discord-test
