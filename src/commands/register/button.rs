@@ -6,21 +6,19 @@ use serenity::prelude::Context;
 
 use crate::reusable::component::error::error;
 
-fn modal_register_row()->CreateActionRow{
+fn modal_register_row(name:&str,pass:bool)->CreateActionRow{
+    let placeholder = match pass {
+        false => "your MHFZ username on launcher".to_owned(),
+        true => "your MHFZ user password (igonore discord warning)".to_owned(),
+    };
     let mut row = CreateActionRow::default();
     row.create_input_text(|i|{
-        i.label("username")
-         .custom_id("username")
+        i.label(name)
+         .custom_id(name)
          .required(true)
          .style(InputTextStyle::Short)
-         .placeholder("your MHFZ username on launcher")
-    }).create_input_text(|i|{
-        i.label("password")
-         .custom_id("password")
-         .required(true)
-         .style(InputTextStyle::Short)
-         .placeholder("your MHFZ user password (igonore discord warning)")
-        });
+         .placeholder(&placeholder)
+    });
     row
 }
 
@@ -28,7 +26,10 @@ pub async fn register(ctx:&Context,cmd:&MessageComponentInteraction){
     if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
         r.kind(InteractionResponseType::Modal)
         .interaction_response_data(|m|{
-                m.components(|c|c.add_action_row(modal_register_row()))
+                m.components(|c|c.add_action_row(modal_register_row("register",false))
+                   .add_action_row(modal_register_row("password", true)))
+                    .custom_id("register_m")
+                    .title("redister command")
             })
     }).await{
         error(ctx, &why.to_string(), "register interface button", "connection to database problem or ghost data input, either way just consult").await;
