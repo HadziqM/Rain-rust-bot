@@ -25,18 +25,18 @@ jobs:
         run: cd target/release&&ls
 
       - name: rename windows config
-        if: matrix.platform == windows-latest
+        if: matrix.platform == 'windows-latest'
         run: ren config.json.example confog.json
 
       - name: rename linux config
-        if: matrix.platform == ubuntu-20.04
+        if: matrix.platform == 'ubuntu-20.04'
         run: mv config.json.example confog.json
 
       - name: upload windows-artefact
         uses: actions/upload-artifact@v3
         with:
           name: windows-artifact
-          if: matrix.platform == windows-latest
+          if: matrix.platform == 'windows-latest'
           path: |
             target/release/discord-test.exe
             src/
@@ -47,7 +47,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: linux-artifact
-          if: matrix.platform == ubuntu-20.04
+          if: matrix.platform == 'ubuntu-20.04'
           path: |
             target/release/discord-test
             src/
