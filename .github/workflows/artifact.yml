@@ -26,11 +26,11 @@ jobs:
 
       - name: rename windows config and move exutable
         if: matrix.platform == 'windows-latest'
-        run: ren ./config.json.example config.json&&copy ./target/release/discord-test.exe .
+        run: ren ./config.json.example config.json&&copy ./target/release/rain-bot.exe .
 
       - name: rename linux and mac config and move exutable
         if: matrix.platform != 'windows-latest'
-        run: mv ./config.json.example config.json&&cp ./target/release/discord-test .
+        run: mv ./config.json.example config.json&&cp ./target/release/rain-bot .
 
       - name: upload windows-artefact
         uses: actions/upload-artifact@v3
@@ -38,8 +38,13 @@ jobs:
         with:
           name: windows-artifact
           path: |
-            discord-test.exe
+            rain-bot.exe
             src/
+            bounty/
+            gacha/
+            icon/
+            misc/
+            query/
             Cargo.toml
             config.json
 
@@ -49,8 +54,13 @@ jobs:
         with:
           name: linux-artifact
           path: |
-            discord-test
+            rain-bot
             src/
+            bounty/
+            gacha/
+            icon/
+            misc/
+            query/
             Cargo.toml
             config.json
 
@@ -60,7 +70,12 @@ jobs:
         with:
           name: mac-artifact
           path: |
-            discord-test
+            rain-bot
             src/
+            bounty/
+            gacha/
+            icon/
+            misc/
+            query/
             Cargo.toml
             config.json

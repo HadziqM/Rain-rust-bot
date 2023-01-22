@@ -81,7 +81,6 @@ pub async fn dm_save(ctx:&Context,cmd:&MessageComponentInteraction){
     if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
         r.kind(InteractionResponseType::ChannelMessageWithSource)
         .interaction_response_data(|m|{
-                //todo create register command
                 m.content(&message).ephemeral(true)
             })
     }).await{
