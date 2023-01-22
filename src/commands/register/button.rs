@@ -1,8 +1,8 @@
 use serenity::builder::CreateActionRow;
-use serenity::model::prelude::component::InputTextStyle;
+use serenity::model::prelude::component::{InputTextStyle, ActionRowComponent};
 use serenity::model::prelude::interaction::InteractionResponseType;
 use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
-use serenity::model::prelude::interaction::modal::{ModalSubmitInteraction, ModalSubmitInteractionData};
+use serenity::model::application::interaction::modal::{ModalSubmitInteraction,ModalSubmitInteractionData};
 use serenity::prelude::Context;
 
 use crate::reusable::component::error::error;
@@ -27,7 +27,7 @@ pub async fn register(ctx:&Context,cmd:&MessageComponentInteraction){
     if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
         r.kind(InteractionResponseType::Modal)
         .interaction_response_data(|m|{
-                m.components(|c|c.add_action_row(modal_register_row("register",false))
+                m.components(|c|c.add_action_row(modal_register_row("username",false))
                    .add_action_row(modal_register_row("password", true)))
                     .custom_id("register_m")
                     .title("register command")
@@ -37,15 +37,27 @@ pub async fn register(ctx:&Context,cmd:&MessageComponentInteraction){
     }
 }
 
-pub async fn modal_register(ctx:&Context,cmd:&ModalSubmitInteraction,_data:&ModalSubmitInteractionData){
+pub async fn modal_register(ctx:&Context,cmd:&ModalSubmitInteraction,data:&ModalSubmitInteractionData){
+    let mut name = String::new();
+    let mut password = String::new();
+    for comp in &data.components{
+        let arow = comp.components.first().unwrap();
+        if let ActionRowComponent::InputText(input) = arow{
+            match input.custom_id.as_str() {
+                "username" => name = input.value.to_owned(),
+                 _=> password = input.value.to_owned(),
+            }
+        }
+    }
     if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
         r.kind(InteractionResponseType::ChannelMessageWithSource)
         .interaction_response_data(|m|{
-                m.ephemeral(true).content("not yet")
+                m.ephemeral(true).content(&format!("username :{}\npass : {}",name,password))
             })
     }).await{
         error(ctx, &why.to_string(), "register modal response", "discord connection failure, make them try again").await;
-    }
+        println!("{why}")
+    };
 }
 pub async fn dm_save(ctx:&Context,cmd:&MessageComponentInteraction){
     //todo download save from db and send it

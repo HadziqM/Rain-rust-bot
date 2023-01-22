@@ -45,7 +45,7 @@ well, i m just newbie programer and my last bot is just work, although sometime 
 * [x] implement button push create and handler
 * [x] implement basic embed rich builder
 * [x] modal builder for register command
-* [ ] handle modal interaction (idk how to get modal data yet)
+* [x] handle modal interaction
 * [ ] implement auto complete for guild command
 * [ ] create guide embed command
 * [ ] add emojis (too lazy to install emoji plug for my vim)
