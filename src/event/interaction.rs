@@ -1,4 +1,4 @@
-use serenity::{model::prelude::interaction::{application_command::ApplicationCommandInteraction, message_component::MessageComponentInteraction}, prelude::Context};
+use serenity::{model::prelude::interaction::{application_command::ApplicationCommandInteraction, message_component::MessageComponentInteraction, modal::ModalSubmitInteraction}, prelude::Context};
 use crate::commands;
 
 
@@ -17,5 +17,11 @@ pub async fn button_command(cmd_id:&str,cmd:&MessageComponentInteraction,ctx:&Co
         "transfer_i"=>commands::register::button::transfer(ctx, cmd).await,
         "dm_save_i"=>commands::register::button::dm_save(ctx, cmd).await,
         _=>println!("button {} isnt handled yet",cmd_id)
+    }
+}
+pub async fn modal_command(cmd_id:&str,cmd:&ModalSubmitInteraction,ctx:&Context){
+    match cmd_id{
+        "register_m"=>commands::register::button::modal_register(ctx, cmd, &cmd.data).await,
+        _=>println!("modal {} isnt handled yet",cmd_id)
     }
 }

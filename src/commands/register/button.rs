@@ -37,6 +37,16 @@ pub async fn register(ctx:&Context,cmd:&MessageComponentInteraction){
     }
 }
 
+pub async fn modal_register(ctx:&Context,cmd:&ModalSubmitInteraction,_data:&ModalSubmitInteractionData){
+    if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
+        r.kind(InteractionResponseType::ChannelMessageWithSource)
+        .interaction_response_data(|m|{
+                m.ephemeral(true).content("not yet")
+            })
+    }).await{
+        error(ctx, &why.to_string(), "register modal response", "discord connection failure, make them try again").await;
+    }
+}
 pub async fn dm_save(ctx:&Context,cmd:&MessageComponentInteraction){
     //todo download save from db and send it
     if let Err(why) = cmd.user.direct_message(&ctx.http, |m|{

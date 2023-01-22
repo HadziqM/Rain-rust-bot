@@ -17,10 +17,14 @@ impl EventHandler for Handler{
             let content = command.data.name.as_str();
             interaction::slash_command(content, &command,&ctx).await;
         };
-        if let Interaction::MessageComponent(command) = interaction {
+        if let Interaction::MessageComponent(command) = interaction.clone() {
             let cid = command.data.custom_id.as_str();
             interaction::button_command(cid, &command, &ctx).await;
 
+        };
+        if let Interaction::ModalSubmit(command) = interaction {
+            let cid = command.data.custom_id.as_str();
+            interaction::modal_command(cid, &command, &ctx).await;
         }
     }
     async fn ready(&self, ctx:Context, ready:Ready){
