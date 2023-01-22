@@ -2,6 +2,7 @@ use serenity::builder::CreateActionRow;
 use serenity::model::prelude::component::InputTextStyle;
 use serenity::model::prelude::interaction::InteractionResponseType;
 use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
+use serenity::model::prelude::interaction::modal::{ModalSubmitInteraction, ModalSubmitInteractionData};
 use serenity::prelude::Context;
 
 use crate::reusable::component::error::error;
@@ -29,13 +30,12 @@ pub async fn register(ctx:&Context,cmd:&MessageComponentInteraction){
                 m.components(|c|c.add_action_row(modal_register_row("register",false))
                    .add_action_row(modal_register_row("password", true)))
                     .custom_id("register_m")
-                    .title("redister command")
+                    .title("register command")
             })
     }).await{
         error(ctx, &why.to_string(), "register interface button", "connection to database problem or ghost data input, either way just consult").await;
     }
 }
-
 
 pub async fn dm_save(ctx:&Context,cmd:&MessageComponentInteraction){
     //todo download save from db and send it

@@ -24,13 +24,13 @@ jobs:
       - name: see exutable
         run: cd target/release&&ls
 
-      - name: rename windows config
+      - name: rename windows config and move exutable
         if: matrix.platform == 'windows-latest'
-        run: ren config.json.example confog.json
+        run: ren config.json.example config.json&&copy ./target/release/discord-test.exe .
 
-      - name: rename linux and mac config
+      - name: rename linux and mac config and move exutable
         if: matrix.platform != 'windows-latest'
-        run: mv config.json.example confog.json
+        run: mv config.json.example config.json&&cp ./target/release/discord-test .
 
       - name: upload windows-artefact
         uses: actions/upload-artifact@v3
