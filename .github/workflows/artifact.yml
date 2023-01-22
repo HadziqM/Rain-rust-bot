@@ -38,7 +38,7 @@ jobs:
         with:
           name: windows-artifact
           path: |
-            target/release/discord-test.exe
+            discord-test.exe
             src/
             Cargo.toml
             config.json
@@ -49,7 +49,7 @@ jobs:
         with:
           name: linux-artifact
           path: |
-            target/release/discord-test
+            discord-test
             src/
             Cargo.toml
             config.json
@@ -60,7 +60,7 @@ jobs:
         with:
           name: mac-artifact
           path: |
-            target/release/discord-test
+            discord-test
             src/
             Cargo.toml
             config.json
