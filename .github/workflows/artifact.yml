@@ -1,0 +1,55 @@
+on: [pull]
+
+name: get_artifact
+
+jobs:
+  upload-artifact:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-20.04, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: build release
+        run: cargo build --release
+
+      - name: see exutable
+        run: cd target/release&&ls
+
+      - name: rename windows config
+        if: matrix.platform == windows-latest
+        run: ren config.json.example confog.json
+
+      - name: rename linux config
+        if: matrix.platform == ubuntu-20.04
+        run: mv config.json.example confog.json
+
+      - name: upload windows-artefact
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-artifact
+          if: matrix.platform == windows-latest
+          path: |
+            target/release/discord-test.exe
+            src/
+            Cargo.toml
+            config.json
+
+      - name: upload linux-artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux-artifact
+          if: matrix.platform == ubuntu-20.04
+          path: |
+            target/release/discord-test
+            src/
+            Cargo.toml
+            config.json
