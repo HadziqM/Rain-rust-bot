@@ -21,8 +21,8 @@ jobs:
       - name: build release
         run: cargo build --release
 
-      - name: see exutable
-        run: cd target/release&&ls
+      - name: make necessary empty folder
+        run: mkdir gacha&&mkdir bounty
 
       - name: rename windows config and move exutable
         if: matrix.platform == 'windows-latest'
