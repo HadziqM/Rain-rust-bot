@@ -13,6 +13,7 @@ pub async fn ready(ctx:Context, ready:Ready){
             apps
                 .create_application_command(|command| commands::id::register(command))
                 .create_application_command(|command| commands::ping::register(command))
+                .create_application_command(|c|commands::register::interface::register(c))
         }).await.unwrap();
     }
     ctx.set_activity(Activity::competing("i want to die")).await;
