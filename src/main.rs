@@ -8,11 +8,7 @@ use reusable::config::{Init,get_config};
 use serenity::prelude::*;
 use event::Handler;
 
-pub static mut CONFIG:Init = Init {
-    token:String::new(),
-    prefix:String::new(),
-    err_channel:String::new()
-};
+pub static mut CONFIG:Init = Init::default();
 
 #[tokio::main]
 async fn main() {
@@ -20,7 +16,7 @@ async fn main() {
         unsafe{
             CONFIG = conf.clone();
         }
-        let mut client = Client::builder(conf.token, GatewayIntents::empty())
+        let mut client = Client::builder(conf.discord.token, GatewayIntents::empty())
             .event_handler(Handler)
             .await
             .expect("Error creating client");

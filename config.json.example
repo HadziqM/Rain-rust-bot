@@ -1,4 +1,83 @@
 {
-  "token":"",
-  "prefix":""
+  "discord": {
+    "token":"MTA0NjMzOTc3NTIzNTM2NzAzNA.Gz9mSx.POV4V6S67yhIa2epGcmLQe7ZoNs6cZvoVpLaLQ",
+    "prefix":"%"
+   },
+  "postgress": {
+    "host":"103.186.0.221",
+    "password":"Qwerty333",
+    "port":6432,
+    "database":"erupe"
+   },
+  "mhfz_config": {   
+    "account_creation":true
+   },
+  "bot_config": {
+    "member_join":true,
+    "member_leave":true,
+    "role_moderation":true,
+    "member_moderation":true,
+    "gacha":true,
+    "bounty":true,
+    "transmog_contest":true,
+    "server_market":true,
+    "mezfes_contest":true,
+    "pvp_contest":true,
+    "speedrun_contest":true
+   },
+  "log_channels": {
+    "err_channel":"1031774270512169070",
+    "account_channel":"",
+    "transfer_channel":"",
+    "moderation_channel":""
+   },
+  "server_channel": {
+    "member_join":"",
+    "member_leave":"",
+    "rule_channel":"",
+    "rule_msg_id":"",
+  },
+  "server_channel_url": {
+    "guide_channel":"",
+    "game_channel":"",
+    "bot_channel":""
+   },
+  "server_role":{
+    "admin_role":"",
+    "member_role":"",
+    "mute_role":""
+  },
+  "bounty_channel": {
+    "board":"",
+    "conquered":"",
+    "promotion":"",
+    "cooldown_ch":"",
+    "leaderboard_ch":"",
+    "judge_ch":""
+   },
+  "bounty_message_id": {
+    "cooldown_msg":"",
+    "leaderboard_msg":""
+   },
+  "gacha_channel": {
+    "pull":""
+  },
+  "transmog_contest":{
+    "submitted_channel":""
+  },
+  "mezfes_contest" :{
+    "leaderboard_channel":"",
+    "leaderboard_msg_id":""
+  },
+  "pvp_contest" :{
+    "leaderboard_channel":"",
+    "leaderboard_msg_id":""
+  },
+  "speedrun_contest" :{
+    "leaderboard_channel":"",
+    "leaderboard_msg_id":""
+  },
+  "server_market" :{
+    "market_channel":""
+  }
 }
