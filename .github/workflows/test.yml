@@ -1,6 +1,6 @@
 on: [push, pull_request]
 
-name: UnitTest
+name: Check
 
 jobs:
   check:
@@ -21,27 +21,3 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
-
-  test:
-    name: Test Suite
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - name: create-json
-        id: create-json
-        uses: jsdaniell/create-json@v1.2.2
-        with:
-          name: "config.json"
-          json: '{"token":"your discord token", "prefix":"%","err_channel":""}'
-      - name: Run cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test

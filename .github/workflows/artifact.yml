@@ -1,6 +1,6 @@
 on: [push]
 
-name: get_artifact
+name: UploadArtifact
 
 jobs:
   upload-artifact:

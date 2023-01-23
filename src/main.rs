@@ -56,7 +56,6 @@ async fn main() {
     let intents = GatewayIntents::GUILDS | GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
     match get_config(){
         Ok(conf)=> {
-            println!("{}",&conf.discord.token);
             unsafe{
                 CONFIG = conf.clone();
             }

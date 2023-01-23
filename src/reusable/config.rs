@@ -129,11 +129,11 @@ pub fn get_config()->Result<Init,Box<dyn Error>>{
 
 #[cfg(test)]
 mod tests{
+    use super::*;
 
     #[test]
     fn config() {
-        // let idk = get_config().unwrap();
-        // assert_eq!(idk.prefix,"%".to_string());
-        assert_eq!(1,1);
+        let idk = get_config().unwrap();
+        assert_eq!(idk.discord.prefix,"%".to_string());
     }
 }
