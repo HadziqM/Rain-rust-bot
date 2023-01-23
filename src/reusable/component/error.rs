@@ -9,7 +9,7 @@ use super::super::utils::color;
 pub async fn error(ctx:&Context,err:&str,on:&str,advice:&str){
     let ch_id;
     unsafe{
-        ch_id = ChannelId(CONFIG.err_channel.parse::<u64>().unwrap());
+        ch_id = ChannelId(CONFIG.log_channel.err_channel.parse::<u64>().unwrap());
     }
     if let Err(why) = ch_id.send_message(&ctx.http, |msg|{
         msg.embed(|emb|{

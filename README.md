@@ -102,7 +102,7 @@ detail of how to install rust and cargo is covered in rust book [here](https://d
 #### from release
 1. download any release you want (its already contain source code)
 2. extract the zip
-3. build release the source and place it on main folder
+3. build release the source and place it on main folder </br>
 for `MacOs` or `linux`
 ```shell
 cargo build --release
@@ -119,9 +119,9 @@ copy ./target/release/rain-bot.exe .
 ### from sorce
 well if you want to stay upto date, you can follow this step
 1. clone the repository
-2. build release, place the exutable on main then rename example file
-```shell
+2. build release, place the exutable on main then rename example file </br>
 for `MacOs` or `linux`
+```shell
 cargo build --release
 cp ./target/release/rain-bot .
 mv ./config.json.example config.json
