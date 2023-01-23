@@ -1,12 +1,12 @@
 {
   "discord": {
-    "token":"MTA0NjMzOTc3NTIzNTM2NzAzNA.Gz9mSx.POV4V6S67yhIa2epGcmLQe7ZoNs6cZvoVpLaLQ",
+    "token":"",
     "prefix":"%"
    },
   "postgress": {
-    "host":"103.186.0.221",
-    "password":"Qwerty333",
-    "port":6432,
+    "host":"",
+    "password":"",
+    "port":5432,
     "database":"erupe"
    },
   "mhfz_config": {   
@@ -25,7 +25,7 @@
     "pvp_contest":true,
     "speedrun_contest":true
    },
-  "log_channels": {
+  "log_channel": {
     "err_channel":"1031774270512169070",
     "account_channel":"",
     "transfer_channel":"",
@@ -35,7 +35,7 @@
     "member_join":"",
     "member_leave":"",
     "rule_channel":"",
-    "rule_msg_id":"",
+    "rule_msg_id":""
   },
   "server_channel_url": {
     "guide_channel":"",
