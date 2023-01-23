@@ -39,14 +39,15 @@ impl Card{
 pub async fn connection() -> Result<Pool<Postgres>, sqlx::Error> {
     let url;
     unsafe{
+        let config = CONFIG.to_owned().unwrap();
         url = format!("postgres://postgres:{}@{}:{}/{}",
-            &CONFIG.postgress.password,
-            &CONFIG.postgress.host,
-            &CONFIG.postgress.port,
-            &CONFIG.postgress.database);
+            &config.postgress.password,
+            &config.postgress.host,
+            &config.postgress.port,
+            &config.postgress.database);
     }
     let pool = PgPoolOptions::new()
-        .max_connections(20)
+        .max_connections(5)
         .connect(url.as_str()).await?;
     Ok(pool)
 }
@@ -103,7 +104,7 @@ mod postgres_test{
     #[tokio::test]
     async fn test_connection() {
         unsafe{
-            CONFIG = get_config().unwrap()
+            CONFIG = Some(get_config().unwrap())
         }
         let mut res = "success".to_string();
         if let Err(why) = connection().await{
@@ -115,7 +116,7 @@ mod postgres_test{
     #[tokio::test]
     async fn test_user() {
         unsafe{
-            CONFIG = get_config().unwrap()
+            CONFIG = Some(get_config().unwrap())
         }
         let pool = connection().await.unwrap();
         let x = get_user("455622761168109569",&pool).await.unwrap();
@@ -126,7 +127,7 @@ mod postgres_test{
     #[tokio::test]
     async fn test_register() {
         unsafe{
-            CONFIG = get_config().unwrap()
+            CONFIG = Some(get_config().unwrap())
         }
         let pool = connection().await.unwrap();
         let x = registered("455622761168109569",&pool).await.unwrap();
@@ -135,7 +136,7 @@ mod postgres_test{
     #[tokio::test]
     async fn test_card() {
         unsafe{
-            CONFIG = get_config().unwrap()
+            CONFIG = Some(get_config().unwrap())
         }
         let pool = connection().await.unwrap();
         let x = user_card(843,&pool).await.unwrap();

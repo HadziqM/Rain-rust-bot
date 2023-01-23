@@ -6,6 +6,7 @@ pub async fn slash_command(cmd_id:&str,cmd:&ApplicationCommandInteraction,ctx:&C
     match cmd_id{
         "ping" => commands::ping::run(&cmd.data.options,ctx,cmd).await,
         "id" =>commands::id::run(&cmd.data.options,ctx,cmd).await,
+        "error"=>commands::error::run(&cmd.data.options, ctx, cmd).await,
         "interface"=>commands::register::interface::run(&cmd.data.options, ctx, cmd).await,
         _=> println!("slash command {} isnt handled yet",cmd_id),
     }

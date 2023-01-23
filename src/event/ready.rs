@@ -1,10 +1,13 @@
 use serenity::model::prelude::GuildId;
 use serenity::model::prelude::{Ready, Activity};
 use serenity::prelude::*;
-use crate::commands;
+use crate::{commands, USER};
 
 
 pub async fn ready(ctx:Context, ready:Ready){
+    unsafe{
+        USER = Some(ready.user.clone())
+    }
     let user = ready.user.name;
     println!("{} is running", &user);
     for guild in &ready.guilds{
@@ -13,6 +16,7 @@ pub async fn ready(ctx:Context, ready:Ready){
             apps
                 .create_application_command(|command| commands::id::register(command))
                 .create_application_command(|command| commands::ping::register(command))
+                .create_application_command(|command| commands::error::register(command))
                 .create_application_command(|c|commands::register::interface::register(c))
         }).await.unwrap();
     }
