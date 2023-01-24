@@ -1,6 +1,8 @@
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres, Row};
+use std::error::Error;
 
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres, Row};
 use crate::reusable::config::Init;
+use bcrypt::verify;
 
 
 #[derive(Debug)]
@@ -91,6 +93,20 @@ pub async fn user_card(cid:i32,conn:&Pool<Postgres>)-> Result<Card,sqlx::Error>{
     })
 }
 
+pub async fn check_password(pool:&Pool<Postgres>,cid:i32,pass:&str)->Result<bool,Box<dyn Error>>{
+    let uid:i64 = sqlx::query(&format!("SELECT user_id FROM characters where id={cid}"))
+        .fetch_one(pool).await?.try_get("user_id")?;
+    let hash:String = sqlx::query(&format!("SELECT password FROM users where id={uid}"))
+        .fetch_one(pool).await?.try_get("password")?;
+    Ok(verify(pass,&hash)?)
+}
+pub async fn change_password(pool:&Pool<Postgres>,cid:i32,pass:&str)->Result<String,Box<dyn Error>>{
+    let uid:i64 = sqlx::query(&format!("SELECT user_id FROM characters where id={cid}"))
+        .fetch_one(pool).await?.try_get("user_id")?;
+    let hased = bcrypt::hash(pass, 10)?;
+    sqlx::query(&format!("UPDATE users SET password='{hased}' where id={uid}")).execute(pool).await?;
+    Ok(hased)
+}
 
 #[cfg(test)]
 mod postgres_test{
@@ -127,5 +143,12 @@ mod postgres_test{
         let x = user_card(843,&pool).await.unwrap();
         println!("{:?}",x);
         assert_eq!(1,1)
+    }
+    #[tokio::test]
+    async fn test_pass_validator() {
+        let pool = connection(&get_config().unwrap()).await.unwrap();
+        println!("{}",change_password(&pool, 843, "trustme").await.unwrap());
+        let x = check_password(&pool,843,"trustme").await.unwrap();
+        assert_eq!(x,true)
     }
 }
