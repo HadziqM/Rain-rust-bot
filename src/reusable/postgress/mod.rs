@@ -5,15 +5,15 @@ pub mod card;
 pub mod account;
 
 #[derive(Debug)]
-pub struct PgConnection<'a> {
+pub struct PgConn<'a> {
     pub init: &'a Init,
     pub did: &'a str,
     pub pool:Pool<Postgres>
 }
 
-impl<'a> PgConnection<'a> {
-    pub async fn create(init:&'a Init, did:&'a str)->Result<PgConnection<'a>,sqlx::Error>{
-        let pg = PgConnection{
+impl<'a> PgConn<'a> {
+    pub async fn create(init:&'a Init, did:&'a str)->Result<PgConn<'a>,sqlx::Error>{
+        let pg = PgConn{
             init,did,
             pool:connection(init).await?
         };
