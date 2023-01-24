@@ -4,9 +4,10 @@ use serenity::model::prelude::interaction::application_command::{CommandDataOpti
 use serenity::prelude::Context;
 use serenity::model::prelude::interaction::InteractionResponseType;
 use crate::reusable::component::{error::error,button::normal_button};
+use crate::reusable::config::Init;
 use crate::reusable::utils::color;
 
-pub async fn run(_options: &[CommandDataOption],ctx:&Context,cmd:&ApplicationCommandInteraction){
+pub async fn run(_options: &[CommandDataOption],ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
     if let Err(why) = cmd.create_interaction_response(&ctx.http, |resp| {
         resp.kind(InteractionResponseType::ChannelMessageWithSource)
             .interaction_response_data(|msg|{
@@ -26,7 +27,7 @@ pub async fn run(_options: &[CommandDataOption],ctx:&Context,cmd:&ApplicationCom
                     })
             })
     }).await{
-        error(ctx, &why.to_string(), "interface slash command", "failed to create button, mostlikely connection problem").await;
+        error(ctx, &why.to_string(), "interface slash command", "failed to create button, mostlikely connection problem",init,&cmd.user).await;
     }
 }
 

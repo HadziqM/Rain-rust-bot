@@ -1,4 +1,4 @@
-use std::{fs::read_to_string};
+use std::fs::read_to_string;
 use serde::Deserialize;
 use std::error::Error;
 
@@ -26,6 +26,7 @@ pub struct Init {
 pub struct Discord {
     pub(crate) token: String,
     pub(crate) prefix: String,
+    pub(crate) author_id:u64
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct Postgress {
@@ -54,98 +55,98 @@ pub struct BotConfig {
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct LogChannels {
-    pub(crate) err_channel: String,
-    pub(crate) account_channel: String,
-    pub(crate) transfer_channel: String,
-    pub(crate) moderation_channel: String,
+    pub(crate) err_channel: u64,
+    pub(crate) account_channel: u64,
+    pub(crate) transfer_channel: u64,
+    pub(crate) moderation_channel: u64,
 }
 
 #[derive(Debug,Deserialize,Clone)]
 pub struct ServerChannel {
-    pub(crate) member_join: String,
-    pub(crate) member_leave: String,
-    pub(crate) rule_channel: String,
-    pub(crate) rule_msg_id: String,
+    pub(crate) member_join: u64,
+    pub(crate) member_leave: u64,
+    pub(crate) rule_channel: u64,
+    pub(crate) rule_msg_id: u64,
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct ServerChannelUrl {
-    pub(crate) guide_channel: String,
-    pub(crate) game_channel: String,
-    pub(crate) bot_channel: String,
+    pub(crate) guide_channel: u64,
+    pub(crate) game_channel: u64,
+    pub(crate) bot_channel: u64,
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct ServerRole {
-    pub(crate) admin_role: String,
-    pub(crate) member_role: String,
-    pub(crate) mute_role: String,
+    pub(crate) admin_role: u64,
+    pub(crate) member_role: u64,
+    pub(crate) mute_role: u64,
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct BountyChannel {
-    pub(crate) board: String,
-    pub(crate) conquered: String,
-    pub(crate) promotion: String,
-    pub(crate) cooldown_ch: String,
-    pub(crate) judge_ch: String,
+    pub(crate) board: u64,
+    pub(crate) conquered: u64,
+    pub(crate) promotion: u64,
+    pub(crate) cooldown_ch: u64,
+    pub(crate) judge_ch: u64,
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct BountyMessageId {
-    pub(crate) cooldown_msg: String,
-    pub(crate) leaderboard_msg: String,
+    pub(crate) cooldown_msg: u64,
+    pub(crate) leaderboard_msg: u64,
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct GachaChannel {
-    pub(crate) pull: String,
+    pub(crate) pull: u64,
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct TransmogContest{
-    pub(crate) submitted_channel: String,
+    pub(crate) submitted_channel: u64,
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct MezfesContest{
-    pub(crate) leaderboard_channel: String,
-    pub(crate) leaderboard_msg_id: String,
+    pub(crate) leaderboard_channel: u64,
+    pub(crate) leaderboard_msg_id: u64,
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct PvpContest{
-    pub(crate) leaderboard_channel: String,
-    pub(crate) leaderboard_msg_id: String,
+    pub(crate) leaderboard_channel: u64,
+    pub(crate) leaderboard_msg_id: u64,
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct SpeedrunContest{
-    pub(crate) leaderboard_channel: String,
-    pub(crate) leaderboard_msg_id: String,
+    pub(crate) leaderboard_channel: u64,
+    pub(crate) leaderboard_msg_id: u64,
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct ServerMarket{
-    pub(crate) market_channel: String,
+    pub(crate) market_channel: u64,
 }
 
 impl Init {
     pub fn default()->Init{
-                Init { server_market: ServerMarket { market_channel: String::new() },
-            speedrun_contest: SpeedrunContest { leaderboard_channel: String::new(), leaderboard_msg_id:String::new() },
-            pvp_contest: PvpContest { leaderboard_channel: String::new(), leaderboard_msg_id: String::new() },
-            mezfes_contest: MezfesContest { leaderboard_channel: String::new(), leaderboard_msg_id: String::new() },
-            transmog_contest: TransmogContest { submitted_channel: String::new() },
-            gacha_channel: GachaChannel { pull: String::new() },
-            bounty_message_id: BountyMessageId { cooldown_msg: String::new(), leaderboard_msg: String::new() },
-            bounty_channel: BountyChannel { board: String::new(),
-                conquered: String::new(),
-                promotion: String::new(),
-                cooldown_ch: String::new(),
-                judge_ch: String::new()},
-            server_role: ServerRole { admin_role: String::new(), member_role: String::new(), mute_role: String::new() },
-            server_channel_url: ServerChannelUrl { guide_channel: String::new(),
-                game_channel: String::new(),
-                bot_channel: String::new() },
-            server_channel: ServerChannel { member_join: String::new(),
-                member_leave: String::new(),
-                rule_channel: String::new(),
-                rule_msg_id: String::new() },
-            log_channel: LogChannels { err_channel: String::new(),
-                account_channel: String::new(), 
-                transfer_channel: String::new(),
-                moderation_channel: String::new() },
+                Init { server_market: ServerMarket { market_channel: 0 },
+            speedrun_contest: SpeedrunContest { leaderboard_channel: 0, leaderboard_msg_id:0 },
+            pvp_contest: PvpContest { leaderboard_channel: 0, leaderboard_msg_id: 0 },
+            mezfes_contest: MezfesContest { leaderboard_channel: 0, leaderboard_msg_id: 0 },
+            transmog_contest: TransmogContest { submitted_channel: 0 },
+            gacha_channel: GachaChannel { pull: 0 },
+            bounty_message_id: BountyMessageId { cooldown_msg: 0, leaderboard_msg: 0 },
+            bounty_channel: BountyChannel { board: 0,
+                conquered: 0,
+                promotion: 0,
+                cooldown_ch: 0,
+                judge_ch: 0},
+            server_role: ServerRole { admin_role: 0, member_role: 0, mute_role: 0 },
+            server_channel_url: ServerChannelUrl { guide_channel: 0,
+                game_channel: 0,
+                bot_channel: 0 },
+            server_channel: ServerChannel { member_join: 0,
+                member_leave: 0,
+                rule_channel: 0,
+                rule_msg_id: 0 },
+            log_channel: LogChannels { err_channel: 0,
+                account_channel: 0, 
+                transfer_channel: 0,
+                moderation_channel: 0 },
             bot_config: BotConfig { member_join: true,
                 member_leave: true,
                 role_moderation: true,
@@ -162,7 +163,11 @@ impl Init {
                 password: String::new(),
                 port: 0,
                 database: String::new() },
-            discord: Discord { token: String::new(), prefix: String::new() }
+            discord: Discord { 
+                token: String::new(), 
+                prefix: String::new(),
+                author_id:0
+            }
      }
     }
 }

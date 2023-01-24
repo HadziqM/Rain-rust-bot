@@ -1,5 +1,6 @@
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres, Row};
-use crate::CONFIG;
+
+use crate::reusable::config::Init;
 
 
 #[derive(Debug)]
@@ -36,16 +37,12 @@ impl Card{
 }
 
 
-pub async fn connection() -> Result<Pool<Postgres>, sqlx::Error> {
-    let url;
-    unsafe{
-        let config = CONFIG.to_owned().unwrap();
-        url = format!("postgres://postgres:{}@{}:{}/{}",
-            &config.postgress.password,
-            &config.postgress.host,
-            &config.postgress.port,
-            &config.postgress.database);
-    }
+pub async fn connection(init:&Init) -> Result<Pool<Postgres>, sqlx::Error> {
+    let url = format!("postgres://postgres:{}@{}:{}/{}",
+        init.postgress.password,
+        init.postgress.host,
+        init.postgress.port,
+        init.postgress.database);
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(url.as_str()).await?;
@@ -103,11 +100,8 @@ mod postgres_test{
 
     #[tokio::test]
     async fn test_connection() {
-        unsafe{
-            CONFIG = Some(get_config().unwrap())
-        }
         let mut res = "success".to_string();
-        if let Err(why) = connection().await{
+        if let Err(why) = connection(&get_config().unwrap()).await{
             res = "fail".to_string();
             println!("{why}")
         };
@@ -115,10 +109,7 @@ mod postgres_test{
     }
     #[tokio::test]
     async fn test_user() {
-        unsafe{
-            CONFIG = Some(get_config().unwrap())
-        }
-        let pool = connection().await.unwrap();
+        let pool = connection(&get_config().unwrap()).await.unwrap();
         let x = get_user("455622761168109569",&pool).await.unwrap();
         assert_eq!(x,843);
         let y = get_user("hahahahah",&pool).await.unwrap();
@@ -126,19 +117,13 @@ mod postgres_test{
     }
     #[tokio::test]
     async fn test_register() {
-        unsafe{
-            CONFIG = Some(get_config().unwrap())
-        }
-        let pool = connection().await.unwrap();
+        let pool = connection(&get_config().unwrap()).await.unwrap();
         let x = registered("455622761168109569",&pool).await.unwrap();
         assert_eq!(x,2597);
     }
     #[tokio::test]
     async fn test_card() {
-        unsafe{
-            CONFIG = Some(get_config().unwrap())
-        }
-        let pool = connection().await.unwrap();
+        let pool = connection(&get_config().unwrap()).await.unwrap();
         let x = user_card(843,&pool).await.unwrap();
         println!("{:?}",x);
         assert_eq!(1,1)
