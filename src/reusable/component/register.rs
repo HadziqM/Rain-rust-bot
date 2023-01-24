@@ -11,10 +11,10 @@ pub struct UserData {
 }
 
 async fn user_check(did:&str,init:&Init)->Result<UserData,sqlx::Error>{
-    let pool = postgress::basic::connection(init).await?;
-    let cid = postgress::basic::get_user(did, &pool).await?;
+    let pool = postgress::connection(init).await?;
+    let cid = postgress::card::get_user(did, &pool).await?;
     if cid == 0 {
-        return Ok(UserData { cid: 0, rid: postgress::basic::registered(did, &pool).await? });
+        return Ok(UserData { cid: 0, rid: postgress::card::registered(did, &pool).await? });
     }
     Ok(UserData { cid, rid: 0 })
 }
