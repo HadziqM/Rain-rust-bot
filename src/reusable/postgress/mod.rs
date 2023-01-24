@@ -4,6 +4,26 @@ use super::config::Init;
 pub mod card;
 pub mod account;
 
+#[derive(Debug)]
+pub struct PgConnection<'a> {
+    pub init: &'a Init,
+    pub did: &'a str,
+    pub pool:Pool<Postgres>
+}
+
+impl<'a> PgConnection<'a> {
+    pub async fn create(init:&'a Init, did:&'a str)->Result<PgConnection<'a>,sqlx::Error>{
+        let pg = PgConnection{
+            init,did,
+            pool:connection(init).await?
+        };
+        Ok(pg)
+    }
+    pub async fn close(&mut self){
+        self.pool.close().await
+    }
+}
+
 
 pub async fn connection(init:&Init) -> Result<Pool<Postgres>, sqlx::Error> {
     let url = format!("postgres://postgres:{}@{}:{}/{}",
