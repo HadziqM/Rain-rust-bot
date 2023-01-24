@@ -14,7 +14,7 @@ pub async fn error(ctx:&Context,err:&str,on:&str,advice:&str,init:&Init,usr:&Use
     let ch_id = ChannelId(init.log_channel.err_channel.to_owned());
     let user = UserId(init.discord.author_id).to_user(&ctx.http).await.unwrap_or_default();
     if let Err(why) = ch_id.send_message(&ctx.http, |msg|{
-        msg.content(format!("for @{}",usr.id)).embed(|emb|{
+        msg.content(&format!("for {}",usr.to_string())).embed(|emb|{
             emb.title("🛑 Error Occured 🛑")
                 .description("some cant be handled error occured")
                 .fields(vec![
@@ -22,9 +22,9 @@ pub async fn error(ctx:&Context,err:&str,on:&str,advice:&str,init:&Init,usr:&Use
                     ("📜 error message",&format!("```\n{err}\n```"),false),
                     ("⛑  author advice",advice,false)
                 ])
-                .author(|f|f.name(usr.name.as_str()).icon_url(usr.avatar_url().unwrap_or_default()))
-                .footer(|f|f.text(format!("you can consult this to {}",user.to_string()))
-                    .icon_url(user.avatar_url().unwrap_or_default()))
+                .author(|f|f.name(usr.name.as_str()).icon_url(usr.face()))
+                .footer(|f|f.text(format!("you can consult this to {}",user.tag()))
+                    .icon_url(user.face()))
                 .color(color("ff", "00", "00"))
                 .thumbnail("attachment://panics.png")
         }).add_file("./icon/panics.png")
@@ -48,9 +48,9 @@ pub async fn error_rply(ctx:&Context,err:&str,on:&str
                         ("📜 error message",&format!("```\n{err}\n```"),false),
                         ("⛑  author advice",advice,false)
                     ])
-                    .author(|f|f.name(usr.name.as_str()).icon_url(usr.avatar_url().unwrap_or_default()))
-                    .footer(|f|f.text(format!("you can consult this to {}",user.to_string()))
-                        .icon_url(user.avatar_url().unwrap_or_default()))
+                    .author(|f|f.name(usr.name.as_str()).icon_url(usr.face()))
+                    .footer(|f|f.text(format!("you can consult this to {}",user.tag()))
+                        .icon_url(user.face()))
                     .color(color("ff", "00", "00"))
                     .thumbnail("attachment://panics.png")
                 })
