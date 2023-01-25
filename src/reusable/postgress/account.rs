@@ -13,7 +13,7 @@ impl<'a> PgConn<'a>{
         let check = self.get_user_data().await?;
         if check.cid != 0 || check.rid != 0{
             let cid = self.get_char_id().await?;
-            change_password(&self.pool, cid, pass).await?;
+            change_password(&self.pool, cid.0, pass).await?;
             return Ok(true);
         }
         Ok(false)

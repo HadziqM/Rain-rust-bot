@@ -4,6 +4,8 @@ use serenity::prelude::Context;
 use serenity::model::prelude::interaction::InteractionResponseType;
 use crate::{Init,ErrorLog,PgConn};
 
+
+
 pub async fn run(_options: &[CommandDataOption],ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
     let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
     match PgConn::create(init, &cmd.user.id.to_string()).await {
@@ -18,7 +20,7 @@ pub async fn run(_options: &[CommandDataOption],ctx:&Context,cmd:&ApplicationCom
                     }
                     if let Err(why) = cmd.create_interaction_response(&ctx.http, |resp| {
                         resp.kind(InteractionResponseType::ChannelMessageWithSource)
-                            .interaction_response_data(|msg|msg.content(""))
+                            .interaction_response_data(|msg|msg.content(message.as_str()))
                     }).await{
                         err.change_error(why.to_string(), "on check command", "just discord error,please consult");
                         err.log_error_channel().await;
