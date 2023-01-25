@@ -10,6 +10,8 @@ pub async fn slash_command(cmd_id:&str,cmd:&ApplicationCommandInteraction,ctx:&C
         "error"=>commands::error::run(option, ctx, cmd,hnd).await,
         "interface"=>commands::register::interface::run(option,ctx,cmd,hnd).await,
         "create"=>commands::register::create::run_slash(option,ctx,cmd,hnd).await,
+        "check"=>commands::register::check::run(option,ctx,cmd,hnd).await,
+        "change_password"=>commands::register::change_pasword::run(option,ctx,cmd,hnd).await,
         _=> println!("slash command {} isnt handled yet",cmd_id),
     }
 }

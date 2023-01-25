@@ -34,6 +34,18 @@ impl<'a> PgConn<'a>{
     pub async fn get_user_data(&self)->Result<UserData,sqlx::Error>{
         user_check(&self.did, &self.pool).await
     }
+    pub async fn many_card(&self)->Result<Option<Vec<Card>>,sqlx::Error>{
+        let user = self.already_create().await?;
+        if user != 0{
+            let cid = get_user_all(user, &self.pool).await?;
+            let mut card = Vec::new();
+            for i in cid{
+                card.push(user_card(i, &self.pool).await?);
+            }
+            return Ok(Some(card));
+        }
+        Ok(None)
+    }
     pub async fn get_card(&self)->Result<Option<Card>,sqlx::Error>{
         let user = self.get_user_data().await?;
         if user.cid != 0{
@@ -75,6 +87,15 @@ async fn get_user(did:&str,conn:&Pool<Postgres>) -> Result<i32,sqlx::Error> {
         Some(d)=>Ok(d.get("char_id")),
         None=>Ok(0)
     }
+}
+async fn get_user_all(uid:i32,conn:&Pool<Postgres>) -> Result<Vec<i32>,sqlx::Error> {
+    let row = sqlx::query(&format!("SELECT char_id FROM discord WHERE user_id={uid}"))
+        .fetch_all(conn).await?;
+    let mut cid:Vec<i32> = Vec::new();
+    for i in row{
+        cid.push(i.get("char_id"))
+    }
+    Ok(cid)
 }
 async fn get_user_name(did:&str,conn:&Pool<Postgres>) -> Result<(i32,String),sqlx::Error> {
     let row = sqlx::query(&format!("SELECT char_id username FROM discord WHERE discord_id='{did}'"))

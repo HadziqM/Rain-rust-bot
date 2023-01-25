@@ -1,13 +1,44 @@
-// use serenity::{prelude::Context, model::prelude::interaction::application_command::ApplicationCommandInteraction};
-// use sqlx::Pool;
-//
-// use crate::reusable::config::Init;
-//
-// use super::{super::postgress, error:: error_rply};
-//
-//
+use serenity::{builder::CreateInteractionResponse, model::{user::User, prelude::interaction::InteractionResponseType}};
 
+use crate::reusable::{postgress::card::Card, utils::color};
 
+fn card_construct<'a,'b>(m:&'a mut CreateInteractionResponse<'b>,card:Card,user:&User)->&'a mut CreateInteractionResponse<'b>{
+    let login = &format!("<t:{}:R>",card.login);
+    let icon = path(&card.weapon_type);
+    m.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|msg|{
+        msg.embed(|emb|{
+            emb.title(card.name.as_str()).fields(vec![
+                ("User",&format!("user_name: {}\nuser_id: {}\nchar_id: {}\nlast_login: {}",&card.username,card.user_id,card.char_id,login),false),
+                ("Character",&format!("HR: {}\nGR: {}",hrp(card.hrp),card.gr),false),
+                ("Guild",&format!("name: {}\nguild_id: {}\nleader_id: {}",&card.guild,card.guild_id,card.guild_lead),false)
+            ]).footer(|f|f.text(&format!("character owned by {}",user.name)).icon_url(user.face()))
+                .colour(color("ff", "55", "00")).thumbnail(&format!("attachment://{}",icon.1))
+        }).add_file(icon.0)
+    })
+}
+
+fn path<'a>(m:&'a i32)->(&'a str,&'a str){
+    let iconlist = vec!["./icon/GS.png", "./icon/HS.png", "./icon/H.png", "./icon/L.png", "./icon/SS.png", "./icon/LB.png", "./icon/DS.png","./icon/LS.png", "./icon/HH.png", "./icon/GL.png", "./icon/B.png", "./icon/T.png", "./icon/SAF.png", "./icon/MS.png"];
+    let pt = iconlist[*m as usize];
+    let gh = pt.split("/").last().unwrap();
+    (pt,gh)
+}
+fn hrp(h:i32)->u8{
+    if h==999{
+        return 7;
+    }else if h>299{
+        return 6;
+    }else if h>99{
+        return 5;
+    }else if h>50{
+        return 4;
+    }else if h>30{
+        return 3;
+    }else if h>1{
+        return 2;
+    }
+    1
+}
 // pub async fn binding_check(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init)->Option<i32>{
 //     let id = cmd.user.id.to_string();
 //     match user_check(&id,init).await {
