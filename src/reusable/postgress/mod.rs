@@ -6,9 +6,9 @@ pub mod account;
 
 #[derive(Debug)]
 pub struct PgConn<'a> {
-    pub init: &'a Init,
-    pub did: &'a str,
-    pub pool:Pool<Postgres>
+    pub(crate) init: &'a Init,
+    pub(crate) did: &'a str,
+    pub(crate) pool:Pool<Postgres>
 }
 
 impl<'a> PgConn<'a> {
