@@ -13,10 +13,14 @@ impl<'a> PgConn<'a>{
         let cid = self.get_char_id().await?;
         change_password(&self.pool, cid, pass).await
     }
-    pub async fn create_account(&self,user:&str,pass:&str)->Result<i64,sqlx::Error>{
+    pub async fn create_account(&self,user:&str,pass:&str)->Result<Option<i64>,sqlx::Error>{
+        let check = self.get_user_data().await?;
+        if check.cid != 0 || check.rid != 0{
+            return Ok(None);
+        }
         let uid = create_account(&self.pool, user, pass).await?;
         use_history(&self.pool, &self.did, uid).await?;
-        Ok(uid)
+        Ok(Some(uid))
     }
 }
 

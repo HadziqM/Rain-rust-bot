@@ -22,9 +22,9 @@ pub async fn button_command(cmd_id:&str,cmd:&MessageComponentInteraction,ctx:&Co
         _=>println!("button {} isnt handled yet",cmd_id)
     }
 }
-pub async fn modal_command(cmd_id:&str,cmd:&ModalSubmitInteraction,ctx:&Context,hnd:&Init){
+pub async fn modal_command(cmd_id:&str,cmd:&mut ModalSubmitInteraction,ctx:&Context,hnd:&Init){
     match cmd_id{
-        "register_m"=>commands::register::create::modal_register(ctx, cmd, &cmd.data,hnd).await,
+        "register_m"=>commands::register::create::modal_register(ctx,cmd,&cmd.data.to_owned(),hnd).await,
         _=>println!("modal {} isnt handled yet",cmd_id)
     }
 }

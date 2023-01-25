@@ -4,8 +4,8 @@ pub mod reusable;
 pub mod commands;
 mod event;
 
-use reusable::config::*;
-use reusable::component::error::*;
+use reusable::config::{Init,get_config};
+use reusable::component::error::ErrorLog;
 use reusable::postgress::PgConn;
 use serenity::prelude::*;
 use event::Handler;

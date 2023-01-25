@@ -79,6 +79,7 @@ pub struct ServerRole {
     pub(crate) admin_role: u64,
     pub(crate) member_role: u64,
     pub(crate) mute_role: u64,
+    pub(crate) register_role: u64,
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct BountyChannel {
@@ -119,57 +120,6 @@ pub struct SpeedrunContest{
 #[derive(Debug,Deserialize,Clone)]
 pub struct ServerMarket{
     pub(crate) market_channel: u64,
-}
-
-impl Init {
-    pub fn default()->Init{
-                Init { server_market: ServerMarket { market_channel: 0 },
-            speedrun_contest: SpeedrunContest { leaderboard_channel: 0, leaderboard_msg_id:0 },
-            pvp_contest: PvpContest { leaderboard_channel: 0, leaderboard_msg_id: 0 },
-            mezfes_contest: MezfesContest { leaderboard_channel: 0, leaderboard_msg_id: 0 },
-            transmog_contest: TransmogContest { submitted_channel: 0 },
-            gacha_channel: GachaChannel { pull: 0 },
-            bounty_message_id: BountyMessageId { cooldown_msg: 0, leaderboard_msg: 0 },
-            bounty_channel: BountyChannel { board: 0,
-                conquered: 0,
-                promotion: 0,
-                cooldown_ch: 0,
-                judge_ch: 0},
-            server_role: ServerRole { admin_role: 0, member_role: 0, mute_role: 0 },
-            server_channel_url: ServerChannelUrl { guide_channel: 0,
-                game_channel: 0,
-                bot_channel: 0 },
-            server_channel: ServerChannel { member_join: 0,
-                member_leave: 0,
-                rule_channel: 0,
-                rule_msg_id: 0 },
-            log_channel: LogChannels { err_channel: 0,
-                account_channel: 0, 
-                transfer_channel: 0,
-                moderation_channel: 0 },
-            bot_config: BotConfig { member_join: true,
-                member_leave: true,
-                role_moderation: true,
-                member_moderation: true,
-                gacha: true,
-                bounty: true,
-                transmog_contest: true,
-                mezfes_contest: true,
-                server_market: true,
-                pvp_contest: true,
-                speedrun_contest: true },
-            mhfz_config: MhfzConfig { account_creation: true },
-            postgress: Postgress { host: String::new(),
-                password: String::new(),
-                port: 0,
-                database: String::new() },
-            discord: Discord { 
-                token: String::new(), 
-                prefix: String::new(),
-                author_id:0
-            }
-     }
-    }
 }
 
 pub fn get_config()->Result<Init,Box<dyn Error>>{

@@ -39,7 +39,7 @@ impl<'a> ErrorLog<'a>{
         self.advice = advice;
     }
     pub async fn log_error_channel(&self){
-        let ch_id = ChannelId(self.init.log_channel.err_channel.to_owned());
+        let ch_id = ChannelId(self.init.log_channel.err_channel);
         let user = UserId(self.init.discord.author_id).to_user(&self.ctx.http).await.unwrap_or_default();
         if let Err(why) = ch_id.send_message(&self.ctx.http, |msg|{
             msg.content(&format!("for {}",self.usr.to_string())).embed(|emb|{
@@ -60,11 +60,11 @@ impl<'a> ErrorLog<'a>{
             println!("cant send error message to discord channel :{}",why)
         }
     }
-    fn interaction_response<'b,'c>(&self,m:&'c mut CreateInteractionResponse<'b>)-> 
+    fn interaction_response<'b,'c>(&self,m:&'c mut CreateInteractionResponse<'b>,ephemeral:bool)-> 
     &'c mut CreateInteractionResponse<'b>{
         m.kind(InteractionResponseType::ChannelMessageWithSource)
         .interaction_response_data(|msg|{
-                msg.add_file("./icon/panics.png").embed(|emb|{
+                msg.ephemeral(ephemeral).add_file("./icon/panics.png").embed(|emb|{
                 emb.title("🛑 Error Occured 🛑")
                     .description("some cant be handled error occured")
                     .fields(vec![
@@ -80,25 +80,25 @@ impl<'a> ErrorLog<'a>{
                 })
             })
     }
-    pub async fn log_slash(&mut self,cmd:&'a ApplicationCommandInteraction){
+    pub async fn log_slash(&mut self,cmd:&ApplicationCommandInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
-            self.interaction_response(m)).await{
+            self.interaction_response(m,ephemeral)).await{
             self.change_error(why.to_string(),"sending error msg", "discord connection problem");
             self.log_error_channel().await;
             println!("{why}");
         }
     }
-    pub async fn log_button(&mut self,cmd:&'a MessageComponentInteraction){
+    pub async fn log_button(&mut self,cmd:&MessageComponentInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
-            self.interaction_response(m)).await{
+            self.interaction_response(m,ephemeral)).await{
             self.change_error(why.to_string(),"sending error msg", "discord connection problem");
             self.log_error_channel().await;
             println!("{why}");
         }
     }
-    pub async fn log_modal(&mut self,cmd:&'a ModalSubmitInteraction){
+    pub async fn log_modal(&mut self,cmd:&ModalSubmitInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
-            self.interaction_response(m)).await{
+            self.interaction_response(m,ephemeral)).await{
             self.change_error(why.to_string(),"sending error msg", "discord connection problem");
             self.log_error_channel().await;
             println!("{why}");
