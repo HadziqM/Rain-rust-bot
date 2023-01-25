@@ -9,9 +9,14 @@ impl<'a> PgConn<'a>{
     pub async fn check_user_password(&self,cid:i32,pass:&str)->Result<bool,sqlx::Error>{
         check_password(&self.pool, cid, pass).await
     }
-    pub async fn change_user_password(&self,pass:&str)->Result<(),sqlx::Error>{
-        let cid = self.get_char_id().await?;
-        change_password(&self.pool, cid, pass).await
+    pub async fn change_user_password(&self,pass:&str)->Result<bool,sqlx::Error>{
+        let check = self.get_user_data().await?;
+        if check.cid != 0 || check.rid != 0{
+            let cid = self.get_char_id().await?;
+            change_password(&self.pool, cid, pass).await?;
+            return Ok(true);
+        }
+        Ok(false)
     }
     pub async fn create_account(&self,user:&str,pass:&str)->Result<Option<i64>,sqlx::Error>{
         let check = self.get_user_data().await?;

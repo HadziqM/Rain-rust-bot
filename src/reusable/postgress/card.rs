@@ -25,8 +25,8 @@ pub struct UserData {
 }
 
 impl<'a> PgConn<'a>{
-    pub async fn get_char_id(&self)-> Result<i32,sqlx::Error>{
-        get_user(&self.did, &self.pool).await
+    pub async fn get_char_id(&self)-> Result<(i32,String),sqlx::Error>{
+        get_user_name(&self.did, &self.pool).await
     }
     pub async fn already_create(&self)->Result<i32,sqlx::Error>{
         registered(&self.did, &self.pool).await
@@ -74,6 +74,14 @@ async fn get_user(did:&str,conn:&Pool<Postgres>) -> Result<i32,sqlx::Error> {
     match row.first(){
         Some(d)=>Ok(d.get("char_id")),
         None=>Ok(0)
+    }
+}
+async fn get_user_name(did:&str,conn:&Pool<Postgres>) -> Result<(i32,String),sqlx::Error> {
+    let row = sqlx::query(&format!("SELECT char_id username FROM discord WHERE discord_id='{did}'"))
+        .fetch_all(conn).await?;
+    match row.first(){
+        Some(d)=>Ok((d.get("char_id"),d.get("username"))),
+        None=>Ok((0,String::new()))
     }
 }
 
