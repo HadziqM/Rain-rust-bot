@@ -5,10 +5,7 @@ use serenity::model::prelude::interaction::application_command::{ApplicationComm
 use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
 use serenity::model::application::interaction::modal::{ModalSubmitInteraction,ModalSubmitInteractionData};
 use serenity::prelude::Context;
-
-use crate::reusable::config::Init;
-use crate::reusable::component::error::*;
-use crate::reusable::postgress::PgConn;
+use crate::{PgConn,Init,ErrorLog};
 
 fn modal_register_row(name:&str,pass:bool)->CreateActionRow{
     let placeholder = match pass {
@@ -41,21 +38,26 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
     command.name("create").description("to create account on rain mhfz server")
 }
 pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init){
+    let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
     if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
         modal_response(r)
     }).await{
-        error(ctx, &why.to_string(), "register interface button", "most likely discord connection problem, so modal didnt shown, try consult this one or wait till connection is more stable",init,&cmd.user).await;
+        err.change_error(why.to_string(), "register interface button", "failed to response, most likely your registrasion already done, its just discord error");
+        err.log_error_channel().await;
     }
 }
 pub async fn run_slash(_options: &[CommandDataOption],ctx:&Context, cmd:&ApplicationCommandInteraction,init:&Init){
     if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
         modal_response(r)
     }).await{
-        error(ctx, &why.to_string(), "register command", "most likely discord connection problem, so modal didnt shown, try consult this one or wait till connection is more stable",init,&cmd.user).await;
+        let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
+        err.change_error(why.to_string(), "register interface button", "failed to response, most likely your registrasion already done, its just discord error");
+        err.log_error_channel().await;
     }
 }
 
 pub async fn modal_register(ctx:&Context,cmd:&ModalSubmitInteraction,data:&ModalSubmitInteractionData,init:&Init){
+    let mut error = ErrorLog::new(&ctx, init, &cmd.user).await;
     let mut name = String::new();
     let mut password = String::new();
     for comp in &data.components{
@@ -71,16 +73,17 @@ pub async fn modal_register(ctx:&Context,cmd:&ModalSubmitInteraction,data:&Modal
         Ok(pg)=>{
             match pg.create_account(&name, &password).await{
                 Ok(_id)=>{
-                    error_modal(ctx,"idk", "create modal submition", "failed to create account, most likely account already used or you use special character on username", cmd, init).await
+                    println!("idk");
                 }
                 Err(why)=>{
-                    let err = why.to_string();
-                    error_modal(ctx,&err, "create modal submition", "failed to create account, most likely account already used or you use special character on username", cmd, init).await
+                    error.change_error(why.to_string(), "submit register", "failed to create account, maybe the user is already taken, and dont use special character like `'` on name or password");
+                    error.log_modal(&cmd).await;
                 }
             }
         }
         Err(err)=>{
-            error_modal(ctx,&err.to_string(), "create modal submition", "error connecting to database wait for few minute for server to back", cmd, init).await
+            error.change_error(err.to_string(), "submit register", "database connection timedout, wait for few minutes or maintenance finished");
+            error.log_modal(&cmd).await;
         }
     }
 }

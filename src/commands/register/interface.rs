@@ -3,8 +3,8 @@ use serenity::model::prelude::component::ButtonStyle;
 use serenity::model::prelude::interaction::application_command::{CommandDataOption, ApplicationCommandInteraction};
 use serenity::prelude::Context;
 use serenity::model::prelude::interaction::InteractionResponseType;
-use crate::reusable::component::{error::error,button::normal_button};
-use crate::reusable::config::Init;
+use crate::reusable::component::button::normal_button;
+use crate::{Init,ErrorLog};
 use crate::reusable::utils::color;
 
 pub async fn run(_options: &[CommandDataOption],ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
@@ -27,7 +27,9 @@ pub async fn run(_options: &[CommandDataOption],ctx:&Context,cmd:&ApplicationCom
                     })
             })
     }).await{
-        error(ctx, &why.to_string(), "interface slash command", "failed to create button, mostlikely connection problem",init,&cmd.user).await;
+        let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
+        err.change_error(why.to_string(), "error command", "it just test woles");
+        err.log_error_channel().await;
     }
 }
 
