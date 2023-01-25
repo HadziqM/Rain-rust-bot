@@ -1,4 +1,6 @@
-on: [push]
+on:
+  push:
+    branches:[release]
 
 name: UploadArtifact
 
@@ -21,9 +23,6 @@ jobs:
       - name: build release
         run: cargo build --release
 
-      - name: make necessary empty folder
-        run: mkdir gacha&&mkdir bounty
-
       - name: rename windows config and move exutable
         if: matrix.platform == 'windows-latest'
         run: ren ./config.json.example config.json&&copy ./target/release/rain-bot.exe .
@@ -40,8 +39,6 @@ jobs:
           path: |
             rain-bot.exe
             src/
-            bounty/
-            gacha/
             icon/
             misc/
             query/
@@ -56,8 +53,6 @@ jobs:
           path: |
             rain-bot
             src/
-            bounty/
-            gacha/
             icon/
             misc/
             query/
@@ -72,8 +67,6 @@ jobs:
           path: |
             rain-bot
             src/
-            bounty/
-            gacha/
             icon/
             misc/
             query/
