@@ -27,7 +27,7 @@ impl EventHandler for Handler{
         }
     }
     async fn ready(&self, ctx:Context, ready:Ready){
-        ready::ready(ctx, ready).await
+        ready::ready(ctx, ready,&self.config).await
     }
 
 }

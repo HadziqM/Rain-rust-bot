@@ -27,7 +27,7 @@ pub async fn run(options: &[CommandDataOption],ctx:&Context, cmd:&ApplicationCom
                         };
                         if let Err(why) = cmd.create_interaction_response(&ctx.http, |resp| {
                             resp.kind(InteractionResponseType::ChannelMessageWithSource)
-                                .interaction_response_data(|msg|msg.content(out))
+                                .interaction_response_data(|msg|msg.content(out).ephemeral(true))
                         }).await{
                             error.change_error(why.to_string(),"change password", "discord connection problem,please consult");
                             error.log_error_channel().await;

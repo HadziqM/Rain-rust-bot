@@ -39,7 +39,7 @@ impl<'a> ErrorLog<'a>{
         self.advice = advice;
     }
     pub async fn log_error_channel(&self){
-        let ch_id = ChannelId(self.init.log_channel.err_channel);
+        let ch_id = ChannelId(self.init.log_channel.err_channel.to_owned());
         let user = UserId(self.init.discord.author_id).to_user(&self.ctx.http).await.unwrap_or_default();
         if let Err(why) = ch_id.send_message(&self.ctx.http, |msg|{
             msg.content(&format!("for {}",self.usr.to_string())).embed(|emb|{

@@ -100,11 +100,11 @@ async fn get_user(did:&str,conn:&Pool<Postgres>) -> Result<i32,sqlx::Error> {
     }
 }
 async fn get_user_all(uid:i32,conn:&Pool<Postgres>) -> Result<Vec<i32>,sqlx::Error> {
-    let row = sqlx::query(&format!("SELECT char_id FROM discord WHERE user_id={uid}"))
+    let row = sqlx::query("SELECT id FROM characters WHERE user_id=$1").bind(uid)
         .fetch_all(conn).await?;
     let mut cid:Vec<i32> = Vec::new();
     for i in row{
-        cid.push(i.get("char_id"))
+        cid.push(i.get("id"))
     }
     Ok(cid)
 }
