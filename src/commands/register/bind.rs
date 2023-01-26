@@ -42,7 +42,7 @@ pub async fn run(_options: &[CommandDataOption],ctx:&Context,cmd:&ApplicationCom
         error.log_slash(cmd, false).await;
         return;
     }
-    let path = cards[index].get_path().0.to_owned();
+    let path = cards.iter().map(|e|e.get_path().0.to_owned()).collect::<Vec<_>>();
     cmd.create_interaction_response(&ctx.http, |m|{
         cards[index].bind(m, &cmd.user, &path)
     }).await.unwrap();
@@ -61,10 +61,12 @@ pub async fn run(_options: &[CommandDataOption],ctx:&Context,cmd:&ApplicationCom
             cmd.edit_original_interaction_response(&ctx.http, |f|{
                 cards[index].edit_bind(f, &cmd.user)
             }).await.unwrap();
+            pat.defer(&ctx.http).await.unwrap();
         }else if id=="use"{
             pat.create_interaction_response(&ctx.http, |m|{
                 m.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|msg|msg.content("ok selected"))
             }).await.unwrap();
+            col.delete(&ctx.http).await.unwrap();
         }
     }
 }

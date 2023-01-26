@@ -1,4 +1,4 @@
-use serenity::{builder::{CreateInteractionResponse, EditInteractionResponse}, model::{prelude::{interaction::InteractionResponseType, component::ButtonStyle}, user::User}};
+use serenity::{builder::{CreateInteractionResponse, EditInteractionResponse, CreateEmbed}, model::{prelude::{interaction::InteractionResponseType, component::ButtonStyle}, user::User}};
 
 use crate::reusable::{postgress::card::Card, utils::color};
 
@@ -39,49 +39,43 @@ impl Card{
         }
         1
     }
+
     fn last_login(&self)->String{
         format!("<t:{}:R>",self.login)
     }
+
+    fn crete_embed(&self,user:&User)->CreateEmbed{
+        let mut emb = CreateEmbed::default();
+        emb.title(self.name.as_str()).fields(vec![
+        ("User",&format!("username: {}\nuser_id: {}\nchar_id: {}\nlast_login: {}",&self.username,self.user_id,self.char_id,self.last_login()),false),
+        ("Character",&format!("HR: {}\nGR: {}",self.hrp(),self.gr),false),
+        ("Guild",&format!("name: {}\nguild_id: {}",&self.g_name(),&self.g_id()),false)
+    ]).footer(|f|f.text(&format!("character owned by {}",user.name)).icon_url(user.face()))
+        .colour(color("ff", "55", "00")).thumbnail(&format!("attachment://{}",self.get_path().1));
+        emb
+    }
+
     pub fn card<'a,'b>(&self,m:&'a mut CreateInteractionResponse<'b>,user:&User,path:&'b str)->&'a mut CreateInteractionResponse<'b>{
         m.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|d|{
-            d.embed(|emb|{
-                emb.title(self.name.as_str()).fields(vec![
-                    ("User",&format!("username: {}\nuser_id: {}\nchar_id: {}\nlast_login: {}",&self.username,self.user_id,self.char_id,self.last_login()),false),
-                    ("Character",&format!("HR: {}\nGR: {}",self.hrp(),self.gr),false),
-                    ("Guild",&format!("name: {}\nguild_id: {}",&self.g_name(),&self.g_id()),false)
-                ]).footer(|f|f.text(&format!("character owned by {}",user.name)).icon_url(user.face()))
-                    .colour(color("ff", "55", "00")).thumbnail(&format!("attachment://{}",self.get_path().1))
-            }).add_file(path)
-
+            d.add_embed(self.crete_embed(user)).add_file(path)
         })
     }
-    pub fn bind<'a,'b>(&self,m:&'a mut CreateInteractionResponse<'b>,user:&User,path:&'b str)->&'a mut CreateInteractionResponse<'b>{
+    pub fn bind<'a,'b>(&self,m:&'a mut CreateInteractionResponse<'b>,user:&User,path:&'b Vec<String>)->&'a mut CreateInteractionResponse<'b>{
         m.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|d|{
-            d.embed(|emb|{
-                emb.title(self.name.as_str()).fields(vec![
-                    ("User",&format!("username: {}\nuser_id: {}\nchar_id: {}\nlast_login: {}",&self.username,self.user_id,self.char_id,self.last_login()),false),
-                    ("Character",&format!("HR: {}\nGR: {}",self.hrp(),self.gr),false),
-                    ("Guild",&format!("name: {}\nguild_id: {}",&self.g_name(),&self.g_id()),false)
-                ]).footer(|f|f.text(&format!("character owned by {}",user.name)).icon_url(user.face()))
-                    .colour(color("ff", "55", "00")).thumbnail(&format!("attachment://{}",self.get_path().1))
-            }).add_file(path).components(|c|{
+            for i in path{
+                d.add_file(i.as_str());
+            }
+            d.add_embed(self.crete_embed(user)).components(|c|{
                     c.create_action_row(|r|{
-                        r.add_button(normal_button("use", "use", ButtonStyle::Primary, "👍".parse().unwrap())).add_button(normal_button("next", "next", ButtonStyle::Secondary, "➡️ ".parse().unwrap()))
+                        r.add_button(normal_button("use", "use", ButtonStyle::Primary, "👍".parse().unwrap())).add_button(normal_button("next", "next", ButtonStyle::Secondary, "➡️".parse().unwrap()))
                     })
                 })
         })
     }
     pub fn edit_bind<'a>(&self,m:&'a mut EditInteractionResponse,user:&User)->&'a mut EditInteractionResponse{
-            m.embed(|emb|{
-                emb.title(self.name.as_str()).fields(vec![
-                    ("User",&format!("username: {}\nuser_id: {}\nchar_id: {}\nlast_login: {}",&self.username,self.user_id,self.char_id,self.last_login()),false),
-                    ("Character",&format!("HR: {}\nGR: {}",self.hrp(),self.gr),false),
-                    ("Guild",&format!("name: {}\nguild_id: {}",&self.g_name(),&self.g_id()),false)
-                ]).footer(|f|f.text(&format!("character owned by {}",user.name)).icon_url(user.face()))
-                    .colour(color("ff", "55", "00")).thumbnail(&format!("attachment://{}",self.get_path().1))
-            }).components(|c|{
+            m.add_embed(self.crete_embed(user)).components(|c|{
                     c.create_action_row(|r|{
-                        r.add_button(normal_button("use", "use", ButtonStyle::Primary, "👍".parse().unwrap())).add_button(normal_button("next", "next", ButtonStyle::Secondary, "➡️ ".parse().unwrap()))
+                        r.add_button(normal_button("use", "use", ButtonStyle::Primary, "👍".parse().unwrap())).add_button(normal_button("next", "next", ButtonStyle::Secondary, "➡️".parse().unwrap()))
                     })
                 })
     }

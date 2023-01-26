@@ -14,7 +14,7 @@ pub async fn slash_command(cmd_id:&str,cmd:&ApplicationCommandInteraction,ctx:&C
         "change_password"=>commands::register::change_pasword::run(option,ctx,cmd,hnd).await,
         "card"=>commands::binded::card::run(option,ctx,cmd,hnd).await,
         "switch"=>commands::register::bind::run(option,ctx,cmd,hnd).await,
-        _=> println!("slash command {} isnt handled yet",cmd_id),
+        _=> {return;}
     }
 }
 pub async fn button_command(cmd_id:&str,cmd:&MessageComponentInteraction,ctx:&Context,hnd:&Init){
@@ -23,12 +23,12 @@ pub async fn button_command(cmd_id:&str,cmd:&MessageComponentInteraction,ctx:&Co
         // "bind_i"=>commands::register::button::bind(ctx, cmd).await,
         // "transfer_i"=>commands::register::button::transfer(ctx, cmd).await,
         // "dm_save_i"=>commands::register::button::dm_save(ctx, cmd).await,
-        _=>println!("button {} isnt handled yet",cmd_id)
+        _=>{return;}
     }
 }
 pub async fn modal_command(cmd_id:&str,cmd:&mut ModalSubmitInteraction,ctx:&Context,hnd:&Init){
     match cmd_id{
         "register_m"=>commands::register::create::modal_register(ctx,cmd,&cmd.data.to_owned(),hnd).await,
-        _=>println!("modal {} isnt handled yet",cmd_id)
+        _=>{return;}
     }
 }
