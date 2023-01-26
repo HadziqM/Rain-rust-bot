@@ -1,9 +1,9 @@
 use serenity::builder::CreateApplicationCommand;
-use serenity::model::prelude::interaction::application_command::{CommandDataOption, ApplicationCommandInteraction};
+use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::Context;
 use crate::{ErrorLog,Init,PgConn};
 
-pub async fn run(_options: &[CommandDataOption],ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
+pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
     let mut error = ErrorLog::new(ctx,init,&cmd.user).await;
     match PgConn::create(init, &cmd.user.id.to_string()).await{
         Ok(pg)=>{

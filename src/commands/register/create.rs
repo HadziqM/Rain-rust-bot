@@ -2,7 +2,7 @@ use serenity::builder::{CreateActionRow, CreateInteractionResponse, CreateApplic
 use serenity::model::prelude::{RoleId, Member, ChannelId};
 use serenity::model::prelude::component::{InputTextStyle, ActionRowComponent};
 use serenity::model::prelude::interaction::InteractionResponseType::*;
-use serenity::model::prelude::interaction::application_command::{ApplicationCommandInteraction, CommandDataOption};
+use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
 use serenity::model::application::interaction::modal::{ModalSubmitInteraction,ModalSubmitInteractionData};
 use serenity::prelude::Context;
@@ -94,7 +94,7 @@ pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init
         err.log_error_channel().await;
     }
 }
-pub async fn run_slash(_options: &[CommandDataOption],ctx:&Context, cmd:&ApplicationCommandInteraction,init:&Init){
+pub async fn run_slash(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&Init){
     if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
         modal_response(r)
     }).await{

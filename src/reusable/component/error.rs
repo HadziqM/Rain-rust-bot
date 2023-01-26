@@ -104,7 +104,10 @@ impl<'a> ErrorLog<'a>{
             println!("{why}");
         }
     }
-
+    pub async fn discord_error(&mut self,error:String,on:&'a str){
+        self.change_error(error, on, "discord connection problem, you can consult this problem");
+        self.log_error_channel().await;
+    }
 }
 // pub async fn error(ctx:&Context,err:&str,on:&str,advice:&str,init:&Init,usr:&User){
 //     let ch_id = ChannelId(init.log_channel.err_channel.to_owned());
