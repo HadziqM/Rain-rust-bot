@@ -22,8 +22,8 @@ impl Card{
         (pt,gh)
     }
     fn g_name(&self)->String{
-        match self.guild_name {
-            Some(x) => x,
+        match &self.guild_name {
+            Some(x) => x.to_owned(),
             None => "No guild".to_string(),
         }
     }
@@ -52,13 +52,13 @@ impl Card{
     fn last_login(&self)->String{
         format!("<t:{}:R>",self.login)
     }
-    pub async fn card<'a,'b>(&self,m:&'a mut CreateInteractionResponse<'b>,user:&User,path:&'b str)->&'a mut CreateInteractionResponse<'b>{
+    pub fn card<'a,'b>(&self,m:&'a mut CreateInteractionResponse<'b>,user:&User,path:&'b str)->&'a mut CreateInteractionResponse<'b>{
         m.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|d|{
             d.embed(|emb|{
                 emb.title(self.name.as_str()).fields(vec![
-                    ("User",&format!("user_name: {}\nuser_id: {}\nchar_id: {}\nlast_login: {}",&self.username,self.user_id,self.char_id,self.last_login()),false),
+                    ("User",&format!("username: {}\nuser_id: {}\nchar_id: {}\nlast_login: {}",&self.username,self.user_id,self.char_id,self.last_login()),false),
                     ("Character",&format!("HR: {}\nGR: {}",self.hrp(),self.gr),false),
-                    ("Guild",&format!("name: {}\nguild_id: {}",self.g_name(),self.g_id()),false)
+                    ("Guild",&format!("name: {}\nguild_id: {}",&self.g_name(),&self.g_id()),false)
                 ]).footer(|f|f.text(&format!("character owned by {}",user.name)).icon_url(user.face()))
                     .colour(color("ff", "55", "00")).thumbnail(&format!("attachment://{}",self.get_path().1))
             }).add_file(path)

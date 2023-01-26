@@ -18,6 +18,7 @@ pub async fn ready(ctx:Context, ready:Ready){
                 .create_application_command(|c|commands::register::create::register(c))
                 .create_application_command(|c|commands::register::check::register(c))
                 .create_application_command(|c|commands::register::change_pasword::register(c))
+                .create_application_command(|c|commands::binded::card::register(c))
         }).await.unwrap();
     }
     ctx.set_activity(Activity::competing("i want to die")).await;

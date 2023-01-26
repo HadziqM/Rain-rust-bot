@@ -12,13 +12,13 @@ use crate::{PgConn,Init,ErrorLog};
 struct RegisterAcknowledged<'a,'b> {
     username: &'a str,
     user:&'a mut Member,
-    uid:i64,
+    uid:i32,
     ctx:&'a Context,
     err:&'a mut ErrorLog<'b>,
 }
 
 impl<'a,'b> RegisterAcknowledged<'a,'b>{
-    fn new(username:&'a str,user:&'a mut Member,uid:i64,ctx:&'a Context,err:&'a mut ErrorLog<'b>)->RegisterAcknowledged<'a,'b>{
+    fn new(username:&'a str,user:&'a mut Member,uid:i32,ctx:&'a Context,err:&'a mut ErrorLog<'b>)->RegisterAcknowledged<'a,'b>{
         RegisterAcknowledged { username, user, uid,ctx,err }
     }
     async fn add_roles(&mut self){
@@ -124,7 +124,7 @@ pub async fn modal_register(ctx:&Context,cmd:&mut ModalSubmitInteraction,data:&M
                     match id {
                         Some(cid) => {
                             let mut member = cmd.member.to_owned().unwrap();
-                            let mut reg = RegisterAcknowledged::new(&name,&mut member, cid, ctx, &mut error);
+                            let mut reg = RegisterAcknowledged::new(&name,&mut member, cid.id, ctx, &mut error);
                             reg.send_response(cmd).await;
                             reg.add_roles().await;
                             reg.log_to_user().await;
