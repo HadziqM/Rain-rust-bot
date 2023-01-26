@@ -11,30 +11,29 @@ use crate::{ErrorLog,Init,PgConn};
 #[allow(unused_assignments)]
 pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
     let mut error = ErrorLog::new(ctx,init,&cmd.user).await;
-    let cards = match PgConn::create(init, &cmd.user.id.to_string()).await{
-        Ok(pg)=>{
-            match pg.many_card().await{
-                Ok(cd)=>match cd{
-                    Some(card)=>card,
-                    None=>{
-                        error.change_error("no message".to_string(), "card slash", "you dont have account in this server,try create one");
-                        error.log_slash(cmd, false).await;
-                        return;
-                    }
-                },
-                Err(why)=>{
-                    error.change_error(why.to_string(), "getting card", "database connection failure");
+    let uid = &cmd.user.id.to_string().to_owned();
+    let mut pg = match PgConn::create(init, &uid).await {
+        Ok(x) => x,
+        Err(why) => {
+            error.pgcon_error(why.to_string(),"switch command", cmd).await;
+            return ;
+        }
+    };
+    let cards = match pg.many_card().await{
+        Ok(cd)=>match cd{
+            Some(card)=>card,
+                None=>{
+                    error.change_error("no message".to_string(), "card slash", "you dont have account in this server,try create one");
                     error.log_slash(cmd, false).await;
                     return;
                 }
-            }
-        }
+            },
         Err(why)=>{
-            error.change_error(why.to_string(), "getting databse pool", "connection to database timed out, wit for server back to health");
+            error.change_error(why.to_string(), "getting card", "database connection failure");
             error.log_slash(cmd, false).await;
             return;
-        }
-    };
+            }
+        };
     let mut index:usize = 0;
     if cards.len() == 0{
         error.change_error("You dont have any character in database".to_string(), "getting characters data", "please create character on launcher and safely enter mezeporta befor doing this");
@@ -89,6 +88,7 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
         }
     }
     reply.stop();
+    pg.close().await;
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {

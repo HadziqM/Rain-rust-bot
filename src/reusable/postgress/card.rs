@@ -83,7 +83,7 @@ pub struct UserData {
     pub rid:i32
 }
 
-async fn user_check(did:&str,pool:&Pool<Postgres>)->Result<UserData,sqlx::Error>{
+pub async fn user_check(did:&str,pool:&Pool<Postgres>)->Result<UserData,sqlx::Error>{
     let cid = get_user(did,pool).await?;
     if cid == 0 {
         return Ok(UserData { cid: 0, rid:registered(did, &pool).await? });

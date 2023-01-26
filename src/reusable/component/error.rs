@@ -80,26 +80,23 @@ impl<'a> ErrorLog<'a>{
                 })
             })
     }
-    pub async fn log_slash(&mut self,cmd:&ApplicationCommandInteraction,ephemeral:bool){
+    pub async fn log_slash(&self,cmd:&ApplicationCommandInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
             self.interaction_response(m,ephemeral)).await{
-            self.change_error(why.to_string(),"sending error msg", "discord connection problem");
             self.log_error_channel().await;
             println!("{why}");
         }
     }
-    pub async fn log_button(&mut self,cmd:&MessageComponentInteraction,ephemeral:bool){
+    pub async fn log_button(&self,cmd:&MessageComponentInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
             self.interaction_response(m,ephemeral)).await{
-            self.change_error(why.to_string(),"sending error msg", "discord connection problem");
             self.log_error_channel().await;
             println!("{why}");
         }
     }
-    pub async fn log_modal(&mut self,cmd:&ModalSubmitInteraction,ephemeral:bool){
+    pub async fn log_modal(&self,cmd:&ModalSubmitInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
             self.interaction_response(m,ephemeral)).await{
-            self.change_error(why.to_string(),"sending error msg", "discord connection problem");
             self.log_error_channel().await;
             println!("{why}");
         }
@@ -107,6 +104,10 @@ impl<'a> ErrorLog<'a>{
     pub async fn discord_error(&mut self,error:String,on:&'a str){
         self.change_error(error, on, "discord connection problem, you can consult this problem");
         self.log_error_channel().await;
+    }
+    pub async fn pgcon_error(&mut self,error:String,on:&'a str,cmd:&ApplicationCommandInteraction){
+        self.change_error(error, on, "connection to database timedout, wait for server to be stable");
+        self.log_slash(cmd, false).await;
     }
 }
 // pub async fn error(ctx:&Context,err:&str,on:&str,advice:&str,init:&Init,usr:&User){

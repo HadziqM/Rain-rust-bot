@@ -32,8 +32,14 @@ impl<'a> PgConn<'a>{
         use_history(&self.pool, &self.did, uid.id as i64).await?;
         Ok(Some(uid))
     }
+    pub async fn switch(&self,cid:i32)->Result<(),sqlx::Error>{
+        switch_character(cid, &self.did, &self.pool).await
+    }
 }
-
+async fn switch_character(cid:i32,did:&str,pool:&Pool<Postgres>)->Result<(),sqlx::Error>{
+    sqlx::query("INSERT INTO discord (discord_id,char_id,gacha) VALUES ($1,$2,100) ON DUPLICATE KEY UPDATE char_id=$2").bind(did).bind(cid).execute(pool).await?;
+    Ok(())
+}
 
 
 async fn check_password(pool:&Pool<Postgres>,cid:i32,pass:&str)->Result<bool,sqlx::Error>{
@@ -65,7 +71,15 @@ async fn create_account(pool:&Pool<Postgres>,user:&str,pass:&str)->Result<Accoun
     let idk = sqlx::query_as::<_,AccountData>("INSERT INTO users (username,password,return_expires) VALUES ($1,$2,$3) RETURNING id,username").bind(user).bind(&hash).bind(time).fetch_one(pool).await?;
     Ok(idk)
 }
-
+async fn purge(pool:&Pool<Postgres>,did:&str)->Result<(),sqlx::Error>{
+    sqlx::query("DELETE from discord_register WHERE discord_id=$1").bind(did).execute(pool).await?;
+    sqlx::query("DELETE from discord WHERE discord_id=$1").bind(did).execute(pool).await?;
+    Ok(())
+}
+async fn dell_acc(pool:&Pool<Postgres>,username:&str)->Result<(),sqlx::Error>{
+    sqlx::query("DELETE from users WHERE username=$1").bind(username).execute(pool).await?;
+    Ok(())
+}
 
 async fn use_history(pool:&Pool<Postgres>,did:&str,uid:i64)->Result<(),sqlx::Error>{
     sqlx::query(&format!("INSERT INTO discord_register (discord_id,user_id) VALUES ('{did}',{uid})")).execute(pool).await?;
@@ -76,7 +90,17 @@ mod test_postgres{
     use super::*;
     use super::super::connection;
     use crate::get_config;
+    use super::super::card::user_check;
 
+    #[tokio::test]
+    async fn test_user_creation(){
+        let pool = connection(&get_config().unwrap()).await.unwrap();
+        purge(&pool, "455622761168109569").await.unwrap();
+        dell_acc(&pool, "grahamisdead").await.unwrap();
+        let x = user_check("455622761168109569", &pool).await.unwrap();
+        println!("{x:?}");
+        pool.close().await;
+    }
     // #[tokio::test]
     // async fn test_user_creation(){
     //     let pool = connection(&get_config().unwrap()).await.unwrap();

@@ -51,7 +51,8 @@ impl<'a,'b> RegisterAcknowledged<'a,'b>{
                 i.ephemeral(true).content("account succesfully created")
             })
         }).await{
-            self.err.change_error(why.to_string(), "responding modal", "account succesfully created so dont worry, its just discord connection problem")
+            self.err.change_error(why.to_string(), "responding modal", "account succesfully created so dont worry, its just discord connection problem");
+            self.err.log_error_channel().await;
         }
     }
 }
