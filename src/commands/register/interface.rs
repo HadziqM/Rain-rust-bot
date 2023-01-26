@@ -17,12 +17,12 @@ pub async fn run(_options: &[CommandDataOption],ctx:&Context,cmd:&ApplicationCom
                         .description("button interface for mhfz player to make use of server's utility")
                 }).components(|c|{
                         c.create_action_row(|r|{
-                            r.add_button(normal_button("register", "register_i", ButtonStyle::Primary))
-                            .add_button(normal_button("bind", "bind_i", ButtonStyle::Secondary))
+                            r.add_button(normal_button("register", "register_i", ButtonStyle::Primary,"📝".parse().unwrap()))
+                            .add_button(normal_button("bind", "bind_i", ButtonStyle::Secondary,"🔐".parse().unwrap()))
                         })
                         .create_action_row(|r|{
-                            r.add_button(normal_button("transfer", "transfer_i", ButtonStyle::Primary))
-                            .add_button(normal_button("DM save", "dm_save_i", ButtonStyle::Secondary))
+                            r.add_button(normal_button("transfer", "transfer_i", ButtonStyle::Primary,"⏳".parse().unwrap()))
+                            .add_button(normal_button("DM save", "dm_save_i", ButtonStyle::Secondary,"🎁".parse().unwrap()))
                         })
                     })
             })

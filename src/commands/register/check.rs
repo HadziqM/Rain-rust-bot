@@ -20,7 +20,7 @@ pub async fn run(_options: &[CommandDataOption],ctx:&Context,cmd:&ApplicationCom
                     }
                     if let Err(why) = cmd.create_interaction_response(&ctx.http, |resp| {
                         resp.kind(InteractionResponseType::ChannelMessageWithSource)
-                            .interaction_response_data(|msg|msg.content(message.as_str()))
+                            .interaction_response_data(|msg|msg.content(message.as_str()).ephemeral(true))
                     }).await{
                         err.change_error(why.to_string(), "on check command", "just discord error,please consult");
                         err.log_error_channel().await;

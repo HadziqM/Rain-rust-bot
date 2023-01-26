@@ -109,10 +109,10 @@ async fn get_user_all(uid:i32,conn:&Pool<Postgres>) -> Result<Vec<i32>,sqlx::Err
     Ok(cid)
 }
 async fn get_user_name(did:&str,conn:&Pool<Postgres>) -> Result<(i32,String),sqlx::Error> {
-    let row = sqlx::query(&format!("SELECT char_id username FROM discord WHERE discord_id='{did}'"))
+    let row = sqlx::query("SELECT user_id,username FROM discord_register LEFT OUTER JOIN users ON user_id=users.id WHERE discord_id=$1").bind(did)
         .fetch_all(conn).await?;
     match row.first(){
-        Some(d)=>Ok((d.get("char_id"),d.get("username"))),
+        Some(d)=>Ok((d.get("user_id"),d.get("username"))),
         None=>Ok((0,String::new()))
     }
 }
