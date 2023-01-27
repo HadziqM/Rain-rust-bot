@@ -1,4 +1,4 @@
-use serenity::builder::{CreateActionRow, CreateInteractionResponse, CreateApplicationCommand};
+use serenity::builder::{CreateActionRow, CreateInteractionResponse};
 use serenity::model::prelude::{RoleId, Member, ChannelId};
 use serenity::model::prelude::component::{InputTextStyle, ActionRowComponent};
 use serenity::model::prelude::interaction::InteractionResponseType::*;
@@ -28,18 +28,20 @@ impl<'a,'b> RegisterAcknowledged<'a,'b>{
             self.err.log_error_channel().await;
         }
     }
-    async fn log_to_user(&mut self){
+    async fn log_to_user(&mut self,cmd:&ModalSubmitInteraction){
+        let serv =cmd.guild_id.unwrap_or_default();
+        let server = serv.to_partial_guild(&self.ctx.http).await.unwrap();
         let ch = ChannelId(self.err.init.log_channel.account_channel);
         if let Err(why) = ch.send_message(&self.ctx.http, |m|{
             m.embed(|e|{
                 e.title("Account Succesfully Created on Server")
-                .description(&format!("{} created an account on server, by creating account here you already aggree to follow our rules to as stated on rules channel, as a member of rain server comunity we welcome you to enjoy the game together",self.user.to_string())).fields(vec![
+                .description(&format!("{} created an account on server, by creating account here you already aggree to follow our rules to as stated on rules channel, as a member of {} comunity we welcome you to enjoy the game together",self.user.to_string(),server.name)).fields(vec![
                     ("👤 Username",&format!("`{}`",self.username),false),
                     ("🆔 User Id",&format!("`{}`",self.uid),false)
                 ]).author(|a|a.name(self.user.display_name()).icon_url(self.user.face()))
                 .colour(color("00", "ff", "00"))
-                .image("attachment://server.jpg")
-            }).add_file("./misc/server.jpg")
+                .image(server.banner_url().unwrap_or("https://media.discordapp.net/attachments/1068440173479739393/1068458599627620392/cachedImage.png?width=807&height=455".to_string()).as_str())
+            })
         }).await{
             self.err.change_error(why.to_string(), "log user create", "sorry connection problem we cant send your greeting message");
             self.err.log_error_channel().await;
@@ -80,11 +82,6 @@ fn modal_response<'a,'b>(lt:&'a mut CreateInteractionResponse<'b>)->&'a mut Crea
                 .custom_id("register_m")
                 .title("register command")
     })
-}
-
-
-pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command.name("create").description("to create account on rain mhfz server")
 }
 pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init){
     let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
@@ -177,7 +174,7 @@ pub async fn modal_register(ctx:&Context,cmd:&mut ModalSubmitInteraction,data:&M
                             let mut reg = RegisterAcknowledged::new(&name,&mut member, cid.id, ctx, &mut error);
                             reg.send_response(cmd).await;
                             reg.add_roles().await;
-                            reg.log_to_user().await;
+                            reg.log_to_user(cmd).await;
                         }
                         None => {
                             error.change_error("no error message".to_string(), "submit register", "you already have account on the server run `/check` to check your username,`/change_pass` to change your password");

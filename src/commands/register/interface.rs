@@ -1,4 +1,3 @@
-use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::component::ButtonStyle;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::Context;
@@ -30,8 +29,4 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
         err.change_error(why.to_string(), "error command", "it just test woles");
         err.log_error_channel().await;
     }
-}
-
-pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command.name("interface").description("An User interface for MHFZ player")
 }
