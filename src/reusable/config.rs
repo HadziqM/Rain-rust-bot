@@ -34,6 +34,7 @@ pub struct Postgress {
     pub(crate) password: String,
     pub(crate) port: u16,
     pub(crate) database: String,
+    pub(crate) user:String
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct MhfzConfig {

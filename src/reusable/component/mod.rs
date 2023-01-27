@@ -1,6 +1,7 @@
 pub mod error;
-pub mod button;
+pub mod widget;
 pub mod guide;
 pub mod card;
 pub mod registered;
 
+pub struct Components;

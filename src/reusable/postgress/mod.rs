@@ -26,7 +26,8 @@ impl<'a> PgConn<'a> {
 
 
 pub async fn connection(init:&Init) -> Result<Pool<Postgres>, sqlx::Error> {
-    let url = format!("postgres://postgres:{}@{}:{}/{}",
+    let url = format!("postgres://{}:{}@{}:{}/{}",
+        init.postgress.user,
         init.postgress.password,
         init.postgress.host,
         init.postgress.port,

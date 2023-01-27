@@ -33,12 +33,8 @@ impl<'a> PgConn<'a>{
         }
         return Ok(card);
     }
-    pub async fn get_card(&self)->Result<Option<Card>,sqlx::Error>{
-        let user = self.get_user_data().await?;
-        if user.cid != 0{
-            return Ok(Some(test_card(user.cid, &self.pool).await?));
-        };
-        Ok(None)
+    pub async fn get_card(&self,cid:i32)->Result<Card,sqlx::Error>{
+        test_card(cid, &self.pool).await
     }
 }
 

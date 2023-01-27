@@ -8,6 +8,7 @@ use reusable::config::{Init,get_config};
 use reusable::component::error::ErrorLog;
 use reusable::component::registered::Register;
 use reusable::postgress::PgConn;
+use reusable::component::Components;
 use serenity::prelude::*;
 use event::Handler;
 

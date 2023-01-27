@@ -3,8 +3,7 @@ use serenity::model::prelude::component::ButtonStyle;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::Context;
 use serenity::model::prelude::interaction::InteractionResponseType;
-use crate::reusable::component::button::normal_button;
-use crate::{Init,ErrorLog};
+use crate::{Init,ErrorLog,Components};
 use crate::reusable::utils::color;
 
 pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
@@ -17,12 +16,12 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
                         .description("button interface for mhfz player to make use of server's utility")
                 }).components(|c|{
                         c.create_action_row(|r|{
-                            r.add_button(normal_button("register", "register_i", ButtonStyle::Primary,"📝".parse().unwrap()))
-                            .add_button(normal_button("bind", "bind_i", ButtonStyle::Secondary,"🔐".parse().unwrap()))
+                            r.add_button(Components::normal_button("register", "register_i", ButtonStyle::Primary,"📝"))
+                            .add_button(Components::normal_button("bind", "bind_i", ButtonStyle::Secondary,"🔐"))
                         })
                         .create_action_row(|r|{
-                            r.add_button(normal_button("transfer", "transfer_i", ButtonStyle::Primary,"⏳".parse().unwrap()))
-                            .add_button(normal_button("DM save", "dm_save_i", ButtonStyle::Secondary,"🎁".parse().unwrap()))
+                            r.add_button(Components::normal_button("transfer", "transfer_i", ButtonStyle::Primary,"⏳"))
+                            .add_button(Components::normal_button("DM save", "dm_save_i", ButtonStyle::Secondary,"🎁"))
                         })
                     })
             })

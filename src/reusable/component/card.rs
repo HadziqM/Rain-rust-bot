@@ -1,9 +1,15 @@
-use serenity::{builder::{CreateInteractionResponse, EditInteractionResponse, CreateEmbed}, model::{prelude::{interaction::InteractionResponseType, component::ButtonStyle}, user::User}};
+use serenity::{builder::{CreateInteractionResponse, EditInteractionResponse, CreateEmbed, CreateActionRow}, model::{prelude::{interaction::InteractionResponseType, component::ButtonStyle}, user::User}};
 
 use crate::reusable::{postgress::card::Card, utils::color};
 
-use super::button::normal_button;
+use crate::Components;
 
+fn make_button()->CreateActionRow{
+    let mut arow = CreateActionRow::default();
+    arow.add_button(Components::normal_button("use", "use", ButtonStyle::Primary, "👍"));
+    arow.add_button(Components::normal_button("next", "next", ButtonStyle::Success, "➡️"));
+    arow
+}
 impl Card{
     pub fn get_path(&self)->(String,String){
         let iconlist = vec!["./icon/GS.png", "./icon/HS.png", "./icon/H.png", "./icon/L.png", "./icon/SS.png", "./icon/LB.png", "./icon/DS.png","./icon/LS.png", "./icon/HH.png", "./icon/GL.png", "./icon/B.png", "./icon/T.png", "./icon/SAF.png", "./icon/MS.png"];
@@ -65,17 +71,13 @@ impl Card{
                 d.add_file(i.as_str());
             }
             d.add_embed(self.crete_embed(user)).components(|c|{
-                    c.create_action_row(|r|{
-                        r.add_button(normal_button("use", "use", ButtonStyle::Primary, "👍".parse().unwrap())).add_button(normal_button("next", "next", ButtonStyle::Secondary, "➡️".parse().unwrap()))
-                    })
+                c.add_action_row(make_button())
                 })
         })
     }
     pub fn edit_bind<'a>(&self,m:&'a mut EditInteractionResponse,user:&User)->&'a mut EditInteractionResponse{
-            m.add_embed(self.crete_embed(user)).components(|c|{
-                    c.create_action_row(|r|{
-                        r.add_button(normal_button("use", "use", ButtonStyle::Primary, "👍".parse().unwrap())).add_button(normal_button("next", "next", ButtonStyle::Secondary, "➡️".parse().unwrap()))
-                    })
-                })
+        m.add_embed(self.crete_embed(user)).components(|c|{
+            c.add_action_row(make_button())
+            })
     }
 }
