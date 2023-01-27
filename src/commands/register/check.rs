@@ -1,4 +1,3 @@
-use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::Context;
 use serenity::model::prelude::interaction::InteractionResponseType;
@@ -39,8 +38,3 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
         }
     }
 }
-
-pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command.name("check").description("check your username and id if you have one")
-}
-

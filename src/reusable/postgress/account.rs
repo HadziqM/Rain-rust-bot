@@ -10,6 +10,20 @@ pub struct AccountData {
     pub id: i32,
     pub username:String
 }
+#[derive(Debug,FromRow)]
+pub struct SaveData {
+    pub savedata: Option<Vec<u8>>,
+    pub decomyset: Option<Vec<u8>>,
+    pub hunternavi: Option<Vec<u8>>,
+    pub otomoairou: Option<Vec<u8>>,
+    pub partner: Option<Vec<u8>>,
+    pub platedata: Option<Vec<u8>>,
+    pub platebox: Option<Vec<u8>>,
+    pub platemyset: Option<Vec<u8>>,
+    pub rengokudata: Option<Vec<u8>>,
+    pub savemercenary: Option<Vec<u8>>,
+    pub skin_hist: Option<Vec<u8>>,
+}
 impl<'a> PgConn<'a>{
     pub async fn check_user_password(&self,cid:i32,pass:&str)->Result<bool,sqlx::Error>{
         check_password(&self.pool, cid, pass).await
@@ -35,13 +49,17 @@ impl<'a> PgConn<'a>{
     pub async fn switch(&self,cid:i32)->Result<(),sqlx::Error>{
         switch_character(cid, &self.did, &self.pool).await
     }
+    pub async fn send_save(&self,cid:i32)->Result<SaveData,sqlx::Error>{
+        get_save(&self.pool, cid).await
+    }
 }
 async fn switch_character(cid:i32,did:&str,pool:&Pool<Postgres>)->Result<(),sqlx::Error>{
     sqlx::query("INSERT INTO discord (discord_id,char_id,gacha) VALUES ($1,$2,100) ON CONFLICT (discord_id) DO UPDATE SET char_id=$2").bind(did).bind(cid).execute(pool).await?;
     Ok(())
 }
-
-
+async fn get_save(pool:&Pool<Postgres>,cid:i32)->Result<SaveData,sqlx::Error>{
+    sqlx::query_as("SELECT * FROM characters WHERE id=$1").bind(cid).fetch_one(pool).await
+}
 async fn check_password(pool:&Pool<Postgres>,cid:i32,pass:&str)->Result<bool,sqlx::Error>{
     let uid:i64 = sqlx::query(&format!("SELECT user_id FROM characters where id={cid}"))
         .fetch_one(pool).await?.try_get("user_id")?;
@@ -60,11 +78,6 @@ fn get_naive()->Option<NaiveDateTime>{
     let amonth = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs()+30*24*60*60;
     NaiveDateTime::from_timestamp_opt(amonth as i64,0)
 }
-// pub async fn create_account(pool:&Pool<Postgres>,user:&str,pass:&str)->Result<i64,sqlx::Error>{
-//     let hash = hash(pass, 10).unwrap_or_default();
-//     sqlx::query(&format!("INSERT INTO users (username,password) VALUES ('{user}','{hash}')")).execute(pool).await?;
-//     Ok(sqlx::query(&format!("SELECT id FROM users WHERE username='{user}'")).fetch_one(pool).await?.try_get("id")?)
-// }
 async fn create_account(pool:&Pool<Postgres>,user:&str,pass:&str)->Result<AccountData,sqlx::Error>{
     let hash = hash(pass, 10).unwrap_or_default();
     let time = get_naive().unwrap_or_default();
@@ -90,14 +103,21 @@ mod test_postgres{
     use super::*;
     use super::super::connection;
     use crate::get_config;
-    use super::super::card::user_check;
+    // use super::super::card::user_check;
 
+    // #[tokio::test]
+    // async fn test_user_creation(){
+    //     let pool = connection(&get_config().unwrap()).await.unwrap();
+    //     purge(&pool, "455622761168109569").await.unwrap();
+    //     dell_acc(&pool, "grahamisdead").await.unwrap();
+    //     let x = user_check("455622761168109569", &pool).await.unwrap();
+    //     println!("{x:?}");
+    //     pool.close().await;
+    // }
     #[tokio::test]
-    async fn test_user_creation(){
+    async fn test_save(){
         let pool = connection(&get_config().unwrap()).await.unwrap();
-        purge(&pool, "455622761168109569").await.unwrap();
-        dell_acc(&pool, "grahamisdead").await.unwrap();
-        let x = user_check("455622761168109569", &pool).await.unwrap();
+        let x = get_save(&pool,843).await.unwrap();
         println!("{x:?}");
         pool.close().await;
     }
