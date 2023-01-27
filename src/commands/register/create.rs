@@ -88,6 +88,30 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
 }
 pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init){
     let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
+    let did = cmd.user.id.to_string();
+    match PgConn::create(init, &did).await {
+        Ok(mut pg) =>{
+            match pg.get_user_data().await {
+                Ok(data) => {
+                    if data.cid != 0 || data.rid!=0{
+                        err.change_error("you already have account in game".to_string(), "checking user data", "you cant have more than one account sorry");
+                        err.log_button(cmd, true).await;
+                        return pg.close().await;
+                    }
+                    pg.close().await;
+                }
+                Err(why) => {
+                    err.change_error(why.to_string(), "getting user data", "please report this");
+                    err.log_button(cmd, true).await;
+                    return pg.close().await;
+                }
+            }
+        }
+        Err(why) => {
+            err.pgcon_error_button(why.to_string(), "create button", cmd).await;
+            return;
+        }
+    };
     if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
         modal_response(r)
     }).await{
@@ -96,6 +120,31 @@ pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init
     }
 }
 pub async fn run_slash(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&Init){
+    let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
+    let did = cmd.user.id.to_string();
+    match PgConn::create(init, &did).await {
+        Ok(mut pg) =>{
+            match pg.get_user_data().await {
+                Ok(data) => {
+                    if data.cid != 0 || data.rid!=0{
+                        err.change_error("you already have account in game".to_string(), "checking user data", "you cant have more than one account sorry");
+                        err.log_slash(cmd, false).await;
+                        return pg.close().await;
+                    }
+                    pg.close().await;
+                }
+                Err(why) => {
+                    err.change_error(why.to_string(), "getting user data", "please report this");
+                    err.log_slash(cmd, false).await;
+                    return pg.close().await;
+                }
+            }
+        }
+        Err(why) => {
+            err.pgcon_error(why.to_string(), "create button", cmd).await;
+            return;
+        }
+    };
     if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
         modal_response(r)
     }).await{

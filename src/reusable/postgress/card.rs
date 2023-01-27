@@ -1,22 +1,6 @@
 use sqlx::{Pool, Postgres, Row, FromRow};
 use super::PgConn;
 
-
-// #[derive(Debug,Clone,FromRow)]
-// pub struct Card {
-//     pub char_id:i32,
-//     pub user_id:i64,
-//     pub username:String,
-//     pub name:String,
-//     pub login:i32,
-//     pub hrp:i32,
-//     pub gr:i32,
-//     pub guild:String,
-//     pub guild_id:i64,
-//     pub guild_lead:i32,
-//     pub weapon_type:i32,
-// }
-//
 #[derive(Debug,FromRow)]
 pub struct Card {
     pub char_id: i32,
@@ -41,17 +25,13 @@ impl<'a> PgConn<'a>{
     pub async fn get_user_data(&self)->Result<UserData,sqlx::Error>{
         user_check(&self.did, &self.pool).await
     }
-    pub async fn many_card(&self)->Result<Option<Vec<Card>>,sqlx::Error>{
-        let user = self.already_create().await?;
-        if user != 0{
-            let cid = get_user_all(user, &self.pool).await?;
-            let mut card = Vec::new();
-            for i in cid{
-                card.push(test_card(i, &self.pool).await?);
-            }
-            return Ok(Some(card));
+    pub async fn many_card(&self,user:i32)->Result<Vec<Card>,sqlx::Error>{
+        let cid = get_user_all(user, &self.pool).await?;
+        let mut card = Vec::new();
+        for i in cid{
+            card.push(test_card(i, &self.pool).await?);
         }
-        Ok(None)
+        return Ok(card);
     }
     pub async fn get_card(&self)->Result<Option<Card>,sqlx::Error>{
         let user = self.get_user_data().await?;
@@ -92,7 +72,7 @@ pub async fn user_check(did:&str,pool:&Pool<Postgres>)->Result<UserData,sqlx::Er
 }
 
 async fn get_user(did:&str,conn:&Pool<Postgres>) -> Result<i32,sqlx::Error> {
-    let row = sqlx::query(&format!("SELECT char_id FROM discord WHERE discord_id='{did}'"))
+    let row = sqlx::query("SELECT char_id FROM discord WHERE discord_id=$1").bind(did)
         .fetch_all(conn).await?;
     match row.first(){
         Some(d)=>Ok(d.get("char_id")),
@@ -127,27 +107,6 @@ async fn registered(did:&str,conn:&Pool<Postgres>)->Result<i32,sqlx::Error>{
     }
 }
 
-// async fn user_card(cid:i32,conn:&Pool<Postgres>)-> Result<Card,sqlx::Error>{
-//     let pg_guild = sqlx::query(&format!("SELECT guild_id FROM guild_characters WHERE character_id={cid}")).fetch_one(conn).await?;
-//     let pg_char = sqlx::query(&format!("SELECT user_id,name,gr,hrp,weapon_type,last_login FROM characters WHERE id={cid}")).fetch_one(conn).await?;
-//     let gid:i64 = pg_guild.try_get("guild_id")?;
-//     let pg_gc = sqlx::query(&format!("SELECT name,leader_id FROM guilds WHERE id={gid}")).fetch_one(conn).await?;
-//     let uid:i64 = pg_char.try_get("user_id")?;
-//     let user = sqlx::query(&format!("SELECT username FROM users WHERE id={uid}")).fetch_one(conn)
-//         .await?;
-//     Ok(Card { char_id: cid,
-//         user_id: uid,
-//         username: user.try_get("username")?,
-//         name: pg_char.try_get("name")?,
-//         login: pg_char.try_get("last_login")?,
-//         hrp: pg_char.try_get("hrp")?,
-//         gr: pg_char.try_get("gr")?,
-//         guild: pg_gc.try_get("name")?,
-//         guild_id: gid,
-//         guild_lead: pg_gc.try_get("leader_id")?,
-//         weapon_type: pg_char.try_get("weapon_type")?
-//     })
-// }
 async fn test_card(cid:i32,conn:&Pool<Postgres>)->Result<Card,sqlx::Error>{
     let idk = sqlx::query_as::<_,Card>(
         "SELECT characters.id as char_id, user_id,characters.name as name,gr,hrp,weapon_type,
@@ -160,20 +119,20 @@ WHERE characters.id=$1").bind(cid).fetch_one(conn).await?;
     Ok(idk)
 }
 
-#[cfg(test)]
-mod postgres_test{
-    use crate::reusable::config::get_config;
+// #[cfg(test)]
+// mod postgres_test{
+//     use crate::reusable::config::get_config;
+//
+//     use super::*;
+//     use super::super::connection;
 
-    use super::*;
-    use super::super::connection;
-
-    #[tokio::test]
-    async fn test_user() {
-        let pool = connection(&get_config().unwrap()).await.unwrap();
-        let x = test_card(843, &pool).await.unwrap();
-        println!("{x:?}");
-        pool.close().await;
-    }
+    // #[tokio::test]
+    // async fn test_user() {
+    //     let pool = connection(&get_config().unwrap()).await.unwrap();
+    //     let x = test_card(843, &pool).await.unwrap();
+    //     println!("{x:?}");
+    //     pool.close().await;
+    // }
     // #[tokio::test]
     // async fn test_user() {
     //     let pool = connection(&get_config().unwrap()).await.unwrap();
@@ -200,4 +159,4 @@ mod postgres_test{
     //     assert_eq!(1,1);
     //     pool.close().await;
     // }
-}
+// }

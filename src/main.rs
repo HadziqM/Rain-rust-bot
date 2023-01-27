@@ -6,6 +6,7 @@ mod event;
 
 use reusable::config::{Init,get_config};
 use reusable::component::error::ErrorLog;
+use reusable::component::registered::Register;
 use reusable::postgress::PgConn;
 use serenity::prelude::*;
 use event::Handler;

@@ -39,7 +39,6 @@ impl Card{
         }
         1
     }
-
     fn last_login(&self)->String{
         format!("<t:{}:R>",self.login)
     }

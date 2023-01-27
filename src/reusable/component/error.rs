@@ -109,6 +109,10 @@ impl<'a> ErrorLog<'a>{
         self.change_error(error, on, "connection to database timedout, wait for server to be stable");
         self.log_slash(cmd, false).await;
     }
+    pub async fn pgcon_error_button(&mut self,error:String,on:&'a str,cmd:&MessageComponentInteraction){
+        self.change_error(error, on, "connection to database timedout, wait for server to be stable");
+        self.log_button(cmd, true).await;
+    }
 }
 // pub async fn error(ctx:&Context,err:&str,on:&str,advice:&str,init:&Init,usr:&User){
 //     let ch_id = ChannelId(init.log_channel.err_channel.to_owned());
