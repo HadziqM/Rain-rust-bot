@@ -14,6 +14,7 @@ pub async fn slash_command(cmd_id:&str,cmd:&ApplicationCommandInteraction,ctx:&C
         "change_password"=>commands::register::change_pasword::run(option,ctx,cmd,hnd).await,
         "card"=>commands::binded::card::run(ctx,cmd,hnd).await,
         "switch"=>commands::register::bind::run(ctx,cmd,hnd).await,
+        "Card"=>commands::binded::card::run_user(ctx,cmd,hnd).await,
         _=> {return;}
     }
 }

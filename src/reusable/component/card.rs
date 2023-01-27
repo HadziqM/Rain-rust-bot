@@ -11,11 +11,24 @@ fn make_button()->CreateActionRow{
     arow
 }
 impl Card{
-    pub fn get_path(&self)->(String,String){
-        let iconlist = vec!["./icon/GS.png", "./icon/HS.png", "./icon/H.png", "./icon/L.png", "./icon/SS.png", "./icon/LB.png", "./icon/DS.png","./icon/LS.png", "./icon/HH.png", "./icon/GL.png", "./icon/B.png", "./icon/T.png", "./icon/SAF.png", "./icon/MS.png"];
-        let pt = iconlist[self.weapon_type as usize].to_string();
-        let gh = pt.to_owned().split("/").last().unwrap().to_string();
-        (pt,gh)
+    pub fn get_path(&self)->String{
+        let iconlist = vec![
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440322977312868/GS.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440324617281626/HS.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440323501596792/H.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440324931862599/L.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440373548044348/SS.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440325309345822/LB.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440322260086794/DS.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440372474302464/LS.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440324088807466/HH.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440322633383946/GL.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440321907761162/B.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440373757743154/T.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440372709167174/MS.png"
+        ];
+        iconlist[self.weapon_type as usize].to_string()
     }
     fn g_name(&self)->String{
         match &self.guild_name {
@@ -56,20 +69,17 @@ impl Card{
         ("Character",&format!("HR: {}\nGR: {}",self.hrp(),self.gr),false),
         ("Guild",&format!("name: {}\nguild_id: {}",&self.g_name(),&self.g_id()),false)
     ]).footer(|f|f.text(&format!("character owned by {}",user.name)).icon_url(user.face()))
-        .colour(color("ff", "55", "00")).thumbnail(&format!("attachment://{}",self.get_path().1));
+        .colour(color("ff", "55", "00")).thumbnail(&self.get_path());
         emb
     }
 
-    pub fn card<'a,'b>(&self,m:&'a mut CreateInteractionResponse<'b>,user:&User,path:&'b str)->&'a mut CreateInteractionResponse<'b>{
+    pub fn card<'a,'b>(&self,m:&'a mut CreateInteractionResponse<'b>,user:&User)->&'a mut CreateInteractionResponse<'b>{
         m.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|d|{
-            d.add_embed(self.crete_embed(user)).add_file(path)
+            d.add_embed(self.crete_embed(user))
         })
     }
-    pub fn bind<'a,'b>(&self,m:&'a mut CreateInteractionResponse<'b>,user:&User,path:&'b Vec<String>)->&'a mut CreateInteractionResponse<'b>{
+    pub fn bind<'a,'b>(&self,m:&'a mut CreateInteractionResponse<'b>,user:&User)->&'a mut CreateInteractionResponse<'b>{
         m.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|d|{
-            for i in path{
-                d.add_file(i.as_str());
-            }
             d.add_embed(self.crete_embed(user)).components(|c|{
                 c.add_action_row(make_button())
                 })

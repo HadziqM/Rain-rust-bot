@@ -6,7 +6,7 @@ use crate::{Init,Register};
 
 pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
     let did = cmd.user.id.to_string();
-    Register::default(ctx, cmd, init, &did, "switch command").await;
+    Register::default(ctx, cmd, init, &did, "switch command",true).await;
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {

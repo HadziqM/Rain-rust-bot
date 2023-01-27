@@ -15,7 +15,7 @@ pub struct Register<'a>{
 }
 
 impl<'a> Register<'a> {
-    pub async fn default(ctx:&'a Context,cmd:&'a ApplicationCommandInteraction,init:&'a Init,did:&'a str,on:&'a str)->Option<Register<'a>>{
+    pub async fn default(ctx:&'a Context,cmd:&'a ApplicationCommandInteraction,init:&'a Init,did:&'a str,on:&'a str,bypass:bool)->Option<Register<'a>>{
         let mut error = ErrorLog::new(ctx,init,&cmd.user).await;
         let mut pg =match PgConn::create(init,&did).await{
             Ok(pg)=>pg,
@@ -24,11 +24,13 @@ impl<'a> Register<'a> {
                 return None;
             }
         };
-        let cards = match pg.get_user_data().await{
+        let cards = match pg.get_user_data_long().await{
             Ok(dt)=>{
                 if dt.cid != 0 {
-                    return Some(Register { error, pg, cid:dt.cid });
-                }else if dt.rid == 0{
+                    if !bypass{
+                        return Some(Register { error, pg, cid:dt.cid });
+                    }
+                }else if dt.rid == 0&&dt.cid == 0{
                     pg.close().await;
                     error.change_error("no message".to_string(), "card slash", "you dont have account in this server,try create one");
                     error.log_slash(cmd, false).await;
@@ -57,9 +59,8 @@ impl<'a> Register<'a> {
             pg.close().await;
             return None;
         }
-        let path = cards.iter().map(|e|e.get_path().0.to_owned()).collect::<Vec<_>>();
         if let Err(why)=cmd.create_interaction_response(&ctx.http, |m|{
-            cards[index].bind(m, &cmd.user, &path)
+            cards[index].bind(m, &cmd.user)
         }).await{
             error.discord_error(why.to_string(), "sending card").await;
             pg.close().await;
@@ -95,18 +96,23 @@ impl<'a> Register<'a> {
                     break;
                 }
             }else if id=="use"{
+                if let Err(why)=pg.switch(cards[index].char_id).await{
+                    error.change_error(why.to_string(), "switching char", "report this or try again");
+                    error.log_slash(cmd, false).await;
+                    break;
+                }
                 if let Err(why)=pat.create_interaction_response(&ctx.http, |m|{
-                    m.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|msg|msg.content("ok selected"))
+                    m.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|msg|msg.content("successfully changing your main character").ephemeral(true))
                 }).await{
                     error.discord_error(why.to_string(), "replying use button").await;
-                };
-                if let Err(why)=col.delete(&ctx.http).await{
-                    error.discord_error(why.to_string(), "deleting bind message").await;
                 };
                 break;
             }
         }
         reply.stop();
+        if let Err(why)=col.delete(&ctx.http).await{
+            error.discord_error(why.to_string(), "deleting bind message").await;
+        };
         pg.close().await;
         None
     }

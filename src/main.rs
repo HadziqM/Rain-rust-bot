@@ -9,6 +9,7 @@ use reusable::component::error::ErrorLog;
 use reusable::component::registered::Register;
 use reusable::postgress::PgConn;
 use reusable::component::Components;
+use reusable::component::discord::AppReg;
 use serenity::prelude::*;
 use event::Handler;
 

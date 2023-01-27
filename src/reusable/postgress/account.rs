@@ -37,7 +37,7 @@ impl<'a> PgConn<'a>{
     }
 }
 async fn switch_character(cid:i32,did:&str,pool:&Pool<Postgres>)->Result<(),sqlx::Error>{
-    sqlx::query("INSERT INTO discord (discord_id,char_id,gacha) VALUES ($1,$2,100) ON DUPLICATE KEY UPDATE char_id=$2").bind(did).bind(cid).execute(pool).await?;
+    sqlx::query("INSERT INTO discord (discord_id,char_id,gacha) VALUES ($1,$2,100) ON CONFLICT (discord_id) DO UPDATE SET char_id=$2").bind(did).bind(cid).execute(pool).await?;
     Ok(())
 }
 

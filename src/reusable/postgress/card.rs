@@ -25,6 +25,9 @@ impl<'a> PgConn<'a>{
     pub async fn get_user_data(&self)->Result<UserData,sqlx::Error>{
         user_check(&self.did, &self.pool).await
     }
+    pub async fn get_user_data_long(&self)->Result<UserData,sqlx::Error>{
+        user_check_long(&self.did, &self.pool).await
+    }
     pub async fn many_card(&self,user:i32)->Result<Vec<Card>,sqlx::Error>{
         let cid = get_user_all(user, &self.pool).await?;
         let mut card = Vec::new();
@@ -65,6 +68,20 @@ pub async fn user_check(did:&str,pool:&Pool<Postgres>)->Result<UserData,sqlx::Er
         return Ok(UserData { cid: 0, rid:registered(did, &pool).await? });
     }
     Ok(UserData { cid, rid: 0 })
+}
+pub async fn user_check_long(did:&str,pool:&Pool<Postgres>)->Result<UserData,sqlx::Error>{
+    let cid = get_user(did,pool).await?;
+    let rid = registered(did,pool).await?;
+    if cid == 0 {
+        return Ok(UserData { cid: 0, rid });
+    }
+    if cid != 0 && rid == 0{
+        let uid:i64 = sqlx::query("SELECT user_id FROM characters WHERE id=$1").bind(cid).fetch_one(pool).await?.try_get("user_id")?;
+        sqlx::query("INSERT INTO discord_register (discord_id,user_id) VALUES ($1,$2)").bind(did)
+        .bind(uid as i32).fetch_one(pool).await?;
+        return Ok(UserData{cid,rid:uid as i32});
+    }
+    Ok(UserData{cid,rid})
 }
 
 async fn get_user(did:&str,conn:&Pool<Postgres>) -> Result<i32,sqlx::Error> {
