@@ -2,7 +2,7 @@ use serenity::model::prelude::{GuildId, UserId};
 use serenity::model::prelude::{Ready, Activity};
 use serenity::prelude::*;
 use crate::commands;
-use crate::reusable::config::Init;
+use crate::Init;
 
 
 pub async fn ready(ctx:Context, ready:Ready, init:&Init){
@@ -18,6 +18,7 @@ pub async fn ready(ctx:Context, ready:Ready, init:&Init){
         GuildId::set_application_commands(&guild.id, &ctx.http, |apps|{
             apps.set_application_commands(commands::register::reg())
                 .set_application_commands(commands::binded::reg())
+                .set_application_commands(commands::admin::reg())
         }).await.unwrap();
     }
     ctx.set_activity(Activity::competing("i want to die")).await;

@@ -20,9 +20,8 @@ async fn main() {
     let intents = GatewayIntents::GUILDS | GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
     match get_config(){
         Ok(conf)=> {
-            let config = conf.clone();
-            let mut client = Client::builder(conf.discord.token, intents)
-                .event_handler(Handler{config})
+            let mut client = Client::builder(conf.discord.token.to_owned(), intents)
+                .event_handler(Handler{config:conf})
                 .await
                 .expect("Error creating client");
             if let Err(why) = client.start().await {

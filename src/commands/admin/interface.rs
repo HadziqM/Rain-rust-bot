@@ -16,7 +16,7 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
                 }).components(|c|{
                         c.create_action_row(|r|{
                             r.add_button(Components::normal_button("register", "register_i", ButtonStyle::Primary,"📝"))
-                            .add_button(Components::normal_button("bind", "bind_i", ButtonStyle::Secondary,"🔐"))
+                            .add_button(Components::normal_button("switch", "switch_i", ButtonStyle::Secondary,"🔐"))
                         })
                         .create_action_row(|r|{
                             r.add_button(Components::normal_button("transfer", "transfer_i", ButtonStyle::Primary,"⏳"))
@@ -26,7 +26,6 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
             })
     }).await{
         let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
-        err.change_error(why.to_string(), "error command", "it just test woles");
-        err.log_error_channel().await;
+        err.discord_error(why.to_string(), "interface command").await;
     }
 }

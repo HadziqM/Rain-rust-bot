@@ -2,7 +2,6 @@ use serenity::{builder::CreateApplicationCommand, model::prelude::command::Comma
 
 use crate::AppReg;
 
-pub mod interface;
 pub mod create;
 pub mod bind;
 pub mod check;
@@ -10,7 +9,6 @@ pub mod change_pasword;
 
 pub fn reg()->Vec<CreateApplicationCommand>{
     let mut out = Vec::new();
-    out.push(AppReg::normal_slash("interface", "mhfz user interface"));
     out.push(AppReg::normal_slash("create", "create mhfz accont to this server"));
     out.push(AppReg::normal_slash("check", "check your user data in server"));
     out.push(AppReg::normal_slash("switch", "switch your character for discord event"));

@@ -1,4 +1,4 @@
-use serenity::{builder::CreateApplicationCommand, model::prelude::command::CommandType};
+use serenity::{builder::CreateApplicationCommand, model::{prelude::command::CommandType, Permissions}};
 
 
 pub struct AppReg;
@@ -17,6 +17,11 @@ impl AppReg{
     pub fn normal_slash(name:&str,desc:&str)->CreateApplicationCommand{
         let mut app = CreateApplicationCommand::default();
         app.name(name).description(desc);
+        app
+    }
+    pub fn admin_slash(name:&str,desc:&str)->CreateApplicationCommand{
+        let mut app = CreateApplicationCommand::default();
+        app.name(name).description(desc).default_member_permissions(Permissions::ADMINISTRATOR);
         app
     }
 }

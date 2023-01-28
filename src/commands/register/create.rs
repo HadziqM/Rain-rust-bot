@@ -4,7 +4,7 @@ use serenity::model::prelude::component::{InputTextStyle, ActionRowComponent};
 use serenity::model::prelude::interaction::InteractionResponseType::*;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
-use serenity::model::application::interaction::modal::{ModalSubmitInteraction,ModalSubmitInteractionData};
+use serenity::model::application::interaction::modal::ModalSubmitInteraction;
 use serenity::prelude::Context;
 use crate::reusable::utils::color;
 use crate::{PgConn,Init,ErrorLog};
@@ -151,7 +151,8 @@ pub async fn run_slash(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&In
     }
 }
 
-pub async fn modal_register(ctx:&Context,cmd:&mut ModalSubmitInteraction,data:&ModalSubmitInteractionData,init:&Init){
+pub async fn modal_register(ctx:&Context,cmd:&ModalSubmitInteraction,init:&Init){
+    let data = cmd.data.to_owned();
     let mut error = ErrorLog::new(&ctx, init, &cmd.user).await;
     let mut name = String::new();
     let mut password = String::new();

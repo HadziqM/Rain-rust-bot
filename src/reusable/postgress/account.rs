@@ -1,6 +1,7 @@
 use sqlx::{Pool, Postgres,Row, FromRow};
 use bcrypt::{verify,hash};
-use std::time::SystemTime;
+use std::{time::SystemTime, fs::File};
+use std::io::prelude::*;
 use chrono::NaiveDateTime;
 
 use super::PgConn;
@@ -53,6 +54,16 @@ impl<'a> PgConn<'a>{
         get_save(&self.pool, cid).await
     }
 }
+impl SaveData {
+    fn to_file(&self)->Result<(),std::io::Error>{
+        if let Some(x) = &self.savedata{
+            let mut y = File::create("./save/savefile.bin").unwrap();
+            y.write_all(x.as_slice())?;
+        }
+        Ok(())
+    }
+}
+
 async fn switch_character(cid:i32,did:&str,pool:&Pool<Postgres>)->Result<(),sqlx::Error>{
     sqlx::query("INSERT INTO discord (discord_id,char_id,gacha) VALUES ($1,$2,100) ON CONFLICT (discord_id) DO UPDATE SET char_id=$2").bind(did).bind(cid).execute(pool).await?;
     Ok(())
@@ -118,7 +129,7 @@ mod test_postgres{
     async fn test_save(){
         let pool = connection(&get_config().unwrap()).await.unwrap();
         let x = get_save(&pool,843).await.unwrap();
-        println!("{x:?}");
+        assert_eq!((),x.to_file().unwrap());
         pool.close().await;
     }
     // #[tokio::test]

@@ -45,6 +45,10 @@ impl SaveData{
             x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
                 filename: "rengokudata.bin".to_string()});
         }
+        if let Some(y)=&self.savemercenary{
+            x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
+                filename: "savemercenary.bin".to_string()});
+        }
         x
     }
 }

@@ -1,13 +1,12 @@
 use serenity::model::prelude::interaction::InteractionResponseType;
 use serenity::model::prelude::interaction::application_command::{
-    CommandDataOption,
     CommandDataOptionValue, ApplicationCommandInteraction,
 };
 use serenity::prelude::Context;
 use crate::{PgConn,ErrorLog,Init};
 
-pub async fn run(options: &[CommandDataOption],ctx:&Context, cmd:&ApplicationCommandInteraction,init:&Init) {
-    let option = options
+pub async fn run(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&Init) {
+    let option = cmd.data.options
         .get(0)
         .expect("Expected user option")
         .resolved

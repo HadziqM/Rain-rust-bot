@@ -3,15 +3,11 @@ use crate::commands;
 use crate::reusable::config::Init;
 
 pub async fn slash_command(cmd_id:&str,cmd:&ApplicationCommandInteraction,ctx:&Context,hnd:&Init){
-    let option = &cmd.data.options;
     match cmd_id{
-        "ping" => commands::ping::run(ctx,cmd).await,
-        "id" =>commands::id::run(option,ctx,cmd).await,
-        "error"=>commands::error::run(ctx, cmd,hnd).await,
-        "interface"=>commands::register::interface::run(ctx,cmd,hnd).await,
+        "interface"=>commands::admin::interface::run(ctx,cmd,hnd).await,
         "create"=>commands::register::create::run_slash(ctx,cmd,hnd).await,
         "check"=>commands::register::check::run(ctx,cmd,hnd).await,
-        "change_password"=>commands::register::change_pasword::run(option,ctx,cmd,hnd).await,
+        "change_password"=>commands::register::change_pasword::run(ctx,cmd,hnd).await,
         "card"=>commands::binded::card::run(ctx,cmd,hnd).await,
         "switch"=>commands::register::bind::run(ctx,cmd,hnd).await,
         "Card"=>commands::binded::card::run_user(ctx,cmd,hnd).await,
@@ -28,9 +24,9 @@ pub async fn button_command(cmd_id:&str,cmd:&MessageComponentInteraction,ctx:&Co
         _=>{return;}
     }
 }
-pub async fn modal_command(cmd_id:&str,cmd:&mut ModalSubmitInteraction,ctx:&Context,hnd:&Init){
+pub async fn modal_command(cmd_id:&str,cmd:&ModalSubmitInteraction,ctx:&Context,hnd:&Init){
     match cmd_id{
-        "register_m"=>commands::register::create::modal_register(ctx,cmd,&cmd.data.to_owned(),hnd).await,
+        "register_m"=>commands::register::create::modal_register(ctx,cmd,hnd).await,
         _=>{return;}
     }
 }

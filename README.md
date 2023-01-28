@@ -26,8 +26,8 @@ well, i m just newbie programer and my last bot is just work, although sometime 
 
 ## Project Roadmap
 * [x] initialize project
-* [ ] basic `serenity` handling
-* [ ] sqlx interface binding
+* [x] basic `serenity` handling
+* [x] sqlx interface binding
 * [ ] image processing binding
 
 ### Initialize Project
@@ -47,11 +47,11 @@ well, i m just newbie programer and my last bot is just work, although sometime 
 * [x] modal builder for register command
 * [x] handle modal interaction
 * [ ] implement auto complete for guild command
-* [ ] create guide embed command
-* [ ] add emojis (too lazy to install emoji plug for my vim)
+* [x] create guide embed command
+* [x] add emojis
 * [ ] create custom build command
-* [ ] role specific command
-* [ ] get attachment and send attachment
+* [x] role specific command
+* [x] get attachment and send attachment
 * [ ] make bind command easier
 * [ ] change guild interface command
 * [ ] add cheater scan command
@@ -59,11 +59,11 @@ well, i m just newbie programer and my last bot is just work, although sometime 
 
 
 ### Sqlx Interface Binding
-* [ ] install `Sqlx` crate
-* [ ] make .sql file for first initialize and update
-* [ ] make command to execute .sql init
+* [x] install `Sqlx` crate
+* [x] make .sql file for first initialize and update
+* [x] make command to execute .sql init
 * [ ] handle all database related (register,bounty,gacha)
-* [ ] error handling
+* [x] error handling
 * [ ] make testing database (may or may not)
 * [ ] make update command to extend the bot
 * [ ] make new table for image storing and processing
