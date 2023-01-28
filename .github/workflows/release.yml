@@ -1,8 +1,8 @@
+name: 'publish'
 on:
   push:
-    branches:[release]
-
-name: UploadArtifact
+    branches:
+      - release
 
 jobs:
   upload-artifact:
