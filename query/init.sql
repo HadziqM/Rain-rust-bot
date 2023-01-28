@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS discord(
   latest_bounty VARCHAR(10),
   latest_bounty_time BIGINT DEFAULT 0,
   boostcd BIGINT DEFAULT 0,
+  transfercd BIGINT DEFAULT 0,
 	PRIMARY KEY(id)
       CONSTRAINT fk_discord
       FOREIGN KEY(discord_id) 
@@ -63,4 +64,5 @@ create table mezfes(
       FOREIGN KEY(discord_id) 
 	  REFERENCES discord(discord_id)
 );
-ALTER TABLE distribution ADD COLUMN IF NOT EXISTS bot boolean NOT NULL DEFAULT false;
+ALTER TABLE distribution ADD COLUMN IF NOT EXISTS bot boolean DEFAULT false;
+ALTER TABLE discord ADD COLUMN IF NOT EXISTS transfercd BIGINT DEFAULT 0;

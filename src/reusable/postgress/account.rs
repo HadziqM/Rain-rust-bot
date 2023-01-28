@@ -53,6 +53,16 @@ impl<'a> PgConn<'a>{
     pub async fn send_save(&self,cid:i32)->Result<SaveData,sqlx::Error>{
         get_save(&self.pool, cid).await
     }
+    pub async fn transfer_cd(&self)->Result<(bool,i64),sqlx::Error>{
+        let cd:i64 = sqlx::query("SELECT transfercd from discord where discord_id=$1").bind(&self.did).fetch_one(&self.pool).await?.try_get("transfercd")?;
+        let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
+        if now > cd as u64{
+            let week = now + 7*24*60*60;
+            sqlx::query("UPDATE discord SET transfercd=$2 where discord_id=$1").bind(&self.did).bind(week as i64).execute(&self.pool).await?;
+            return Ok((true,week as i64));
+        }
+        Ok((false,cd))
+    }
 }
 impl SaveData {
     fn to_file(&self)->Result<(),std::io::Error>{
@@ -114,6 +124,7 @@ mod test_postgres{
     use super::*;
     use super::super::connection;
     use crate::get_config;
+    use crate::PgConn;
     // use super::super::card::user_check;
 
     // #[tokio::test]
@@ -131,6 +142,15 @@ mod test_postgres{
         let x = get_save(&pool,843).await.unwrap();
         assert_eq!((),x.to_file().unwrap());
         pool.close().await;
+    }
+    #[tokio::test]
+    async fn test_cd(){
+        let init = get_config().unwrap();
+        let did = init.discord.author_id.to_string();
+        let mut pg = PgConn::create(&init, &did).await.unwrap();
+        let cd = pg.transfer_cd().await.unwrap();
+        println!("{cd:?}");
+        pg.close().await;
     }
     // #[tokio::test]
     // async fn test_user_creation(){
