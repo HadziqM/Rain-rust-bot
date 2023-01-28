@@ -135,6 +135,7 @@ mod tests{
     #[test]
     fn config() {
         let idk = get_config().unwrap();
+        println!("{}",cfg!(unix));
         assert_eq!(idk.discord.prefix,"%".to_string());
     }
 }

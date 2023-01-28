@@ -3,6 +3,7 @@ use tokio::io::AsyncWriteExt;
 use tokio::fs::File;
 use crate::{Components,Init,Register,ErrorLog,PgConn};
 use crate::reusable::utils::Color;
+use std::path::Path;
 
 pub struct FileSave{
     pub name:String,
@@ -46,12 +47,14 @@ impl<'a> SaveJudge<'a> {
         emb
     }
     async fn save_to_file(&self)->Result<(),tokio::io::Error>{
-        let mut direction = File::create(&format!("./save/{}.txt",&self.cmd.user.id.to_string())).await?;
+        let save = Path::new(".").join("save");
+        let user = format!("{}.txt",&self.cmd.user.id.to_string());
+        let mut direction = File::create(&save.join(&user)).await?;
         let mut leeway = String::new();
         for data in &self.files{
-            let name = format!("./save/{}_{}",&self.cmd.user.id.to_string()
+            let name = format!("{}_{}",&self.cmd.user.id.to_string()
                 ,data.name.to_owned());
-            let mut file = File::create(&name).await?;
+            let mut file = File::create(&save.join(&name)).await?;
             file.write_all(&data.bin.as_slice()).await?;
             leeway.push_str(&name);
             leeway.push(',');
@@ -91,13 +94,15 @@ impl SaveAcknowladge{
         None
     }
     async fn get_files(&self)->Result<Vec<FileSave>,tokio::io::Error>{
-        let dir = tokio::fs::read_to_string(&format!("./save/{}.txt",&self.uid)).await?;
+        let save = Path::new(".").join("save");
+        let user = format!("{}.txt",&self.uid);
+        let dir = tokio::fs::read_to_string(&save.join(&user)).await?;
         let mut container = Vec::new();
         for path in dir.split(","){
             if path==""{
                 continue;
             }
-            let bytea = tokio::fs::read(path).await?;
+            let bytea = tokio::fs::read(&save.join(path)).await?;
             let mut name = path.split("_").last().unwrap().split(".").next().unwrap();
             if name == "hist"{
                 name = "skin_hist"
@@ -119,6 +124,11 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
         Ok(x)=>{
             if x.0{
                 let data = SaveJudge::get_save(cmd).await;
+                if data.files.len()==0{
+                    reg.error.change_error("no valid file detected".to_string(), "transfer save","please rename your save file properly and dont send any large file, also ask admin to reset your cooldown if you want to try again".to_string());
+                    reg.error.log_slash_defer(cmd, false).await;
+                    return ;
+                }
                 if let Err(why)=cmd.edit_original_interaction_response(&ctx.http, |m|{
                     m.add_embed(data.make_embed())
                 }).await{

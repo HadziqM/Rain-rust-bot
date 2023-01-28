@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use serenity::builder::{CreateInteractionResponse, CreateEmbed};
 use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
 use serenity::model::prelude::interaction::modal::ModalSubmitInteraction;
@@ -19,18 +21,20 @@ pub struct ErrorLog<'a> {
     pub(crate) init:&'a Init,
     pub(crate) usr:&'a User,
     pub(crate) user:User,
+    pub(crate) path:PathBuf
 }
 
 impl<'a> ErrorLog<'a>{
     pub async fn new(ctx:&'a Context, init:&'a Init,usr:&'a User)->ErrorLog<'a>{
         let user = UserId(init.discord.author_id).to_user(&ctx.http).await.unwrap_or_default();
+        let path = Path::new(".").join("icon").join("panic.png");
         ErrorLog { 
             err: String::new(), 
             on: "", advice:String::new(), 
             ctx, 
             init,
             usr,
-            user
+            user,path
         }
     }
     pub fn change_error(&mut self,error:String,on:&'a str,advice:String){
@@ -60,16 +64,16 @@ impl<'a> ErrorLog<'a>{
     pub async fn log_error_channel(&self){
         let ch_id = ChannelId(self.init.log_channel.err_channel.to_owned());
         if let Err(why) = ch_id.send_message(&self.ctx.http, |msg|{
-            msg.content(&format!("for {}",self.usr.to_string())).set_embed(self.make_embed()).add_file("./icon/panics.png")
+            msg.content(&format!("for {}",self.usr.to_string())).set_embed(self.make_embed()).add_file(&self.path)
         }).await{
             println!("cant send error message to discord channel :{}",why)
         }
     }
-    fn interaction_response<'b,'c>(&self,m:&'c mut CreateInteractionResponse<'b>,ephemeral:bool,itype:InteractionResponseType)-> 
+    fn interaction_response<'b,'c>(&'b self,m:&'c mut CreateInteractionResponse<'b>,ephemeral:bool,itype:InteractionResponseType)-> 
     &'c mut CreateInteractionResponse<'b>{
         m.kind(itype)
         .interaction_response_data(|msg|{
-                msg.ephemeral(ephemeral).add_file("./icon/panics.png").set_embed(self.make_embed())
+                msg.ephemeral(ephemeral).add_file(&self.path).set_embed(self.make_embed())
             })
     }
     pub async fn log_slash(&self,cmd:&ApplicationCommandInteraction,ephemeral:bool){

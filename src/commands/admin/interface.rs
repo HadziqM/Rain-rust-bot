@@ -16,7 +16,7 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
                 }).components(|c|{
                         c.create_action_row(|r|{
                             r.add_button(Components::normal_button("register", "register", ButtonStyle::Primary,"📝"))
-                            .add_button(Components::normal_button("DM Save", "dm_save", ButtonStyle::Secondary,"🔐"))
+                            .add_button(Components::normal_button("DM Save", "dms", ButtonStyle::Secondary,"🔐"))
                         })
                     })
             })

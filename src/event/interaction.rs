@@ -25,7 +25,7 @@ pub async fn button_command(cmd_id:&str,cmd:&MessageComponentInteraction,ctx:&Co
     }else{
         match cmd_id{
             "register"=>commands::register::create::run_button(ctx, cmd,hnd).await,
-            "dm_save"=>commands::binded::save::run_button(ctx, cmd,hnd).await,
+            "dms"=>commands::binded::save::run_button(ctx, cmd,hnd).await,
             // "transfer_i"=>commands::register::button::transfer(ctx, cmd).await,
             // "dm_save_i"=>commands::register::button::dm_save(ctx, cmd).await,
             _=>{return;}

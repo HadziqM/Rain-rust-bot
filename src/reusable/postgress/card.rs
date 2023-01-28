@@ -78,7 +78,7 @@ pub async fn user_check_long(did:&str,pool:&Pool<Postgres>)->Result<UserData,sql
     if cid != 0 && rid == 0{
         let uid:i64 = sqlx::query("SELECT user_id FROM characters WHERE id=$1").bind(cid).fetch_one(pool).await?.try_get("user_id")?;
         sqlx::query("INSERT INTO discord_register (discord_id,user_id) VALUES ($1,$2)").bind(did)
-        .bind(uid as i32).fetch_one(pool).await?;
+        .bind(uid as i32).execute(pool).await?;
         return Ok(UserData{cid,rid:uid as i32});
     }
     Ok(UserData{cid,rid})
