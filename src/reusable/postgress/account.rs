@@ -51,6 +51,10 @@ impl<'a> PgConn<'a>{
     pub async fn switch(&self,cid:i32)->Result<(),sqlx::Error>{
         switch_character(cid, &self.did, &self.pool).await
     }
+    pub async fn reset_cd(&self)->Result<(),sqlx::Error>{
+        sqlx::query("UPDATE discord SET transfercd=0 WHERE discord_id=$1").bind(&self.did).execute(&self.pool).await?;
+        Ok(())
+    }
     pub async fn send_save(&self,cid:i32)->Result<SaveData,sqlx::Error>{
         get_save(&self.pool, cid).await
     }
