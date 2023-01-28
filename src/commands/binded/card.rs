@@ -3,8 +3,7 @@ use serenity::prelude::Context;
 use crate::{Init,Register,PgConn,ErrorLog};
 
 pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
-    let did = cmd.user.id.to_string();
-    let mut reg = match Register::default(ctx, cmd, init, &did, "card command",false).await{
+    let mut reg = match Register::default(ctx, cmd, init, "card command",false).await{
         Some(r)=>r,
         None=>{return;}
     };
@@ -35,8 +34,7 @@ pub async fn run_user(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init
             return;
         }
     };
-    let did = user.id.to_string();
-    let mut pg = match PgConn::create(init, &did).await{
+    let mut pg = match PgConn::create(init, user.id.to_string()).await{
         Ok(p)=>p,
         Err(why)=>{
             err.pgcon_error(why.to_string(), "user context menu", cmd).await;

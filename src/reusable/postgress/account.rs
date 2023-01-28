@@ -147,7 +147,7 @@ mod test_postgres{
     async fn test_cd(){
         let init = get_config().unwrap();
         let did = init.discord.author_id.to_string();
-        let mut pg = PgConn::create(&init, &did).await.unwrap();
+        let mut pg = PgConn::create(&init, did).await.unwrap();
         let cd = pg.transfer_cd().await.unwrap();
         println!("{cd:?}");
         pg.close().await;

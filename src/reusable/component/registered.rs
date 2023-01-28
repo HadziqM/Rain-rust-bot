@@ -15,9 +15,9 @@ pub struct Register<'a>{
 }
 
 impl<'a> Register<'a> {
-    pub async fn default(ctx:&'a Context,cmd:&'a ApplicationCommandInteraction,init:&'a Init,did:&'a str,on:&'a str,bypass:bool)->Option<Register<'a>>{
+    pub async fn default(ctx:&'a Context,cmd:&'a ApplicationCommandInteraction,init:&'a Init,on:&'a str,bypass:bool)->Option<Register<'a>>{
         let mut error = ErrorLog::new(ctx,init,&cmd.user).await;
-        let mut pg =match PgConn::create(init,&did).await{
+        let mut pg =match PgConn::create(init,cmd.user.id.to_string()).await{
             Ok(pg)=>pg,
             Err(why)=>{
                 error.pgcon_error(why.to_string(), on, cmd).await;

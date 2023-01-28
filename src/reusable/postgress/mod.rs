@@ -7,12 +7,12 @@ pub mod account;
 #[derive(Debug)]
 pub struct PgConn<'a> {
     pub(crate) init: &'a Init,
-    pub(crate) did: &'a str,
+    pub(crate) did: String,
     pub(crate) pool:Pool<Postgres>
 }
 
 impl<'a> PgConn<'a> {
-    pub async fn create(init:&'a Init, did:&'a str)->Result<PgConn<'a>,sqlx::Error>{
+    pub async fn create(init:&'a Init, did:String)->Result<PgConn<'a>,sqlx::Error>{
         let pg = PgConn{
             init,did,
             pool:connection(init).await?

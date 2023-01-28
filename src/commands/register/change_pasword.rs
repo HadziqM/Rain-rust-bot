@@ -14,7 +14,7 @@ pub async fn run(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&Init) {
         .expect("Expected user object");
     let mut error = ErrorLog::new(ctx, init,&cmd.user).await;
     if let CommandDataOptionValue::String(pass) = option {
-        match PgConn::create(init, &cmd.user.id.to_string()).await {
+        match PgConn::create(init,cmd.user.id.to_string()).await {
             Ok(pg) => {
                 match pg.change_user_password(pass.as_str()).await{
                     Ok(p)=>{

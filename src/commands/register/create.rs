@@ -86,7 +86,7 @@ fn modal_response<'a,'b>(lt:&'a mut CreateInteractionResponse<'b>)->&'a mut Crea
 pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init){
     let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
     let did = cmd.user.id.to_string();
-    match PgConn::create(init, &did).await {
+    match PgConn::create(init, did).await {
         Ok(mut pg) =>{
             match pg.get_user_data().await {
                 Ok(data) => {
@@ -119,7 +119,7 @@ pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init
 pub async fn run_slash(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&Init){
     let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
     let did = cmd.user.id.to_string();
-    match PgConn::create(init, &did).await {
+    match PgConn::create(init, did).await {
         Ok(mut pg) =>{
             match pg.get_user_data().await {
                 Ok(data) => {
@@ -165,7 +165,7 @@ pub async fn modal_register(ctx:&Context,cmd:&ModalSubmitInteraction,init:&Init)
             }
         }
     }
-    match PgConn::create(init, &cmd.user.id.to_string()).await{
+    match PgConn::create(init, cmd.user.id.to_string()).await{
         Ok(mut pg)=>{
             match pg.create_account(&name, &password).await{
                 Ok(id)=>{

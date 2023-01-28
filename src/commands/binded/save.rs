@@ -54,8 +54,7 @@ impl SaveData{
 }
 
 pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
-    let did = cmd.user.id.to_string();
-    let mut reg = match Register::default(ctx, cmd, init, &did, "dm_save command", false).await{
+    let mut reg = match Register::default(ctx, cmd, init, "dm_save command", false).await{
         Some(r)=>r,
         None=>{return ;}
     };

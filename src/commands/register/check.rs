@@ -7,7 +7,7 @@ use crate::{Init,ErrorLog,PgConn};
 
 pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
     let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
-    match PgConn::create(init, &cmd.user.id.to_string()).await {
+    match PgConn::create(init, cmd.user.id.to_string()).await {
         Ok(mut pg) =>{
             match pg.get_char_id().await{
                 Ok(data)=>{
