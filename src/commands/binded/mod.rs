@@ -16,10 +16,16 @@ pub fn reg()->Vec<CreateApplicationCommand>{
         .create_option(|op|op.name("file2").description("attach your binary")
         .kind(CommandOptionType::Attachment).required(false))
         .create_option(|op|op.name("file3").description("attach your binary")
+        .kind(CommandOptionType::Attachment).required(false))
+        .create_option(|op|op.name("file4").description("attach your binary")
+        .kind(CommandOptionType::Attachment).required(false))
+        .create_option(|op|op.name("file5").description("attach your binary")
+        .kind(CommandOptionType::Attachment).required(false))
+        .create_option(|op|op.name("file6").description("attach your binary")
         .kind(CommandOptionType::Attachment).required(false));
     vec![
         AppReg::normal_slash("card", "show your hunter card status"),
-        AppReg::user_context("Card"),
+        AppReg::user_context("👤 Card"),
         AppReg::normal_slash("dm_save", "make bot send you your save file"),
         file
     ]

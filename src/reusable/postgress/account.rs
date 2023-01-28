@@ -3,6 +3,7 @@ use bcrypt::{verify,hash};
 use std::{time::SystemTime, fs::File};
 use std::io::prelude::*;
 use chrono::NaiveDateTime;
+use crate::commands::binded::transfer::FileSave;
 
 use super::PgConn;
 
@@ -57,11 +58,15 @@ impl<'a> PgConn<'a>{
         let cd:i64 = sqlx::query("SELECT transfercd from discord where discord_id=$1").bind(&self.did).fetch_one(&self.pool).await?.try_get("transfercd")?;
         let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
         if now > cd as u64{
-            let week = now + 7*24*60*60;
+            let week = now + 24*60*60;
             sqlx::query("UPDATE discord SET transfercd=$2 where discord_id=$1").bind(&self.did).bind(week as i64).execute(&self.pool).await?;
             return Ok((true,week as i64));
         }
         Ok((false,cd))
+    }
+    pub async fn transfer_file(&self,file:&FileSave,cid:i32)->Result<(),sqlx::Error>{
+        sqlx::query(&format!("UPDATE characters SET {}=$1 WHERE id=$2",&file.name)).bind(file.bin.as_slice()).bind(cid).execute(&self.pool).await?;
+        Ok(())
     }
 }
 impl SaveData {
@@ -122,7 +127,7 @@ async fn use_history(pool:&Pool<Postgres>,did:&str,uid:i64)->Result<(),sqlx::Err
 #[cfg(test)]
 mod test_postgres{
     use super::*;
-    use super::super::connection;
+    // use super::super::connection;
     use crate::get_config;
     use crate::PgConn;
     // use super::super::card::user_check;
@@ -136,20 +141,31 @@ mod test_postgres{
     //     println!("{x:?}");
     //     pool.close().await;
     // }
-    #[tokio::test]
-    async fn test_save(){
-        let pool = connection(&get_config().unwrap()).await.unwrap();
-        let x = get_save(&pool,843).await.unwrap();
-        assert_eq!((),x.to_file().unwrap());
-        pool.close().await;
-    }
+    // #[tokio::test]
+    // async fn test_save(){
+    //     let pool = connection(&get_config().unwrap()).await.unwrap();
+    //     let x = get_save(&pool,843).await.unwrap();
+    //     assert_eq!((),x.to_file().unwrap());
+    //     pool.close().await;
+    // }
+    // #[tokio::test]
+    // async fn test_cd(){
+    //     let init = get_config().unwrap();
+    //     let did = init.discord.author_id.to_string();
+    //     let mut pg = PgConn::create(&init, did).await.unwrap();
+    //     let cd = pg.transfer_cd().await.unwrap();
+    //     println!("{cd:?}");
+    //     pg.close().await;
+    // }
     #[tokio::test]
     async fn test_cd(){
         let init = get_config().unwrap();
         let did = init.discord.author_id.to_string();
         let mut pg = PgConn::create(&init, did).await.unwrap();
-        let cd = pg.transfer_cd().await.unwrap();
-        println!("{cd:?}");
+        let file = std::fs::read("./save/455622761168109569_savedata.bin").unwrap();
+        let savefile = FileSave{bin:file,name:"savedata".to_string()};
+        let data = pg.get_user_data().await.unwrap();
+        pg.transfer_file(&savefile,data.cid).await.unwrap();
         pg.close().await;
     }
     // #[tokio::test]

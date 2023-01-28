@@ -38,6 +38,9 @@ impl<'a> ErrorLog<'a>{
         self.on = on;
         self.advice = advice;
     }
+    pub fn change_why(&mut self,error:String){
+        self.err = error;
+    }
     pub async fn log_error_channel(&self){
         let ch_id = ChannelId(self.init.log_channel.err_channel.to_owned());
         let user = UserId(self.init.discord.author_id).to_user(&self.ctx.http).await.unwrap_or_default();
@@ -108,6 +111,10 @@ impl<'a> ErrorLog<'a>{
     pub async fn pgcon_error(&mut self,error:String,on:&'a str,cmd:&ApplicationCommandInteraction){
         self.change_error(error, on, "connection to database timedout, wait for server to be stable".to_string());
         self.log_slash(cmd, false).await;
+    }
+    pub async fn pgcon_error_ch(&mut self,error:String,on:&'a str){
+        self.change_error(error, on, "connection to database timedout, wait for server to be stable".to_string());
+        self.log_error_channel().await;
     }
     pub async fn pgcon_error_button(&mut self,error:String,on:&'a str,cmd:&MessageComponentInteraction){
         self.change_error(error, on, "connection to database timedout, wait for server to be stable".to_string());

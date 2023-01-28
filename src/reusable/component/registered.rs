@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use serenity::futures::StreamExt;
 use serenity::model::prelude::interaction::InteractionResponseType;
+use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
 use serenity::{prelude::Context, model::prelude::interaction::application_command::ApplicationCommandInteraction};
 
 use crate::reusable::config::Init;
@@ -113,6 +114,30 @@ impl<'a> Register<'a> {
         if let Err(why)=col.delete(&ctx.http).await{
             error.discord_error(why.to_string(), "deleting bind message").await;
         };
+        pg.close().await;
+        None
+    }
+    pub async fn default_button(ctx:&'a Context,cmd:&'a MessageComponentInteraction,init:&'a Init,on:&'a str)->Option<Register<'a>>{
+        let mut error = ErrorLog::new(ctx,init,&cmd.user).await;
+        let mut pg =match PgConn::create(init,cmd.user.id.to_string()).await{
+            Ok(pg)=>pg,
+            Err(why)=>{
+                error.pgcon_error_button(why.to_string(), on, cmd).await;
+                return None;
+            }
+        };
+        match pg.get_user_data().await{
+            Ok(x)=>{
+                if x.cid != 0{
+                    return Some(Register { error, pg, cid:x.cid });
+                }
+                error.change_error("you dont have main character".to_string(), "check user data", "please make account if you dont have one or use `/switch` command to select your main character of you already have account".to_string());
+                error.log_button(cmd, true).await;
+            }
+            Err(why)=>{
+                error.pgcon_error_button(why.to_string(),on, cmd).await
+            }
+        }
         pg.close().await;
         None
     }

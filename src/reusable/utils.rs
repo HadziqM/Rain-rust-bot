@@ -10,7 +10,7 @@ pub enum Color{
     Random
 }
 impl Color {
-    fn throw(&self)->Colour{
+    pub fn throw(&self)->Colour{
         match self{
             Self::Red=>color("ff", "00", "00"),
             Self::Blue=>color("00", "00", "ff"),
