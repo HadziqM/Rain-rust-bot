@@ -32,7 +32,7 @@ impl<'a> Register<'a> {
                     }
                 }else if dt.rid == 0&&dt.cid == 0{
                     pg.close().await;
-                    error.change_error("no message".to_string(), "card slash", "you dont have account in this server,try create one");
+                    error.change_error("no message".to_string(), "card slash", "you dont have account in this server,try create one".to_string());
                     error.log_slash(cmd, false).await;
                     return None;
                 }
@@ -46,7 +46,7 @@ impl<'a> Register<'a> {
                 }
             }
             Err(why)=>{
-                error.change_error(why.to_string(), "getting card", "database connection failure");
+                error.change_error(why.to_string(), "getting card", "database connection failure".to_string());
                 error.log_slash(cmd, false).await;
                 pg.close().await;
                 return None;
@@ -54,7 +54,7 @@ impl<'a> Register<'a> {
         };
         let mut index:usize = 0;
         if cards.len() == 0{
-            error.change_error("You dont have any character in database".to_string(), "getting characters data", "please create character on launcher and safely enter mezeporta befor doing this");
+            error.change_error("You dont have any character in database".to_string(), "getting characters data", "please create character on launcher and safely enter mezeporta befor doing this".to_string());
             error.log_slash(cmd, false).await;
             pg.close().await;
             return None;
@@ -97,7 +97,7 @@ impl<'a> Register<'a> {
                 }
             }else if id=="use"{
                 if let Err(why)=pg.switch(cards[index].char_id).await{
-                    error.change_error(why.to_string(), "switching char", "report this or try again");
+                    error.change_error(why.to_string(), "switching char", "report this or try again".to_string());
                     error.log_slash(cmd, false).await;
                     break;
                 }

@@ -14,7 +14,7 @@ use super::super::utils::color;
 pub struct ErrorLog<'a> {
     pub(crate) err: String,
     pub(crate) on:&'a str,
-    pub(crate) advice:&'a str,
+    pub(crate) advice:String,
     pub(crate) ctx:&'a Context,
     pub(crate) init:&'a Init,
     pub(crate) usr:&'a User,
@@ -26,14 +26,14 @@ impl<'a> ErrorLog<'a>{
         let user = UserId(init.discord.author_id).to_user(&ctx.http).await.unwrap_or_default();
         ErrorLog { 
             err: String::new(), 
-            on: "", advice: "", 
+            on: "", advice:String::new(), 
             ctx, 
             init,
             usr,
             user
         }
     }
-    pub fn change_error(&mut self,error:String,on:&'a str,advice:&'a str){
+    pub fn change_error(&mut self,error:String,on:&'a str,advice:String){
         self.err = error;
         self.on = on;
         self.advice = advice;
@@ -48,7 +48,7 @@ impl<'a> ErrorLog<'a>{
                     .fields(vec![
                         ("🚧 occured on",self.on,false),
                         ("📜 error message",&format!("```\n{}\n```",&self.err),false),
-                        ("⛑  author advice",self.advice,false)
+                        ("⛑  author advice",&self.advice,false)
                     ])
                     .author(|f|f.name(self.usr.name.as_str()).icon_url(self.usr.face()))
                     .footer(|f|f.text(format!("you can consult this to {}",user.tag()))
@@ -70,7 +70,7 @@ impl<'a> ErrorLog<'a>{
                     .fields(vec![
                         ("🚧 occured on",self.on,false),
                         ("📜 error message",&format!("```\n{}\n```",&self.err),false),
-                        ("⛑  author advice",self.advice,false)
+                        ("⛑  author advice",&self.advice,false)
                     ])
                     .author(|f|f.name(self.usr.name.as_str()).icon_url(self.usr.face()))
                     .footer(|f|f.text(format!("you can consult this to {}",&self.user.tag()))
@@ -102,15 +102,15 @@ impl<'a> ErrorLog<'a>{
         }
     }
     pub async fn discord_error(&mut self,error:String,on:&'a str){
-        self.change_error(error, on, "discord connection problem, you can consult this problem");
+        self.change_error(error, on, "discord connection problem, you can consult this problem".to_string());
         self.log_error_channel().await;
     }
     pub async fn pgcon_error(&mut self,error:String,on:&'a str,cmd:&ApplicationCommandInteraction){
-        self.change_error(error, on, "connection to database timedout, wait for server to be stable");
+        self.change_error(error, on, "connection to database timedout, wait for server to be stable".to_string());
         self.log_slash(cmd, false).await;
     }
     pub async fn pgcon_error_button(&mut self,error:String,on:&'a str,cmd:&MessageComponentInteraction){
-        self.change_error(error, on, "connection to database timedout, wait for server to be stable");
+        self.change_error(error, on, "connection to database timedout, wait for server to be stable".to_string());
         self.log_button(cmd, true).await;
     }
 }

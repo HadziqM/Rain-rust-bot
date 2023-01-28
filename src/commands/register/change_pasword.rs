@@ -26,18 +26,18 @@ pub async fn run(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&Init) {
                             resp.kind(InteractionResponseType::ChannelMessageWithSource)
                                 .interaction_response_data(|msg|msg.content(out).ephemeral(true))
                         }).await{
-                            error.change_error(why.to_string(),"change password", "discord connection problem,please consult");
+                            error.change_error(why.to_string(),"change password", "discord connection problem,please consult".to_string());
                             error.log_error_channel().await;
                         }
                     }
                     Err(why)=>{
-                        error.change_error(why.to_string(), "changing account", "this one rare, please consult");
+                        error.change_error(why.to_string(), "changing account", "this one rare, please consult".to_string());
                         error.log_slash(cmd, false).await;
                     }
                 }
             }
             Err(why) => {
-                error.change_error(why.to_string(),"change password", "wait for server to be more stable")
+                error.change_error(why.to_string(),"change password", "wait for server to be more stable".to_string())
             }
         }
     }

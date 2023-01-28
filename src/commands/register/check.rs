@@ -21,19 +21,19 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
                         resp.kind(InteractionResponseType::ChannelMessageWithSource)
                             .interaction_response_data(|msg|msg.content(message.as_str()).ephemeral(true))
                     }).await{
-                        err.change_error(why.to_string(), "on check command", "just discord error,please consult");
+                        err.change_error(why.to_string(), "on check command", "just discord error,please consult".to_string());
                         err.log_error_channel().await;
                     }
                 }
                 Err(why)=>{
-                    err.change_error(why.to_string(), "getting user information", "this is actually rare, please consult");
+                    err.change_error(why.to_string(), "getting user information", "this is actually rare, please consult".to_string());
                     err.log_slash(cmd, false).await;
                 }
             }
             pg.close().await;
         }
         Err(why) =>{
-            err.change_error(why.to_string(), "getting postgres pool", "try again when connection to server more stable");
+            err.change_error(why.to_string(), "getting postgres pool", "try again when connection to server more stable".to_string());
             err.log_slash(cmd, false).await;
         }
     }

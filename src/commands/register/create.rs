@@ -24,7 +24,7 @@ impl<'a,'b> RegisterAcknowledged<'a,'b>{
     async fn add_roles(&mut self){
         let rid = RoleId(self.err.init.server_role.register_role);
         if let Err(why)=self.user.add_role(&self.ctx.http,rid).await{
-            self.err.change_error(why.to_string(), "add register role", "ask admin to give you role manually");
+            self.err.change_error(why.to_string(), "add register role", "ask admin to give you role manually".to_string());
             self.err.log_error_channel().await;
         }
     }
@@ -43,7 +43,7 @@ impl<'a,'b> RegisterAcknowledged<'a,'b>{
                 .image(server.banner_url().unwrap_or("https://media.discordapp.net/attachments/1068440173479739393/1068458599627620392/cachedImage.png?width=807&height=455".to_string()).as_str())
             })
         }).await{
-            self.err.change_error(why.to_string(), "log user create", "sorry connection problem we cant send your greeting message");
+            self.err.change_error(why.to_string(), "log user create", "sorry connection problem we cant send your greeting message".to_string());
             self.err.log_error_channel().await;
         }
     }
@@ -53,7 +53,7 @@ impl<'a,'b> RegisterAcknowledged<'a,'b>{
                 i.ephemeral(true).content("account succesfully created")
             })
         }).await{
-            self.err.change_error(why.to_string(), "responding modal", "account succesfully created so dont worry, its just discord connection problem");
+            self.err.change_error(why.to_string(), "responding modal", "account succesfully created so dont worry, its just discord connection problem".to_string());
             self.err.log_error_channel().await;
         }
     }
@@ -91,14 +91,14 @@ pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init
             match pg.get_user_data().await {
                 Ok(data) => {
                     if data.cid != 0 || data.rid!=0{
-                        err.change_error("you already have account in game".to_string(), "checking user data", "you cant have more than one account sorry");
+                        err.change_error("you already have account in game".to_string(), "checking user data", "you cant have more than one account sorry".to_string());
                         err.log_button(cmd, true).await;
                         return pg.close().await;
                     }
                     pg.close().await;
                 }
                 Err(why) => {
-                    err.change_error(why.to_string(), "getting user data", "please report this");
+                    err.change_error(why.to_string(), "getting user data", "please report this".to_string());
                     err.log_button(cmd, true).await;
                     return pg.close().await;
                 }
@@ -112,7 +112,7 @@ pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init
     if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
         modal_response(r)
     }).await{
-        err.change_error(why.to_string(), "register interface button", "failed to response, most likely your registrasion already done, its just discord error");
+        err.change_error(why.to_string(), "register interface button", "failed to response, most likely your registrasion already done, its just discord error".to_string());
         err.log_error_channel().await;
     }
 }
@@ -124,14 +124,14 @@ pub async fn run_slash(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&In
             match pg.get_user_data().await {
                 Ok(data) => {
                     if data.cid != 0 || data.rid!=0{
-                        err.change_error("you already have account in game".to_string(), "checking user data", "you cant have more than one account sorry");
+                        err.change_error("you already have account in game".to_string(), "checking user data", "you cant have more than one account sorry".to_string());
                         err.log_slash(cmd, false).await;
                         return pg.close().await;
                     }
                     pg.close().await;
                 }
                 Err(why) => {
-                    err.change_error(why.to_string(), "getting user data", "please report this");
+                    err.change_error(why.to_string(), "getting user data", "please report this".to_string());
                     err.log_slash(cmd, false).await;
                     return pg.close().await;
                 }
@@ -146,7 +146,7 @@ pub async fn run_slash(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&In
         modal_response(r)
     }).await{
         let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
-        err.change_error(why.to_string(), "register interface button", "failed to response, most likely your registrasion already done, its just discord error");
+        err.change_error(why.to_string(), "register interface button", "failed to response, most likely your registrasion already done, its just discord error".to_string());
         err.log_error_channel().await;
     }
 }
@@ -178,20 +178,20 @@ pub async fn modal_register(ctx:&Context,cmd:&ModalSubmitInteraction,init:&Init)
                             reg.log_to_user(cmd).await;
                         }
                         None => {
-                            error.change_error("no error message".to_string(), "submit register", "you already have account on the server run `/check` to check your username,`/change_pass` to change your password");
+                            error.change_error("no error message".to_string(), "submit register", "you already have account on the server run `/check` to check your username,`/change_pass` to change your password".to_string());
                             error.log_modal(cmd,true).await;
                         }
                     }
                 }
                 Err(why)=>{
-                    error.change_error(why.to_string(), "submit register", "failed to create account, maybe the user is already taken, and dont use special character like `'` on name or password");
+                    error.change_error(why.to_string(), "submit register", "failed to create account, maybe the user is already taken, and dont use special character like `'` on name or password".to_string());
                     error.log_modal(cmd,true).await;
                 }
             }
             pg.close().await;
         }
         Err(err)=>{
-            error.change_error(err.to_string(), "submit register", "database connection timedout, wait for few minutes or maintenance finished");
+            error.change_error(err.to_string(), "submit register", "database connection timedout, wait for few minutes or maintenance finished".to_string());
             error.log_modal(cmd,true).await;
         }
     }

@@ -13,13 +13,13 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
             if let Err(why)=cmd.create_interaction_response(&ctx.http, |m|{
                 card.card(m, &cmd.user)
             }).await{
-                reg.error.change_error(why.to_string(), "card response", "connection problem");
+                reg.error.change_error(why.to_string(), "card response", "connection problem".to_string());
                 reg.error.log_error_channel().await;
                 reg.pg.close().await;
             }
         }
         Err(why)=>{
-            reg.error.change_error(why.to_string(), "getting card", "database connection failure");
+            reg.error.change_error(why.to_string(), "getting card", "database connection failure".to_string());
             reg.error.log_slash(cmd, false).await;
             reg.pg.close().await;
         }
@@ -30,7 +30,7 @@ pub async fn run_user(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init
     let user =match cmd.data.resolved.users.iter().next(){
         Some((_id,u))=>u,
         None=>{
-            err.change_error("no user detected".to_string(), "card context", "idk what you do");
+            err.change_error("no user detected".to_string(), "card context", "idk what you do".to_string());
             err.log_slash(cmd, false).await;
             return;
         }
@@ -47,7 +47,7 @@ pub async fn run_user(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init
         Ok(dt)=>{
             if dt.cid == 0 {
                 err.change_error(format!("{} doesnt have character selected",user.name),
-                    "getting user card","user doesnt have account in this server or they doesnt select their character yet with `/switch`");
+                    "getting user card",format!("{} doesnt have account in this server or they doesnt select their character yet with `/switch`",user.to_string()));
                 err.log_slash(cmd, false).await;
                 return pg.close().await;
             }
