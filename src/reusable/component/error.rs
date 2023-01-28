@@ -1,8 +1,8 @@
-use serenity::builder::CreateInteractionResponse;
+use serenity::builder::{CreateInteractionResponse, CreateEmbed};
 use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
 use serenity::model::prelude::interaction::modal::ModalSubmitInteraction;
 use serenity::model::prelude::{ChannelId, UserId};
-use serenity::model::prelude::interaction::InteractionResponseType;
+use serenity::model::prelude::interaction::InteractionResponseType::{*, self};
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::user::User;
 use serenity::prelude::Context;
@@ -41,65 +41,61 @@ impl<'a> ErrorLog<'a>{
     pub fn change_why(&mut self,error:String){
         self.err = error;
     }
+    fn make_embed(&self)->CreateEmbed{
+        let mut emb = CreateEmbed::default();
+        emb.title("🛑 Error Occured 🛑")
+        .description("some cant be handled error occured")
+        .fields(vec![
+            ("🚧 occured on",self.on,false),
+            ("📜 error message",&format!("```\n{}\n```",&self.err),false),
+            ("⛑  author advice",&self.advice,false)
+        ])
+        .author(|f|f.name(self.usr.name.as_str()).icon_url(self.usr.face()))
+        .footer(|f|f.text(format!("you can consult this to {}",self.user.tag()))
+            .icon_url(self.user.face()))
+        .color(color("ff", "00", "00"))
+        .thumbnail("attachment://panics.png");
+        emb
+    }
     pub async fn log_error_channel(&self){
         let ch_id = ChannelId(self.init.log_channel.err_channel.to_owned());
-        let user = UserId(self.init.discord.author_id).to_user(&self.ctx.http).await.unwrap_or_default();
         if let Err(why) = ch_id.send_message(&self.ctx.http, |msg|{
-            msg.content(&format!("for {}",self.usr.to_string())).embed(|emb|{
-                emb.title("🛑 Error Occured 🛑")
-                    .description("some cant be handled error occured")
-                    .fields(vec![
-                        ("🚧 occured on",self.on,false),
-                        ("📜 error message",&format!("```\n{}\n```",&self.err),false),
-                        ("⛑  author advice",&self.advice,false)
-                    ])
-                    .author(|f|f.name(self.usr.name.as_str()).icon_url(self.usr.face()))
-                    .footer(|f|f.text(format!("you can consult this to {}",user.tag()))
-                        .icon_url(user.face()))
-                    .color(color("ff", "00", "00"))
-                    .thumbnail("attachment://panics.png")
-            }).add_file("./icon/panics.png")
+            msg.content(&format!("for {}",self.usr.to_string())).set_embed(self.make_embed()).add_file("./icon/panics.png")
         }).await{
             println!("cant send error message to discord channel :{}",why)
         }
     }
-    fn interaction_response<'b,'c>(&self,m:&'c mut CreateInteractionResponse<'b>,ephemeral:bool)-> 
+    fn interaction_response<'b,'c>(&self,m:&'c mut CreateInteractionResponse<'b>,ephemeral:bool,itype:InteractionResponseType)-> 
     &'c mut CreateInteractionResponse<'b>{
-        m.kind(InteractionResponseType::ChannelMessageWithSource)
+        m.kind(itype)
         .interaction_response_data(|msg|{
-                msg.ephemeral(ephemeral).add_file("./icon/panics.png").embed(|emb|{
-                emb.title("🛑 Error Occured 🛑")
-                    .description("some cant be handled error occured")
-                    .fields(vec![
-                        ("🚧 occured on",self.on,false),
-                        ("📜 error message",&format!("```\n{}\n```",&self.err),false),
-                        ("⛑  author advice",&self.advice,false)
-                    ])
-                    .author(|f|f.name(self.usr.name.as_str()).icon_url(self.usr.face()))
-                    .footer(|f|f.text(format!("you can consult this to {}",&self.user.tag()))
-                        .icon_url(&self.user.face()))
-                    .color(color("ff", "00", "00"))
-                    .thumbnail("attachment://panics.png")
-                })
+                msg.ephemeral(ephemeral).add_file("./icon/panics.png").set_embed(self.make_embed())
             })
     }
     pub async fn log_slash(&self,cmd:&ApplicationCommandInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
-            self.interaction_response(m,ephemeral)).await{
+            self.interaction_response(m,ephemeral,ChannelMessageWithSource)).await{
+            self.log_error_channel().await;
+            println!("{why}");
+        }
+    }
+    pub async fn log_slash_defer(&self,cmd:&ApplicationCommandInteraction,_ephemeral:bool){
+        if let Err(why) = cmd.edit_original_interaction_response(&self.ctx.http, |m|
+            m.set_embed(self.make_embed())).await{
             self.log_error_channel().await;
             println!("{why}");
         }
     }
     pub async fn log_button(&self,cmd:&MessageComponentInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
-            self.interaction_response(m,ephemeral)).await{
+            self.interaction_response(m,ephemeral,ChannelMessageWithSource)).await{
             self.log_error_channel().await;
             println!("{why}");
         }
     }
     pub async fn log_modal(&self,cmd:&ModalSubmitInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
-            self.interaction_response(m,ephemeral)).await{
+            self.interaction_response(m,ephemeral,ChannelMessageWithSource)).await{
             self.log_error_channel().await;
             println!("{why}");
         }
@@ -112,6 +108,10 @@ impl<'a> ErrorLog<'a>{
         self.change_error(error, on, "connection to database timedout, wait for server to be stable".to_string());
         self.log_slash(cmd, false).await;
     }
+    pub async fn pgcon_error_defer(&mut self,error:String,on:&'a str,cmd:&ApplicationCommandInteraction){
+        self.change_error(error, on, "connection to database timedout, wait for server to be stable".to_string());
+        self.log_slash_defer(cmd, false).await;
+    }
     pub async fn pgcon_error_ch(&mut self,error:String,on:&'a str){
         self.change_error(error, on, "connection to database timedout, wait for server to be stable".to_string());
         self.log_error_channel().await;
@@ -121,78 +121,3 @@ impl<'a> ErrorLog<'a>{
         self.log_button(cmd, true).await;
     }
 }
-// pub async fn error(ctx:&Context,err:&str,on:&str,advice:&str,init:&Init,usr:&User){
-//     let ch_id = ChannelId(init.log_channel.err_channel.to_owned());
-//     let user = UserId(init.discord.author_id).to_user(&ctx.http).await.unwrap_or_default();
-//     if let Err(why) = ch_id.send_message(&ctx.http, |msg|{
-//         msg.content(&format!("for {}",usr.to_string())).embed(|emb|{
-//             emb.title("🛑 Error Occured 🛑")
-//                 .description("some cant be handled error occured")
-//                 .fields(vec![
-//                     ("🚧 occured on",on,false),
-//                     ("📜 error message",&format!("```\n{err}\n```"),false),
-//                     ("⛑  author advice",advice,false)
-//                 ])
-//                 .author(|f|f.name(usr.name.as_str()).icon_url(usr.face()))
-//                 .footer(|f|f.text(format!("you can consult this to {}",user.tag()))
-//                     .icon_url(user.face()))
-//                 .color(color("ff", "00", "00"))
-//                 .thumbnail("attachment://panics.png")
-//         }).add_file("./icon/panics.png")
-//     }).await{
-//         println!("cant send error message to discord channel :{}",why)
-//     }
-// }
-//
-// fn error_reply<'a,'b>(m:&'a mut CreateInteractionResponse<'b>,usr:&User,user:&User,on:&str,advice:&str,err:&str)->&'a mut CreateInteractionResponse<'b>{
-//     m.kind(InteractionResponseType::ChannelMessageWithSource)
-//     .interaction_response_data(|msg|{
-//             msg.add_file("./icon/panics.png").embed(|emb|{
-//             emb.title("🛑 Error Occured 🛑")
-//                 .description("some cant be handled error occured")
-//                 .fields(vec![
-//                     ("🚧 occured on",on,false),
-//                     ("📜 error message",&format!("```\n{err}\n```"),false),
-//                     ("⛑  author advice",advice,false)
-//                 ])
-//                 .author(|f|f.name(usr.name.as_str()).icon_url(usr.face()))
-//                 .footer(|f|f.text(format!("you can consult this to {}",user.tag()))
-//                     .icon_url(user.face()))
-//                 .color(color("ff", "00", "00"))
-//                 .thumbnail("attachment://panics.png")
-//             })
-//         })
-// }
-// pub async fn error_interaction(ctx:&Context,err:&str,on:&str
-//     ,advice:&str,cmd:&ApplicationCommandInteraction,init:&Init){
-//     let usr = &cmd.user;
-//     let user = UserId(init.discord.author_id).to_user(&ctx.http).await.unwrap_or_default();
-//     if let Err(why) = cmd.create_interaction_response(&ctx.http, |m|
-//         error_reply(m,usr,&user,on,advice,err)).await{
-//         error(ctx, why.to_string().as_str(), "sending error msg"
-//             , "just discord connection problem",init,usr).await;
-//         println!("{why}");
-//     }
-// }
-// pub async fn error_modal(ctx:&Context,err:&str,on:&str
-//     ,advice:&str,cmd:&ModalSubmitInteraction,init:&Init){
-//     let usr = &cmd.user;
-//     let user = UserId(init.discord.author_id).to_user(&ctx.http).await.unwrap_or_default();
-//     if let Err(why) = cmd.create_interaction_response(&ctx.http, |m|
-//         error_reply(m,usr,&user,on,advice,err)).await{
-//         error(ctx, why.to_string().as_str(), "sending error msg"
-//             , "just discord connection problem",init,usr).await;
-//         println!("{why}");
-//     }
-// }
-// pub async fn error_button(ctx:&Context,err:&str,on:&str
-//     ,advice:&str,cmd:&MessageComponentInteraction,init:&Init){
-//     let usr = &cmd.user;
-//     let user = UserId(init.discord.author_id).to_user(&ctx.http).await.unwrap_or_default();
-//     if let Err(why) = cmd.create_interaction_response(&ctx.http, |m|
-//         error_reply(m,usr,&user,on,advice,err)).await{
-//         error(ctx, why.to_string().as_str(), "sending error msg"
-//             , "just discord connection problem",init,usr).await;
-//         println!("{why}");
-//     }
-// }

@@ -94,8 +94,14 @@ impl SaveAcknowladge{
         let dir = tokio::fs::read_to_string(&format!("./save/{}.txt",&self.uid)).await?;
         let mut container = Vec::new();
         for path in dir.split(","){
+            if path==""{
+                continue;
+            }
             let bytea = tokio::fs::read(path).await?;
-            let name = path.split("/").last().unwrap().split(".").next().unwrap();
+            let mut name = path.split("_").last().unwrap().split(".").next().unwrap();
+            if name == "hist"{
+                name = "skin_hist"
+            }
             container.push(FileSave{bin:bytea,name:name.to_owned()})
         }
         Ok(container)
@@ -108,13 +114,13 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
         Some(r)=>r,
         None=>{return ;}
     };
+    cmd.defer(&ctx.http).await.unwrap();
     match reg.pg.transfer_cd().await{
         Ok(x)=>{
             if x.0{
                 let data = SaveJudge::get_save(cmd).await;
-                if let Err(why)=cmd.create_interaction_response(&ctx.http, |f|{
-                    f.kind(InteractionResponseType::ChannelMessageWithSource)
-                    .interaction_response_data(|m|m.add_embed(data.make_embed()))
+                if let Err(why)=cmd.edit_original_interaction_response(&ctx.http, |m|{
+                    m.add_embed(data.make_embed())
                 }).await{
                     reg.error.discord_error(why.to_string(), "transfer response").await;
                 }
@@ -128,18 +134,19 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
                             reg.error.log_error_channel().await;
                         }
                     }
-                    Err(_)=>{
-                        reg.error.log_error_channel().await;
+                    Err(why)=>{
+                        reg.error.change_why(why.to_string());
+                        reg.error.log_slash_defer(cmd, false).await;
                     }
                 }
 
             }else {
                 reg.error.change_error("Youare Still On Cooldown".to_string(), "save transfer", format!("You need to wait till <t:{}:R> to be able to attemp transfer save again",x.1));
-                reg.error.log_slash(cmd, false).await;
+                reg.error.log_slash_defer(cmd, false).await;
             }
         }
         Err(why)=>{
-            reg.error.pgcon_error(why.to_string(), "get transfer cd", cmd).await;
+            reg.error.pgcon_error_defer(why.to_string(), "get transfer cd", cmd).await;
         }
     };
     reg.pg.close().await;
@@ -201,7 +208,7 @@ pub async fn run_button(data:Vec<&str>,ctx:&Context,cmd:&MessageComponentInterac
             error.log_error_channel().await;
         }
     }
-    if let Err(why) = cmd.delete_original_interaction_response(&ctx.http).await{
+    if let Err(why) =cmd.message.delete(&ctx.http).await{
         error.change_error(why.to_string(), "delete judge message", "please delete the message manually, the process is already done successfully".to_string());
         error.log_error_channel().await;
     }
