@@ -1,4 +1,4 @@
-use serenity::{prelude::Context, model::prelude::{interaction::{application_command::ApplicationCommandInteraction, InteractionResponseType}, AttachmentType}};
+use serenity::{prelude::Context, model::prelude::{interaction::{application_command::ApplicationCommandInteraction, InteractionResponseType, message_component::MessageComponentInteraction}, AttachmentType}};
 
 use crate::{Init,Register, reusable::postgress::account::SaveData};
 use std::borrow::Cow;
@@ -74,6 +74,31 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
         }
         Err(why)=>{
             reg.error.pgcon_error(why.to_string(), "getting save", cmd).await;
+        }
+    }
+    reg.pg.close().await;
+}
+pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init){
+    let mut reg = match Register::default_button(ctx, cmd, init, "dm_save command").await{
+        Some(r)=>r,
+        None=>{return ;}
+    };
+    match reg.pg.send_save(reg.cid).await{
+        Ok(dt)=>{
+            if let Err(why)=cmd.user.direct_message(&ctx.http, |m|{
+                m.content("your save").add_files(dt.get_attachment())
+            }).await{
+                reg.error.change_error(why.to_string(), "send dm_save", "maybe you need to enable dm".to_string())
+            }
+            if let Err(why)=cmd.create_interaction_response(&ctx.http, |n|{
+                n.kind(InteractionResponseType::ChannelMessageWithSource)
+                .interaction_response_data(|m|m.content("tying to dm"))
+            }).await{
+                reg.error.discord_error(why.to_string(), "dm save").await;
+            }
+        }
+        Err(why)=>{
+            reg.error.pgcon_error_button(why.to_string(), "getting save", cmd).await;
         }
     }
     reg.pg.close().await;

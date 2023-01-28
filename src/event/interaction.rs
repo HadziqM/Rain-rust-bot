@@ -13,6 +13,7 @@ pub async fn slash_command(cmd_id:&str,cmd:&ApplicationCommandInteraction,ctx:&C
         "👤 Card"=>commands::binded::card::run_user(ctx,cmd,hnd).await,
         "dm_save"=>commands::binded::save::run(ctx,cmd,hnd).await,
         "transfer"=>commands::binded::transfer::run(ctx,cmd,hnd).await,
+        "reset_save_cd"=>commands::admin::save_cd::run(ctx,cmd,hnd).await,
         _=> {return;}
     }
 }
@@ -24,7 +25,7 @@ pub async fn button_command(cmd_id:&str,cmd:&MessageComponentInteraction,ctx:&Co
     }else{
         match cmd_id{
             "register"=>commands::register::create::run_button(ctx, cmd,hnd).await,
-            // "bind_i"=>commands::register::button::bind(ctx, cmd).await,
+            "dm_save"=>commands::binded::save::run_button(ctx, cmd,hnd).await,
             // "transfer_i"=>commands::register::button::transfer(ctx, cmd).await,
             // "dm_save_i"=>commands::register::button::dm_save(ctx, cmd).await,
             _=>{return;}

@@ -15,7 +15,7 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
                         .description("button interface for mhfz player to make use of server's utility")
                 }).components(|c|{
                         c.create_action_row(|r|{
-                            r.add_button(Components::normal_button("register", "register_i", ButtonStyle::Primary,"📝"))
+                            r.add_button(Components::normal_button("register", "register", ButtonStyle::Primary,"📝"))
                             .add_button(Components::normal_button("DM Save", "dm_save", ButtonStyle::Secondary,"🔐"))
                         })
                     })
