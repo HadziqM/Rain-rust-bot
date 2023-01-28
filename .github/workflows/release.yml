@@ -22,14 +22,15 @@ jobs:
 
       - name: build release
         run: cargo build --release
-
       - name: rename windows config and move exutable
         if: matrix.platform == 'windows-latest'
-        run: ren ./config.json.example config.json&&copy ./target/release/rain-bot.exe .
+        run: ren ./config.json.example config.json&&copy ./target/release/rain-bot.exe .mkdir save&&echo ./save/this_is_save_folder.txt
+
 
       - name: rename linux and mac config and move exutable
         if: matrix.platform != 'windows-latest'
-        run: mv ./config.json.example config.json&&cp ./target/release/rain-bot .
+        run: mv ./config.json.example config.json&&cp ./target/release/rain-bot .&&mkdir save&&touch ./save/this_is_save_folder.txt
+
 
       - name: upload windows-artefact
         uses: actions/upload-artifact@v3
@@ -40,7 +41,7 @@ jobs:
             rain-bot.exe
             src/
             icon/
-            misc/
+            save/
             query/
             Cargo.toml
             config.json
@@ -54,7 +55,7 @@ jobs:
             rain-bot
             src/
             icon/
-            misc/
+            save/
             query/
             Cargo.toml
             config.json
@@ -68,7 +69,7 @@ jobs:
             rain-bot
             src/
             icon/
-            misc/
+            save/
             query/
             Cargo.toml
             config.json

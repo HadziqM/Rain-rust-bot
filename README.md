@@ -137,93 +137,96 @@ ren ./config.json.example config.json
 
 
 ## How to edit config.json
-well i will explain on the pointer `<-` comment </br>
+most is not implemented yet so you can leave it as it is except some few </br>
+i will mark what you need to cahnge on the pointer `<-` comment </br>
 just dont fill the actual file with my comment
 
 ```json
 {
   "discord": {
-    "token":"",                   <- your discord token from discord developer portal
-    "prefix":"%"                  <- your normal command prefix, fill with anything you like
+    "token":"your token",              <- Change it with your discord token
+    "prefix":"%",
+    "author_id":455622761168109569     <- Change it with your discord id or leave it
    },
-  "postgress": {             
-    "host":"",                    <- your postgress host address that host mhfz server
-    "password":"",                <- your postgress database password
-    "port":5432,                  <- your postgress port
-    "database":"erupe"            <- your database name
+  "postgress": {                       <- all of this section need to change
+    "user":"postgres",                 
+    "host":"localhost",
+    "password":"",
+    "port":5432,
+    "database":"erupe"
    },
-  "mhfz_config": {
-    "account_creation":true       <- if you want bot to perform account creation (effect behavior)
+  "mhfz_config": {   
+    "account_creation":true
    },
-  "bot_config": {                 <- need to specify behavior of bot
-    "member_join":true,           <- if you want bot to send greet message on member join
-    "member_leave":true,          <- if you want bot to inform you someone leave
-    "role_moderation":true,       <- if you want bot to moderate giving main role (bot need to be on higher role)
-    "member_moderation":true,     <- if you want bot to aid in moderate member
-    "gacha":true,                 <- if you want bot to perform gacha (effect database)
-    "bounty":true,                <- if you want bot to perform bounty event (effect databse)
-    "transmog_contest":true,      <- if you want bot to perform transmog event (effect database)
-    "server_market":true,         <- if you want bot to perform server market event (effect database)
-    "mezfes_contest":true,        <- if you want bot to perform mezfes event (effect database)
-    "pvp_contest":true,           <- if you want bot to perform pvp event (effect database)
-    "speedrun_contest":true       <- if you want bot to perform speedrun event (effect database)
+  "bot_config": {
+    "member_join":true,
+    "member_leave":true,
+    "role_moderation":true,
+    "member_moderation":true,
+    "gacha":true,
+    "bounty":true,
+    "transmog_contest":true,
+    "mezfes_contest":true,
+    "server_market":true,
+    "pvp_contest":true,
+    "speedrun_contest":true
    },
-  "log_channels": {               <- fill all this section with channel id in string format
-    "err_channel":"",             <- for bot to inform you if there is problem
-    "account_channel":"",         <- log for account creation,can leave it empty
-    "transfer_channel":"",        <- log for transfer channel, can leave it empty
-    "moderation_channel":""       <- for bot to announce moderation behavior (ban,mute,kick,etc.)
+  "log_channel": {
+    "err_channel":1031774270512169070,         <- fill with channel ID for bot to send
+    "account_channel":1031774270512169070,     <- fill with channel ID for bot to send
+    "transfer_channel":1031774270512169070,    <- fill with channel ID for bot to send
+    "moderation_channel":0
    },
-  "server_channel": {             <- you can leave this empty depend on how you fill bot config section
-    "member_join":"",             <- channel id for bot to greet new member
-    "member_leave":"",            <- channel id for bot to inform when member leave
-    "rule_channel":"",            <- channel id to place rule channel and member button
-    "rule_msg_id":"",             <- message id on rule channel so you can edit rule whenever you want
+  "server_channel": {
+    "member_join":0,
+    "member_leave":0,
+    "rule_channel":0,
+    "rule_msg_id":0
   },
-  "server_channel_url": {         <- you can leave this empty depend on how you fill bot config section
-
-    "guide_channel":""            <- the channel url for redirect button to those channel when pressed
-    "game_channel":""             <- the channel url for redirect button to those channel when pressed
-    "bot_channel":""              <- the channel url for redirect button to those channel when pressed
+  "server_channel_url": {
+    "guide_channel":0,
+    "game_channel":0,
+    "bot_channel":0
    },
   "server_role":{
-    "admin_role":"",              <- the role id only for one that could use admin only command
-    "member_role":"",             <- giving member role if you lock server could be accessible that member role
-    "mute_role":""                <- role to give for muting member
+    "admin_role":0,
+    "member_role":0,
+    "mute_role":0,
+    "register_role":1031595216538452038     <- fill with role id, bot need to be higher
   },
-  "bounty_channel": {             <- will be ignored if your fill false on bot_config.bounty
-    "board":"",                   <- channel id for bounty board
-    "conquered":"",               <- channel id for bounty conquered
-    "promotion":"",               <- channel id for bounty promotion
-    "cooldown_ch":"",             <- channel id for bounty cooldown
-    "leaderboard_ch":"",          <- channel id for bounty leaderboard
-    "judge_ch":""                 <- channel id for bounty judge
+  "bounty_channel": {
+    "board":0,
+    "conquered":0,
+    "promotion":0,
+    "cooldown_ch":0,
+    "leaderboard_ch":0,
+    "judge_ch":0
    },
-  "bounty_message_id": {          <- will be ignored if you fill false on bot_config.bounty
-    "cooldown_msg":"",            <- message id on cooldown channel for bot to update cooldown
-    "leaderboard_msg":""          <- message id on leaderboard channel for bot to update leaderboard
+  "bounty_message_id": {
+    "cooldown_msg":0,
+    "leaderboard_msg":0
    },
-  "gacha_channel": {              <- will be ignored if you fill false on bot_config.gacha
-    "pull":""                     <- gacha channel id, leave it empty if you dont want to restrict
+  "gacha_channel": {
+    "pull":0
   },
-  "transmog_contest":{            <- will be ignored if you fill false on bot_config.transmog
-    "submitted_channel":""        <- contest channel id for show off
+  "transmog_contest":{
+    "submitted_channel":0
   },
-  "mezfes_contest" :{             <- will be ignored if you fill false on bot_config.mezfes
-    "leaderboard_channel":"",     <- leaderboard channel id
-    "leaderboard_msg_id":""       <- leaderboard channel message id to update message
+  "mezfes_contest" :{
+    "leaderboard_channel":0,
+    "leaderboard_msg_id":0
   },
-  "pvp_contest" :{                <- will be ignored if you fill false on bot_config.pvp
-    "leaderboard_channel":"",     <- leaderboard channel id
-    "leaderboard_msg_id":""       <- leaderboard channel message id to update message
+  "pvp_contest" :{
+    "leaderboard_channel":0,
+    "leaderboard_msg_id":0
   },
-  "speedrun_contest" :{           <- will be ignored if you fill false on bot_config.transmog
-    "leaderboard_channel":"",     <- leaderboard channel id
-    "leaderboard_msg_id":""       <- leaderboard channel message id to update message
+  "speedrun_contest" :{
+    "leaderboard_channel":0,
+    "leaderboard_msg_id":0
   },
-  "server_market" :{              <- will be ignored if you fill false on bot_config.transmog
-    "market_channel":""           <- market channel id to show wares
-  },
+  "server_market" :{
+    "market_channel":0
+  }
 }
 ```
 
@@ -231,4 +234,17 @@ just dont fill the actual file with my comment
 there will be upcoming `Rain Moderation App` for further customzation (mainly for event and image editing)
 
 ## Detailed Command
-**WIP**
+the implemented command right now
+1. Admin Command
+   - `/interface` to send register and send save button
+   - `/reset_save_cd` to reset user save cooldown
+2. Binded Command
+   - `/card` to show user hunter status
+   - `App>Card` to check other user hunter status
+   - `/dm_save` to send user their backup save file on dm
+   - `/transfer` for transfer save file, save need to be approved by admin and have cd
+3. Register Command
+   - `/switch` to switch their main character for event
+   - `/change_password` to change password
+   - `/check` to check own username and id
+   - `/create` to create blank account on MHFZ
