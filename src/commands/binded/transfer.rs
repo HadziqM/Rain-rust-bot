@@ -1,7 +1,7 @@
-use serenity::{model::prelude::{interaction::application_command::{ApplicationCommandInteraction, CommandDataOptionValue}, component::ButtonStyle}, builder::{CreateEmbed, CreateActionRow}};
+use serenity::{model::prelude::{interaction::{application_command::{ApplicationCommandInteraction, CommandDataOptionValue}, InteractionResponseType}, component::ButtonStyle, ChannelId}, builder::{CreateEmbed, CreateActionRow}, prelude::Context};
 use tokio::io::AsyncWriteExt;
 use tokio::fs::File;
-use crate::Components;
+use crate::{Components,Init,Register};
 
 struct FileSave{
     name:String,
@@ -71,4 +71,45 @@ impl<'a> SaveJudge<'a> {
             );
         arow
     }
+}
+async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
+    let mut reg = match Register::default(ctx, cmd, &init, "transfer save", false).await {
+        Some(r)=>r,
+        None=>{return ;}
+    };
+    match reg.pg.transfer_cd().await{
+        Ok(x)=>{
+            if x.0{
+                let data = SaveJudge::get_save(cmd).await;
+                if let Err(why)=cmd.create_interaction_response(&ctx.http, |f|{
+                    f.kind(InteractionResponseType::ChannelMessageWithSource)
+                    .interaction_response_data(|m|m.add_embed(data.make_embed()))
+                }).await{
+                    reg.error.discord_error(why.to_string(), "transfer response").await;
+                }
+                match data.save_to_file().await{
+                    Ok(_)=>{
+                        let ch = ChannelId(init.log_channel.transfer_channel);
+                        if let Err(why) = ch.send_message(&ctx.http, |m|{
+                            m.set_embed(data.make_embed()).components(|c|c.add_action_row(data.make_button()))
+                        }).await{
+                            reg.error.change_error(why.to_string(), "send save to judge", "sorry you need to report this so you could reset your cooldown".to_string());
+                            reg.error.log_error_channel().await;
+                        }
+                    }
+                    Err(_)=>{
+                        reg.error.log_error_channel().await;
+                    }
+                }
+
+            }else {
+                reg.error.change_error("Youare Still On Cooldown".to_string(), "save transfer", format!("You need to wait till <t:{}:R> to be able to attemp transfer save again",x.1));
+                reg.error.log_slash(cmd, false).await;
+            }
+        }
+        Err(why)=>{
+            reg.error.pgcon_error(why.to_string(), "get transfer cd", cmd).await;
+        }
+    };
+    reg.pg.close().await;
 }
