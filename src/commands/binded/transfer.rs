@@ -120,34 +120,35 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
         None=>{return ;}
     };
     cmd.defer(&ctx.http).await.unwrap();
+    let data = SaveJudge::get_save(cmd).await;
+    if data.files.len()==0{
+        reg.error.change_error("no valid file detected".to_string(), "transfer save","please rename your save file properly and dont send any large file".to_string());
+        reg.error.log_slash_defer(cmd, false).await;
+        return ;
+    }
+    match data.save_to_file().await{
+        Ok(_)=>{
+            let ch = ChannelId(init.log_channel.transfer_channel);
+            if let Err(why) = ch.send_message(&ctx.http, |m|{
+                m.set_embed(data.make_embed()).components(|c|c.add_action_row(data.make_button()))
+            }).await{
+                reg.error.log_error_channel().await;
+                reg.error.change_error(why.to_string(), "send save to judge", "sorry you need to report this so you could reset your cooldown".to_string());
+            }
+        }
+        Err(why)=>{
+            reg.error.change_error(why.to_string(), "saving file to folder", "windows issue".to_string());
+            reg.error.log_slash_defer(cmd, false).await;
+            return ;
+        }
+    }
     match reg.pg.transfer_cd().await{
         Ok(x)=>{
             if x.0{
-                let data = SaveJudge::get_save(cmd).await;
-                if data.files.len()==0{
-                    reg.error.change_error("no valid file detected".to_string(), "transfer save","please rename your save file properly and dont send any large file, also ask admin to reset your cooldown if you want to try again".to_string());
-                    reg.error.log_slash_defer(cmd, false).await;
-                    return ;
-                }
                 if let Err(why)=cmd.edit_original_interaction_response(&ctx.http, |m|{
                     m.add_embed(data.make_embed())
                 }).await{
                     reg.error.discord_error(why.to_string(), "transfer response").await;
-                }
-                match data.save_to_file().await{
-                    Ok(_)=>{
-                        let ch = ChannelId(init.log_channel.transfer_channel);
-                        if let Err(why) = ch.send_message(&ctx.http, |m|{
-                            m.set_embed(data.make_embed()).components(|c|c.add_action_row(data.make_button()))
-                        }).await{
-                            reg.error.change_error(why.to_string(), "send save to judge", "sorry you need to report this so you could reset your cooldown".to_string());
-                            reg.error.log_error_channel().await;
-                        }
-                    }
-                    Err(why)=>{
-                        reg.error.change_why(why.to_string());
-                        reg.error.log_slash_defer(cmd, false).await;
-                    }
                 }
 
             }else {
