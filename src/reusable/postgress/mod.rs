@@ -3,6 +3,7 @@ use super::config::Init;
 
 pub mod card;
 pub mod account;
+pub mod server;
 
 #[derive(Debug)]
 pub struct PgConn<'a> {
@@ -21,6 +22,10 @@ impl<'a> PgConn<'a> {
     }
     pub async fn close(&mut self){
         self.pool.close().await
+    }
+    pub async fn re_connect(&mut self)->Result<(), sqlx::Error>{
+        self.pool = connection(self.init).await?;
+        Ok(())
     }
 }
 

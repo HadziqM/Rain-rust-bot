@@ -175,6 +175,8 @@ just dont fill the actual file with my comment
     "err_channel":1031774270512169070,         <- fill with channel ID for bot to send
     "account_channel":1031774270512169070,     <- fill with channel ID for bot to send
     "transfer_channel":1031774270512169070,    <- fill with channel ID for bot to send
+    "info_channel":1031774270512169070,        <- info server channel ID
+    "info_channel_msg":1068895305472417792,    <- info server channel message id
     "moderation_channel":0
    },
   "server_channel": {

@@ -5,7 +5,7 @@ use crate::commands;
 use crate::Init;
 
 
-pub async fn ready(ctx:Context, ready:Ready, init:&Init){
+pub async fn ready(ctx:&Context, ready:Ready, init:&Init){
     let user = UserId(init.discord.author_id).to_user(&ctx.http).await.unwrap();
     println!("----------------------------------------------------------------");
     println!("-------------------------- START -------------------------------");

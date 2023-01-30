@@ -59,6 +59,8 @@ pub struct LogChannels {
     pub(crate) err_channel: u64,
     pub(crate) account_channel: u64,
     pub(crate) transfer_channel: u64,
+    pub(crate) info_channel: u64,
+    pub(crate) info_channel_msg: u64,
     pub(crate) moderation_channel: u64,
 }
 

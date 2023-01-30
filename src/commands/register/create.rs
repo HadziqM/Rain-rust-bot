@@ -40,7 +40,7 @@ impl<'a,'b> RegisterAcknowledged<'a,'b>{
                     ("🆔 User Id",&format!("`{}`",self.uid),false)
                 ]).author(|a|a.name(self.user.display_name()).icon_url(self.user.face()))
                 .colour(color("00", "ff", "00"))
-                .image(server.banner_url().unwrap_or("https://media.discordapp.net/attachments/1068440173479739393/1068458599627620392/cachedImage.png?width=807&height=455".to_string()).as_str())
+                .image("https://media.discordapp.net/attachments/1068440173479739393/1068458599627620392/cachedImage.png?width=807&height=455")
             })
         }).await{
             self.err.change_error(why.to_string(), "log user create", "sorry connection problem we cant send your greeting message".to_string());

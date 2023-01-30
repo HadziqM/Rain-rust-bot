@@ -5,6 +5,7 @@ use crate::AppReg;
 pub mod card;
 pub mod save;
 pub mod transfer;
+pub mod change;
 
 pub fn reg()->Vec<CreateApplicationCommand>{
     let mut file = CreateApplicationCommand::default();
