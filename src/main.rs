@@ -14,7 +14,6 @@ use serenity::prelude::*;
 use event::Handler;
 
 
-
 #[tokio::main]
 async fn main() {
     let intents = GatewayIntents::GUILDS | GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
