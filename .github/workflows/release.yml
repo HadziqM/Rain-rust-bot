@@ -24,7 +24,7 @@ jobs:
         run: cargo build --release
       - name: rename windows config and move exutable
         if: matrix.platform == 'windows-latest'
-        run: ren ./config.json.example config.json&&copy ./target/release/rain-bot.exe .&&mkdir save&&cd save&&type nul > windows_suck.txt
+        run: ren ./config.json.example config.json&&copy ./target/release/rain-bot.exe .
       - name: rename linux and mac config and move exutable
         if: matrix.platform != 'windows-latest'
         run: mv ./config.json.example config.json&&cp ./target/release/rain-bot .&&mkdir save&&touch ./save/this_is_save_folder.txt
