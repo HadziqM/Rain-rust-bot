@@ -1,6 +1,12 @@
 use std::{path::{Path, PathBuf}, io::Cursor};
-use image::{ImageError, Rgb, ImageBuffer};
+use image::{ImageError, Rgb, ImageBuffer, RgbImage};
 use rusttype::Font;
+use image::imageops::{FilterType,resize};
+
+pub struct GachaData{
+    pub result:GachaR,
+    pub text:String
+}
 
 pub struct GachaImage{
     rec:Rectangle,
@@ -55,7 +61,7 @@ impl Rectangle{
             }
         };
         let read = image::io::Reader::new(Cursor::new(bytes)).with_guessed_format()?.decode()?;
-        let img = read.resize_exact(radius*2+1, radius*2+1, image::imageops::FilterType::Nearest).to_rgb8();
+        let img = read.resize_exact(radius*2+1, radius*2+1,FilterType::Nearest).to_rgb8();
         Ok(Some(Rectangle { radius, off_x, off_y, img }))
     }
     fn get_rbg_pixel(&self,x:u32,y:u32)->Rgb<u8>{
@@ -80,10 +86,10 @@ impl GachaImage {
     }
     fn get_x(&self,text:&str)->i32{
         let len = text.len() as i32;
-        386-len*20/2
+        386-len*16/2
     }
-    async fn test_image(&self,x:GachaR,text:&str)->Result<(),ImageError>{
-        let mut image =  image::open(&x.path())?.to_rgb8();
+    async fn image_edit(&self,gacha:&GachaData)->Result<ImageBuffer<Rgb<u8>,Vec<u8>>,ImageError>{
+        let mut image =  image::open(&gacha.result.path())?.to_rgb8();
         //draw photo profile to image
         for (x,y,px) in image.enumerate_pixels_mut(){
             if self.rec.is_in_area(x, y){
@@ -93,11 +99,30 @@ impl GachaImage {
         //draw text to image
         let res = imageproc::drawing::draw_text(&image,
             Rgb([255,255,255]),
-            self.get_x(text), 510,
+            self.get_x(&gacha.text), 510,
             rusttype::Scale { x: 50.0, y: 50.0 }
-            ,&self.font,text);
-        res.save("test.jpg")?;
-        Ok(())
+            ,&self.font,&gacha.text);
+        Ok(res)
+    }
+    pub async fn multi_pull(&self,gachas:Vec<GachaData>)->Result<Vec<u8>,ImageError>{
+        let mut img:RgbImage = ImageBuffer::new(1028, 615);
+        let mut all_buff = Vec::new();
+        for i in &gachas{
+            let res = &self.image_edit(i).await?;
+            all_buff.push(resize(res,258,206,FilterType::Nearest))
+        }
+        for (x,y,px) in img.enumerate_pixels_mut(){
+            let index:usize = (x as usize/257)+(y as usize/205)*4;
+            println!("{index},{x},{y}");
+            let x_position = x as usize - ((index % 4)*257);
+            let y_position = y as usize - ((index / 4)*205);
+            *px = all_buff[index].get_pixel(x_position as u32, y_position as u32).to_owned()
+        }
+        println!("{}",all_buff.len());
+        Ok(img.as_raw().to_owned())
+    }
+    pub async fn single_pull(&self,gacha:&GachaData)->Result<Vec<u8>,ImageError>{
+        Ok(self.image_edit(gacha).await?.as_raw().to_owned())
     }
 }
 
@@ -107,7 +132,11 @@ mod testing{
 
     #[tokio::test()]
     async fn test_edit() {
+        let mut cev = Vec::new();
+        for _ in 0..12{
+            cev.push(GachaData{result:GachaR::UR,text:"Spirit 犬 Slash VIIx99".to_owned()})
+        }
         let x = GachaImage::new("https://media.discordapp.net/attachments/998783824710344755/1023057468667998228/hello.png").await.unwrap();
-        x.test_image(GachaR::SSR,"Spirit Slash VIIx99").await.unwrap();
+        x.multi_pull(cev).await.unwrap();
     }
 }
