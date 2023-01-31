@@ -113,12 +113,10 @@ impl GachaImage {
         }
         for (x,y,px) in img.enumerate_pixels_mut(){
             let index:usize = (x as usize/257)+(y as usize/205)*4;
-            println!("{index},{x},{y}");
             let x_position = x as usize - ((index % 4)*257);
             let y_position = y as usize - ((index / 4)*205);
             *px = all_buff[index].get_pixel(x_position as u32, y_position as u32).to_owned()
         }
-        println!("{}",all_buff.len());
         Ok(img.as_raw().to_owned())
     }
     pub async fn single_pull(&self,gacha:&GachaData)->Result<Vec<u8>,ImageError>{
