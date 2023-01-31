@@ -74,7 +74,7 @@ impl GachaImage {
         Ok(GachaImage { rec, font })
     }
     async fn load_font()->Font<'static>{
-        let path = Path::new(".").join("icon").join("Itim-Regular.ttf");
+        let path = Path::new(".").join("icon").join("NotoSerifJP-Regular.otf");
         let data = tokio::fs::read(&path).await;
         Font::try_from_vec(data.unwrap()).unwrap()
     }
