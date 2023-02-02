@@ -250,3 +250,8 @@ the implemented command right now
    - `/change_password` to change password
    - `/check` to check own username and id
    - `/create` to create blank account on MHFZ
+
+## For developer
+`senpai` branch is used for release candidate and you can clone from there</br>
+`kohai` branch is used for development, you can pull request there</br>
+`sensei` branch is used for release, solely for building exutable and github action
