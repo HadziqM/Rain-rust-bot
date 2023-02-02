@@ -123,7 +123,7 @@ impl Gacha{
 }
 fn create_embed(user:&User,pg:&GachaPg)->CreateEmbed{
     let mut emb = CreateEmbed::default();
-    emb.title("Mhfz Gacha Result").description(format!("Pity Count: {}\nTicket Remaining: {}",pg.pity,pg.ticket)).author(|a|a.name(user.name).icon_url(user.face())).image("attachment://gacha.jpg");
+    emb.title("Mhfz Gacha Result").description(format!("Pity Count: {}\nTicket Remaining: {}",pg.pity,pg.ticket)).author(|a|a.name(&user.name).icon_url(user.face())).image("attachment://gacha.jpg");
     emb
 }
 pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init,multi:bool){
@@ -182,7 +182,7 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init,mult
                 reg.error.pgcon_error_defer(why.to_string(), "sending distribution", cmd).await;
                 return reg.pg.close().await;
             }
-            let att = AttachmentType::Bytes { data:Cow::from(x), filename:"gacha.jpg".to_string() };
+            let _att = AttachmentType::Bytes { data:Cow::from(x), filename:"gacha.jpg".to_string() };
             let embed = create_embed(&cmd.user, &g_pg);
             if let Err(why)=cmd.edit_original_interaction_response(&ctx.http, |m|{
                 m.add_embed(embed)
