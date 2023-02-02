@@ -45,13 +45,15 @@ impl<'a> Server<'a> {
     }
     fn build_embed(&self,serv:Vec<Servers>)->CreateEmbed{
         let mut field = Vec::new();
+        let mut pc = 0;
         for x in &serv{
             let z = format!("Description :{}\nPlayer_Count: {}\nLand: {}"
                ,&x.description,x.cp,x.land);
             field.push((&x.name,z,true));
+            pc += x.cp
         }
         let mut emb = CreateEmbed::default();
-        emb.title("Server Status").description(&format!("Mhfz Server Status updated <t:{}:R>",SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs()))
+        emb.title("Server Status").description(&format!("Mhfz Server Status updated <t:{}:R>\nPlayer Count Total = {pc}",SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs()))
         .fields(field).color(Color::Random.throw());
         emb
     }
