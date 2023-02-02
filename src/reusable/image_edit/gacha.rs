@@ -8,11 +8,11 @@ pub struct GachaData{
     pub result:GachaR,
     pub text:String
 }
-
 pub struct GachaImage{
     rec:Rectangle,
     font:Font<'static>
 }
+#[derive(Clone)]
 pub enum GachaR{
     R,
     SR,
