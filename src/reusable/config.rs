@@ -62,6 +62,7 @@ pub struct LogChannels {
     pub(crate) info_channel: u64,
     pub(crate) info_channel_msg: u64,
     pub(crate) moderation_channel: u64,
+    pub(crate) erupe_channel: u64,
 }
 
 #[derive(Debug,Deserialize,Clone)]

@@ -1,6 +1,7 @@
-pub mod interaction;
-pub mod ready;
-pub mod paralel;
+mod interaction;
+mod ready;
+mod paralel;
+mod log;
 
 
 use std::time::Duration;
@@ -31,6 +32,12 @@ impl EventHandler for Handler{
     async fn ready(&self, ctx:Context, ready:Ready){
         ready::ready(&ctx, ready,&self.config).await;
         let init = self.config.clone();
+        tokio::spawn(async move {
+            loop {
+                paralel::paralel_thread(&ctx, &init).await;
+                tokio::time::sleep(Duration::from_secs(60)).await;
+            }
+        });
         tokio::spawn(async move {
             loop {
                 paralel::paralel_thread(&ctx, &init).await;
