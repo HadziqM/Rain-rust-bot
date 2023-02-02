@@ -1,7 +1,9 @@
 use std::path::Path;
 
 use serde::Deserialize;
-use crate::reusable::image_edit::gacha::{GachaData, GachaR};
+use serenity::{prelude::Context, model::prelude::interaction::application_command::ApplicationCommandInteraction};
+use crate::reusable::image_edit::gacha::{GachaData, GachaR, GachaImage};
+use crate::{Init,Register};
 use rand::prelude::*;
 
 #[derive(Debug,Deserialize)]
@@ -90,4 +92,28 @@ impl Gacha{
         ssr2.shuffle(&mut thread);
         GachaData{text:ssr2[0].to_owned(),result:GachaR::SSR}
     }
+}
+pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init,multi:bool){
+    let mut reg =match Register::default(ctx, cmd, init, "single pull", false).await{
+        Some(x)=>x,
+        None=>{return;}
+    };
+    let gacha = Gacha::new().await;
+    let image = match GachaImage::new(&cmd.user.static_avatar_url()
+        .unwrap_or(cmd.user.default_avatar_url())).await{
+            Ok(x)=>x,
+            Err(why)=>{
+                reg.error.change_error(why.to_string(), "image init", "please report to admin".to_string());
+                reg.error.log_slash(cmd, false).await;
+                return;
+            }
+        };
+    let raw =match image.single_pull(&gacha.pull()).await{
+        Ok(x)=>x,
+        Err(why)=>{
+            reg.error.change_error(why.to_string(), "edit image", "please report".to_string());
+            reg.error.log_slash(cmd, true).await;
+            return;
+        }
+    };
 }

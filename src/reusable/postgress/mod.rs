@@ -4,6 +4,7 @@ use super::config::Init;
 pub mod card;
 pub mod account;
 pub mod server;
+pub mod gacha;
 
 #[derive(Debug)]
 pub struct PgConn<'a> {
