@@ -4,6 +4,7 @@ use serenity::{prelude::Context, model::{prelude::{ChannelId, Message, UserId}, 
 use crate::{Init,PgConn,ErrorLog};
 use crate::reusable::postgress::server::Servers;
 use crate::reusable::utils::Color;
+use super::log::logging;
 
 
 struct Server<'a>{
@@ -57,18 +58,19 @@ impl<'a> Server<'a> {
         .fields(field).color(Color::Random.throw());
         emb
     }
-    async fn edit_msg(&mut self){
+    async fn edit_msg(&mut self)->i32{
         if let Err(why)=self.pg.re_connect().await{
             self.err.pgcon_error_ch(why.to_string(), "reconnect pgcon").await;
-            return;
+            return 0;
         }
         let z = match self.pg.get_server().await{
             Ok(x)=>x,
             Err(why)=>{
                 self.err.pgcon_error_ch(why.to_string(), "getting server data").await;
-                return;
+                return 0;
             }
         };
+        let pc  = z.iter().map(|e|e.cp).sum::<i32>();
         let embed = self.build_embed(z);
         if let Err(why)=self.msg.edit(&self.ctx.http, |m|{
             m.set_embed(embed)
@@ -76,13 +78,16 @@ impl<'a> Server<'a> {
             self.err.discord_error(why.to_string(), "editing message paralel loop").await;
         }
         self.pg.close().await;
+        pc
     }
 }
 
+static mut CURRENT_PLAYER:i32 = 0;
 
-
-
+//event handler will spawn a thread calling this function every 5 minutes
 pub async fn paralel_thread(ctx:&Context,init:&Init){
+    //send log file to discord channel and emptying the log
+    let ch = logging(ctx, init).await;
     let user = match UserId(init.discord.author_id).to_user(&ctx.http).await{
         Ok(x)=>x,
         Err(why)=>{
@@ -94,5 +99,20 @@ pub async fn paralel_thread(ctx:&Context,init:&Init){
         Some(x)=>x,
         None=>{return;}
     };
-    serv.edit_msg().await;
+    let cp;
+    //run function to update server status on info channel
+    let now = serv.edit_msg().await;
+    //sorry to use unsafe, since rust doesnt support global variable
+    //and this thread is completely detached from main thread
+    //so we cant get access to Handler struct
+    unsafe{
+        cp = CURRENT_PLAYER;
+        CURRENT_PLAYER = now;
+    }
+    //if the current player is 0 and is not 0 before, announce server crash
+    if now==0 && cp != 0{
+        if let Err(why)= ch.send_message(&ctx.http, |m|m.content("SERVER MIGHT CRASH JUST ABOUT NOW")).await{
+            println!("cant send emergency message {why:?}");
+        }
+    }
 }

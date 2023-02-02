@@ -32,18 +32,10 @@ impl EventHandler for Handler{
     async fn ready(&self, ctx:Context, ready:Ready){
         ready::ready(&ctx, ready,&self.config).await;
         let init = self.config.clone();
-        let ctx2 = ctx.clone();
         tokio::spawn(async move {
             loop {
                 paralel::paralel_thread(&ctx, &init).await;
-                tokio::time::sleep(Duration::from_secs(60)).await;
-            }
-        });
-        let init2 = self.config.clone();
-        tokio::spawn(async move {
-            loop {
-                log::logging(&ctx2, &init2).await;
-                tokio::time::sleep(Duration::from_secs(60*10)).await;
+                tokio::time::sleep(Duration::from_secs(60*5)).await;
             }
         });
     }

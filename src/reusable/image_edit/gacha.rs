@@ -3,6 +3,7 @@ use image::{ImageError, Rgb, ImageBuffer, RgbImage};
 use rusttype::Font;
 use image::imageops::{FilterType,resize};
 
+#[derive(Clone)]
 pub struct GachaData{
     pub result:GachaR,
     pub text:String

@@ -5,13 +5,12 @@ use serenity::{prelude::Context, model::prelude::{UserId, ChannelId}};
 use crate::{Init,ErrorLog};
 
 async fn emptying_log(path:&Path)->Result<(),tokio::io::Error>{
-    let file = tokio::fs::File::open(path).await?;
-    file.set_len(0).await?;
-    file.sync_all().await?;
+    tokio::fs::remove_file(path).await?;
+    tokio::fs::File::create(path).await?;
     Ok(())
 }
 
-pub async fn logging(ctx:&Context,init:&Init){
+pub async fn logging(ctx:&Context,init:&Init)->ChannelId{
     let path = Path::new(".").join("log.txt");
     let user =UserId(init.discord.author_id).to_user(&ctx.http).await.unwrap();
     let mut err = ErrorLog::new(ctx,init,&user).await;
@@ -26,4 +25,5 @@ pub async fn logging(ctx:&Context,init:&Init){
         err.change_error(why.to_string(), "empetying log", "please do it manually".to_string());
         err.log_error_channel().await;
     }
+    channel
 }
