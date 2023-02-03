@@ -1,11 +1,7 @@
-use std::borrow::Cow;
 use std::path::Path;
-
 use serde::Deserialize;
 use serenity::builder::CreateEmbed;
-use serenity::model::prelude::AttachmentType;
-use serenity::model::user::User;
-use serenity::{prelude::Context, model::prelude::interaction::application_command::ApplicationCommandInteraction};
+use serenity::all::*;
 use crate::reusable::image_edit::gacha::{GachaData, GachaR, GachaImage};
 use crate::reusable::postgress::gacha::GachaPg;
 use crate::{Init,Register};
@@ -122,11 +118,10 @@ impl Gacha{
     }
 }
 fn create_embed(user:&User,pg:&GachaPg)->CreateEmbed{
-    let mut emb = CreateEmbed::default();
-    emb.title("Mhfz Gacha Result").description(format!("Pity Count: {}\nTicket Remaining: {}",pg.pity,pg.ticket)).author(|a|a.name(&user.name).icon_url(user.face())).image("attachment://gacha.jpg");
-    emb
+    CreateEmbed::new().title("Mhfz Gacha Result").description(format!("Pity Count: {}\nTicket Remaining: {}",pg.pity,pg.ticket))
+        .author(CreateEmbedAuthor::new(&user.name).icon_url(user.face())).image("attachment://gacha.jpg")
 }
-pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init,multi:bool){
+pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init,multi:bool){
     let mut reg =match Register::default(ctx, cmd, init, "single pull", false).await{
         Some(x)=>x,
         None=>{return;}
@@ -182,11 +177,10 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init,mult
                 reg.error.pgcon_error_defer(why.to_string(), "sending distribution", cmd).await;
                 return reg.pg.close().await;
             }
-            let _att = AttachmentType::Bytes { data:Cow::from(x), filename:"gacha.jpg".to_string() };
+            let att = CreateAttachment::bytes(x, "gacha.jpg");
             let embed = create_embed(&cmd.user, &g_pg);
-            if let Err(why)=cmd.edit_original_interaction_response(&ctx.http, |m|{
-                m.add_embed(embed)
-            }).await{
+            if let Err(why)=cmd.edit_response(&ctx.http,EditInteractionResponse::new()
+                .embed(embed)).await{
                 reg.error.discord_error(why.to_string(), "sending gacha result").await;
                 return reg.pg.close().await;
             }
