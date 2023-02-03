@@ -64,14 +64,13 @@ impl Card{
     }
 
     fn crete_embed(&self,user:&User)->CreateEmbed{
-        let mut emb = CreateEmbed::new();
-        emb.title(self.name.as_str()).fields(vec![
+        CreateEmbed::new()
+        .title(self.name.as_str()).fields(vec![
         ("User",&format!("username: {}\nuser_id: {}\nchar_id: {}\nlast_login: {}",&self.username,self.user_id,self.char_id,self.last_login()),false),
         ("Character",&format!("HR: {}\nGR: {}",self.hrp(),self.gr),false),
         ("Guild",&format!("name: {}\nguild_id: {}",&self.g_name(),&self.g_id()),false)
     ]).footer(CreateEmbedFooter::new(format!("owned by {}",user.name)).icon_url(user.face()))
-        .colour(color("ff", "55", "00")).thumbnail(&self.get_path());
-        emb
+        .colour(color("ff", "55", "00")).thumbnail(&self.get_path())
     }
 
     pub fn card(&self,user:&User)->CreateInteractionResponse{

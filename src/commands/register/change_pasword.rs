@@ -3,7 +3,7 @@ use serenity::all::*;
 use crate::{PgConn,ErrorLog,Init,Components};
 
 pub async fn run(ctx:&Context, cmd:&CommandInteraction,init:&Init) {
-    let option = cmd.data.options
+    let option = &cmd.data.options
         .get(0)
         .expect("idk").value;
     let mut error = ErrorLog::new(ctx, init,&cmd.user).await;

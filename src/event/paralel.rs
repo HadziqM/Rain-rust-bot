@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use std::{time::SystemTime, num::NonZeroU64};
 
 use serenity::{prelude::Context, model::{prelude::{ChannelId, Message, UserId}, user::User}, builder::{CreateEmbed, EditMessage}};
 use crate::{Init,PgConn,ErrorLog};
@@ -16,7 +16,7 @@ struct Server<'a>{
 
 impl<'a> Server<'a> {
     async fn new(init:&'a Init,ctx:&'a Context,user:&'a User)->Option<Server<'a>>{
-        let channel = ChannelId(init.log_channel.info_channel);
+        let channel = ChannelId(NonZeroU64::new(init.log_channel.info_channel).unwrap());
         let mut err = ErrorLog::new(ctx, init,user).await;
         err.change_error("idk".to_string(), "paralel loop","dont worry its not important".to_string());
         let msg =match channel.message(&ctx.http, init.log_channel.info_channel_msg).await{
@@ -48,10 +48,9 @@ impl<'a> Server<'a> {
             field.push((&x.name,z,true));
             pc += x.cp
         }
-        let mut emb = CreateEmbed::new();
-        emb.title("Server Status").description(&format!("Mhfz Server Status updated <t:{}:R>\nPlayer Count Total = {pc}",SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs()))
-        .fields(field).color(Color::Random.throw());
-        emb
+        CreateEmbed::new()
+        .title("Server Status").description(&format!("Mhfz Server Status updated <t:{}:R>\nPlayer Count Total = {pc}",SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs()))
+        .fields(field).color(Color::Random.throw())
     }
     async fn edit_msg(&mut self)->i32{
         let z = match self.pg.get_server().await{
@@ -75,7 +74,7 @@ static mut CURRENT_PLAYER:i32 = 0;
 
 //event handler will spawn a thread calling this function every 5 minutes
 pub async fn paralel_thread(ctx:&Context,init:&Init){
-    let user = match UserId(init.discord.author_id).to_user(&ctx.http).await{
+    let user = match UserId(NonZeroU64::new(init.discord.author_id).unwrap()).to_user(&ctx.http).await{
         Ok(x)=>x,
         Err(why)=>{
             println!("cant get user {why}");
@@ -100,7 +99,7 @@ pub async fn paralel_thread(ctx:&Context,init:&Init){
     //and dm wish the log
     let wish;
     if now==0 && cp != 0{
-        wish = Some(UserId(119094696487288833).to_user(&ctx.http).await.unwrap());
+        wish = Some(UserId(NonZeroU64::new(119094696487288833).unwrap()).to_user(&ctx.http).await.unwrap());
     }else{
         wish = None
     }

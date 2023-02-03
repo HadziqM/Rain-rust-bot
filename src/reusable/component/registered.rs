@@ -72,7 +72,7 @@ impl<'a> Register<'a> {
                 return None;
             }
         };
-        let mut reply =col.await_component_interactions(ctx).timeout(Duration::from_secs(60*3)).build();
+        let mut reply =col.await_component_interactions(ctx).timeout(Duration::from_secs(60*3)).stream();
         while let Some(pat) = reply.next().await {
             let id = &pat.data.custom_id;
             if cmd.user != pat.user{
@@ -105,7 +105,6 @@ impl<'a> Register<'a> {
                 break;
             }
         }
-        reply.stop();
         if let Err(why)=col.delete(&ctx.http).await{
             error.discord_error(why.to_string(), "deleting bind message").await;
         };

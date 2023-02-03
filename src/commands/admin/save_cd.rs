@@ -6,13 +6,15 @@ async fn get(cmd:&CommandInteraction,ctx:&Context)->Option<User>{
     for i in &cmd.data.options{
         if let CommandOptionType::User=&i.kind(){
             if let CommandDataOptionValue::User(x) = i.value{
-                match x.to_user(&ctx.http).await{
+                let r = match x.to_user(&ctx.http).await{
                     Ok(y)=>Some(y),
-                    Err(_)=>None
-                }
+                    Err(_)=>{continue;}
+                };
+                return r;
             }
         }
     }
+    None
 }
 pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
     let mut error = ErrorLog::new(ctx, init, &cmd.user).await;

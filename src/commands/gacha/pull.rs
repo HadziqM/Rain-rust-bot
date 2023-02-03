@@ -180,7 +180,7 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init,multi:bool){
             let att = CreateAttachment::bytes(x, "gacha.jpg");
             let embed = create_embed(&cmd.user, &g_pg);
             if let Err(why)=cmd.edit_response(&ctx.http,EditInteractionResponse::new()
-                .embed(embed)).await{
+                .embed(embed).new_attachment(att)).await{
                 reg.error.discord_error(why.to_string(), "sending gacha result").await;
                 return reg.pg.close().await;
             }

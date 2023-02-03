@@ -4,37 +4,37 @@ impl SaveData{
     fn get_attachment(&self)->Vec<CreateAttachment>{
         let mut x = Vec::new();
         if let Some(y)=&self.savedata{
-            x.push(CreateAttachment::bytes(y, "savedata.bin"))
+            x.push(CreateAttachment::bytes(y.to_owned(), "savedata.bin"))
         }
         if let Some(y)=&self.partner{
-            x.push(CreateAttachment::bytes(y, "partner.bin"))
+            x.push(CreateAttachment::bytes(y.to_owned(), "partner.bin"))
         }
         if let Some(y)=&self.platebox{
-            x.push(CreateAttachment::bytes(y, "platebox.bin"))
+            x.push(CreateAttachment::bytes(y.to_owned(), "platebox.bin"))
         }
         if let Some(y)=&self.skin_hist{
-            x.push(CreateAttachment::bytes(y, "skin_hist.bin"))
+            x.push(CreateAttachment::bytes(y.to_owned(), "skin_hist.bin"))
         }
         if let Some(y)=&self.platedata{
-            x.push(CreateAttachment::bytes(y, "platedata.bin"))
+            x.push(CreateAttachment::bytes(y.to_owned(), "platedata.bin"))
         }
         if let Some(y)=&self.otomoairou{
-            x.push(CreateAttachment::bytes(y, "otomoairou.bin"))
+            x.push(CreateAttachment::bytes(y.to_owned(), "otomoairou.bin"))
         }
         if let Some(y)=&self.decomyset{
-            x.push(CreateAttachment::bytes(y, "decomyset.bin"))
+            x.push(CreateAttachment::bytes(y.to_owned(), "decomyset.bin"))
         }
         if let Some(y)=&self.hunternavi{
-            x.push(CreateAttachment::bytes(y, "hunternavi.bin"))
+            x.push(CreateAttachment::bytes(y.to_owned(), "hunternavi.bin"))
         }
         if let Some(y)=&self.platemyset{
-            x.push(CreateAttachment::bytes(y, "platemyset.bin"))
+            x.push(CreateAttachment::bytes(y.to_owned(), "platemyset.bin"))
         }
         if let Some(y)=&self.rengokudata{
-            x.push(CreateAttachment::bytes(y, "rengokudata.bin"))
+            x.push(CreateAttachment::bytes(y.to_owned(), "rengokudata.bin"))
         }
         if let Some(y)=&self.savemercenary{
-            x.push(CreateAttachment::bytes(y, "savemercenary.bin"))
+            x.push(CreateAttachment::bytes(y.to_owned(), "savemercenary.bin"))
         }
         x
     }

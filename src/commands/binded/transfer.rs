@@ -1,10 +1,11 @@
-use serenity::all::{CommandInteraction, CommandOptionType, CommandDataOptionValue, Attachment, ButtonStyle, ChannelId, ComponentInteraction, UserId};
+use serenity::all::{CommandInteraction, CommandOptionType, CommandDataOptionValue, ButtonStyle, ChannelId, ComponentInteraction, UserId};
 use serenity::builder::{CreateEmbed, CreateEmbedAuthor, CreateActionRow, CreateMessage, EditInteractionResponse};
 use serenity::prelude::Context;
 use tokio::io::AsyncWriteExt;
 use tokio::fs::File;
 use crate::{Components,Init,Register,ErrorLog,PgConn};
 use crate::reusable::utils::Color;
+use std::num::NonZeroU64;
 use std::path::Path;
 
 pub struct FileSave{
@@ -22,10 +23,11 @@ impl<'a> SaveJudge<'a> {
             "platedata.bin","platemyset.bin","rengokudata.bin",
             "savemercenary.bin","skin_hist.bin"];
         let mut container = Vec::new();
+        let resolved = &cmd.data.resolved;
         for data in &cmd.data.options{
             if let CommandOptionType::Attachment= &data.kind(){
                 if let CommandDataOptionValue::Attachment(att)=data.value{
-                    let e = Attachment::from(att);
+                    let e = resolved.attachments.get(&att).unwrap().to_owned();
                     //only accept specifict filename and less than 5mb file 
                     if savelist.contains(&e.filename.as_str())&&e.size<5000000{
                         if let Ok(data)=e.download().await{
@@ -45,9 +47,8 @@ impl<'a> SaveJudge<'a> {
             x.push_str("\n");
         }
         x.push_str("```");
-        let mut emb = CreateEmbed::default();
-        emb.title("Save Result").description("The savefile result that already filtered by bot and will be judged by admin later, bot will dm you if savefile is approved by admin.\n**NOTES**\n```dont login into the game untill admin approve or disaprove it then bot dm you, while transfer process run and youare on game, the save file will take no effect, also allow dm permission to let bot dm you```").author(CreateEmbedAuthor::new(self.cmd.user.name).icon_url(self.cmd.user.face())).field("Filtered File(s)",x.as_str(), true).color(Color::Blue.throw());
-        emb
+        CreateEmbed::new()
+        .title("Save Result").description("The savefile result that already filtered by bot and will be judged by admin later, bot will dm you if savefile is approved by admin.\n**NOTES**\n```dont login into the game untill admin approve or disaprove it then bot dm you, while transfer process run and youare on game, the save file will take no effect, also allow dm permission to let bot dm you```").author(CreateEmbedAuthor::new(&self.cmd.user.name).icon_url(self.cmd.user.face())).field("Filtered File(s)",x.as_str(), true).color(Color::Blue.throw())
     }
     async fn save_to_file(&self)->Result<(),tokio::io::Error>{
         let save = Path::new(".").join("save");
@@ -121,8 +122,8 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
         None=>{return ;}
     };
     if let Err(why)=cmd.defer(&ctx.http).await{
-        reg.error.discord_error(why.to_string(), "defering save interaction")
-    }
+        reg.error.discord_error(why.to_string(), "defering save interaction").await
+    };
     let data = SaveJudge::get_save(cmd).await;
     if data.files.len()==0{
         reg.error.change_error("no valid file detected".to_string(), "transfer save","please rename your save file properly and dont send any large file".to_string());
@@ -131,9 +132,9 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
     }
     match data.save_to_file().await{
         Ok(_)=>{
-            let ch = ChannelId(init.log_channel.transfer_channel);
+            let ch = ChannelId(NonZeroU64::new(init.log_channel.transfer_channel).unwrap());
             if let Err(why) = ch.send_message(&ctx.http,CreateMessage::new()
-                .embed(data.make_embed()).components(data.make_button())).await{
+                .embed(data.make_embed()).components(vec![data.make_button()])).await{
                 reg.error.log_error_channel().await;
                 reg.error.change_error(why.to_string(), "send save to judge", "sorry you need to report this so you could reset your cooldown".to_string());
             }
@@ -176,7 +177,7 @@ pub async fn run_button(data:Vec<&str>,ctx:&Context,cmd:&ComponentInteraction,in
             return ;
         }
     };
-    let user = UserId(check.uid.parse::<u64>().unwrap()).to_user(&ctx.http).await.unwrap();
+    let user = UserId(NonZeroU64::new(check.uid.parse::<u64>().unwrap()).unwrap()).to_user(&ctx.http).await.unwrap();
     if check.accept{
         let files = match check.get_files().await{
             Ok(x)=>x,

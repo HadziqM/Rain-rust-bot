@@ -7,6 +7,7 @@ mod log;
 use std::time::Duration;
 
 use serenity::async_trait;
+use serenity::builder::{CreateMessage, CreateEmbed};
 use serenity::model::prelude::{Ready, Message, Interaction,Interaction::*};
 use serenity::prelude::*;
 use crate::reusable::config::*;
@@ -40,9 +41,7 @@ impl EventHandler for Handler{
     }
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.content==format!("{}test",self.config.discord.prefix) {
-            if let Err(why) = msg.channel_id.send_message(&ctx.http, |m|{
-                m.add_embed(|e|e.title("tested"))
-            }).await {
+            if let Err(why) = msg.channel_id.send_message(&ctx.http,CreateMessage::new().embed(CreateEmbed::new().title("tested"))).await {
                 println!("Error sending message: {:?}", why);
             }
         }
