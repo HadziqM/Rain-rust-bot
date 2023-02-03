@@ -1,27 +1,20 @@
-use serenity::{builder::CreateApplicationCommand, model::{prelude::command::CommandType, Permissions}};
+use serenity::{builder::CreateCommand, all::CommandType, model::Permissions};
+
 
 
 pub struct AppReg;
 
 impl AppReg{
-    pub fn user_context(name:&str)->CreateApplicationCommand{
-        let mut app = CreateApplicationCommand::default();
-        app.kind(CommandType::User).name(name);
-        app
+    pub fn user_context(name:&str)->CreateCommand{
+        CreateCommand::new(name).kind(CommandType::User)
     }
-    pub fn message_context(name:&str)->CreateApplicationCommand{
-        let mut app = CreateApplicationCommand::default();
-        app.kind(CommandType::Message).name(name);
-        app
+    pub fn message_context(name:&str)->CreateCommand{
+        CreateCommand::new(name).kind(CommandType::Message)
     }
-    pub fn normal_slash(name:&str,desc:&str)->CreateApplicationCommand{
-        let mut app = CreateApplicationCommand::default();
-        app.name(name).description(desc);
-        app
+    pub fn normal_slash(name:&str,desc:&str)->CreateCommand{
+        CreateCommand::new(name).description(desc)
     }
-    pub fn admin_slash(name:&str,desc:&str)->CreateApplicationCommand{
-        let mut app = CreateApplicationCommand::default();
-        app.name(name).description(desc).default_member_permissions(Permissions::ADMINISTRATOR);
-        app
+    pub fn admin_slash(name:&str,desc:&str)->CreateCommand{
+        CreateCommand::new(name).description(desc).default_member_permissions(Permissions::ADMINISTRATOR)
     }
 }

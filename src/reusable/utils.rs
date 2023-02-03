@@ -1,5 +1,5 @@
-use serenity::utils::Colour;
 use rand::{self, seq::SliceRandom};
+use serenity::all::Colour;
 
 pub enum Color{
     Red,

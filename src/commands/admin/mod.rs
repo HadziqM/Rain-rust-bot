@@ -1,4 +1,5 @@
-use serenity::{builder::CreateApplicationCommand, model::prelude::command::CommandOptionType};
+use serenity::builder::{CreateCommand, CreateCommandOption};
+
 use crate::AppReg;
 
 
@@ -6,9 +7,10 @@ pub mod interface;
 pub mod save_cd;
 
 
-pub fn reg()->Vec<CreateApplicationCommand>{
+pub fn reg()->Vec<CreateCommand>{
     let mut save = AppReg::admin_slash("reset_save_cd", "reset someone save cooldown");
-    save.create_option(|op|op.name("user").description("mention user you want to reset").kind(CommandOptionType::User).required(true));
+    let option = CreateCommandOption::new(serenity::all::CommandOptionType::User,"user","mention user you want to reset");
+    save.add_option(option);
     vec![
         AppReg::admin_slash("interface", "mhfz user interface"),
         save

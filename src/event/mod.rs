@@ -7,9 +7,8 @@ mod log;
 use std::time::Duration;
 
 use serenity::async_trait;
-use serenity::model::prelude::{Ready, Message};
+use serenity::model::prelude::{Ready, Message, Interaction,Interaction::*};
 use serenity::prelude::*;
-use serenity::model::application::interaction::{Interaction::*,Interaction};
 use crate::reusable::config::*;
 use interaction::*;
 
@@ -21,11 +20,11 @@ pub struct Handler{
 
 #[async_trait]
 impl EventHandler for Handler{
-    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
-        match interaction {
-            ModalSubmit(cmd)=>modal_command(&cmd.data.custom_id, &cmd, &ctx,&self.config).await,
-            ApplicationCommand(cmd) => slash_command(&cmd.data.name, &cmd,&ctx, &self.config).await,
-            MessageComponent(cmd) => button_command(&cmd.data.custom_id, &cmd,&ctx, &self.config).await,
+    async fn interaction_create(&self, ctx: Context, inter:Interaction) {
+        match inter {
+            Modal(cmd)=>modal_command(&cmd.data.custom_id, &cmd, &ctx,&self.config).await,
+            Command(cmd) => slash_command(&cmd.data.name, &cmd,&ctx, &self.config).await,
+            Component(cmd) => button_command(&cmd.data.custom_id, &cmd,&ctx, &self.config).await,
             _=>println!("unhandled interaction")
         }
     }

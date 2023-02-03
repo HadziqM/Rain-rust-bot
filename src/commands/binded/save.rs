@@ -63,7 +63,8 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
             if let Err(why)=cmd.user.direct_message(&ctx.http, |m|{
                 m.content("your save").add_files(dt.get_attachment())
             }).await{
-                reg.error.change_error(why.to_string(), "send dm_save", "maybe you need to enable dm".to_string())
+                reg.error.change_error(why.to_string(), "send dm_save", "maybe you need to enable dm".to_string());
+                reg.error.log_error_channel().await;
             }
             if let Err(why)=cmd.create_interaction_response(&ctx.http, |n|{
                 n.kind(InteractionResponseType::ChannelMessageWithSource)

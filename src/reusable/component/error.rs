@@ -1,11 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use serenity::builder::{CreateInteractionResponse, CreateEmbed};
-use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
-use serenity::model::prelude::interaction::modal::ModalSubmitInteraction;
-use serenity::model::prelude::{ChannelId, UserId};
-use serenity::model::prelude::interaction::InteractionResponseType::{*, self};
-use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
+use serenity::model::prelude::{ChannelId, UserId, InteractionResponseType};
 use serenity::model::user::User;
 use serenity::prelude::Context;
 
@@ -69,16 +65,16 @@ impl<'a> ErrorLog<'a>{
             println!("cant send error message to discord channel :{}",why)
         }
     }
-    fn interaction_response<'b,'c>(&'b self,m:&'c mut CreateInteractionResponse<'b>,ephemeral:bool,itype:InteractionResponseType)-> 
-    &'c mut CreateInteractionResponse<'b>{
-        m.kind(itype)
+    fn interaction_response(&self,m:&mut CreateInteractionResponse,ephemeral:bool)-> 
+    &mut CreateInteractionResponse{
+        m.kind(InteractionResponseType::ChannelMessageWithSource)
         .interaction_response_data(|msg|{
                 msg.ephemeral(ephemeral).add_file(&self.path).set_embed(self.make_embed())
             })
     }
     pub async fn log_slash(&self,cmd:&ApplicationCommandInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
-            self.interaction_response(m,ephemeral,ChannelMessageWithSource)).await{
+            self.interaction_response(m,ephemeral)).await{
             self.log_error_channel().await;
             println!("{why}");
         }
@@ -92,14 +88,14 @@ impl<'a> ErrorLog<'a>{
     }
     pub async fn log_button(&self,cmd:&MessageComponentInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
-            self.interaction_response(m,ephemeral,ChannelMessageWithSource)).await{
+            self.interaction_response(m,ephemeral)).await{
             self.log_error_channel().await;
             println!("{why}");
         }
     }
     pub async fn log_modal(&self,cmd:&ModalSubmitInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
-            self.interaction_response(m,ephemeral,ChannelMessageWithSource)).await{
+            self.interaction_response(m,ephemeral)).await{
             self.log_error_channel().await;
             println!("{why}");
         }

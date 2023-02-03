@@ -1,27 +1,19 @@
-use serenity::model::prelude::component::ButtonStyle;
-use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
+use serenity::all::{CommandInteraction, ButtonStyle};
+use serenity::builder::{CreateInteractionResponse, CreateInteractionResponseMessage, CreateEmbed, CreateActionRow};
 use serenity::prelude::Context;
-use serenity::model::prelude::interaction::InteractionResponseType;
 use crate::{Init,ErrorLog,Components};
 use crate::reusable::utils::color;
 
-pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
-    if let Err(why) = cmd.create_interaction_response(&ctx.http, |resp| {
-        resp.kind(InteractionResponseType::ChannelMessageWithSource)
-            .interaction_response_data(|msg|{
-                msg.embed(|emb|{
-                    emb.title("MHFZ user interface")
-                        .color(color("40", "ff", "40"))
-                        .description("button interface for mhfz player to make use of server's utility")
-                }).components(|c|{
-                        c.create_action_row(|r|{
-                            r.add_button(Components::normal_button("register", "register", ButtonStyle::Primary,"📝"))
-                            .add_button(Components::normal_button("DM Save", "dms", ButtonStyle::Secondary,"🔐"))
-                        })
-                    })
-            })
-    }).await{
-        let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
-        err.discord_error(why.to_string(), "interface command").await;
+pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
+    let emb = CreateEmbed::new().title("MHFZ user interface")
+        .color(color("40", "ff", "40"))
+        .description("button interface for mhfz player to make use of server's utility");
+    let arow = CreateActionRow::Buttons(
+        vec![Components::normal_button("register", "register", ButtonStyle::Primary, "📝"),
+             Components::normal_button("DM save", "dms", ButtonStyle::Success, "🔐")]
+        );
+    if let Err(why) = cmd.create_response(&ctx.http, CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
+                    .embed(emb).components(vec![arow]))).await{
+        println!("wth");
     }
 }

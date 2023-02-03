@@ -1,8 +1,10 @@
-use serenity::{model::prelude::interaction::{application_command::ApplicationCommandInteraction, message_component::MessageComponentInteraction, modal::ModalSubmitInteraction}, prelude::Context};
+use serenity::all::{CommandInteraction, ComponentInteraction, ModalInteraction};
+use serenity::prelude::Context;
+
 use crate::commands;
 use crate::reusable::config::Init;
 
-pub async fn slash_command(cmd_id:&str,cmd:&ApplicationCommandInteraction,ctx:&Context,hnd:&Init){
+pub async fn slash_command(cmd_id:&str,cmd:&CommandInteraction,ctx:&Context,hnd:&Init){
     match cmd_id{
         "interface"=>commands::admin::interface::run(ctx,cmd,hnd).await,
         "create"=>commands::register::create::run_slash(ctx,cmd,hnd).await,
@@ -17,7 +19,7 @@ pub async fn slash_command(cmd_id:&str,cmd:&ApplicationCommandInteraction,ctx:&C
         _=> {return;}
     }
 }
-pub async fn button_command(cmd_id:&str,cmd:&MessageComponentInteraction,ctx:&Context,hnd:&Init){
+pub async fn button_command(cmd_id:&str,cmd:&ComponentInteraction,ctx:&Context,hnd:&Init){
     //if its a dynamic id's
     let dynamic = cmd_id.split("_").collect::<Vec<_>>();
     if dynamic.contains(&"save"){
@@ -32,7 +34,7 @@ pub async fn button_command(cmd_id:&str,cmd:&MessageComponentInteraction,ctx:&Co
         }
     }
 }
-pub async fn modal_command(cmd_id:&str,cmd:&ModalSubmitInteraction,ctx:&Context,hnd:&Init){
+pub async fn modal_command(cmd_id:&str,cmd:&ModalInteraction,ctx:&Context,hnd:&Init){
     match cmd_id{
         "register_m"=>commands::register::create::modal_register(ctx,cmd,hnd).await,
         _=>{return;}
