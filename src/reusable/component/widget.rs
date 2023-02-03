@@ -1,5 +1,5 @@
 use serenity::all::ButtonStyle;
-use serenity::builder::CreateButton;
+use serenity::builder::{CreateButton, CreateInteractionResponse, CreateInteractionResponseMessage};
 use serenity::model::prelude::ReactionType;
 
 use super::Components;
@@ -13,6 +13,11 @@ impl Components{
             b.emoji(emj);
         }
         b
+    }
+    pub fn interaction_response(content:&str,ephemeral:bool)->CreateInteractionResponse{
+        CreateInteractionResponse::Message(
+            CreateInteractionResponseMessage::new().content(content).ephemeral(ephemeral)
+            )
     }
 }
 

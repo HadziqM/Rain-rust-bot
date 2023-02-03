@@ -8,9 +8,7 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
     };
     match reg.pg.get_card(reg.cid).await{
         Ok(card)=>{
-            if let Err(why)=cmd.create_interaction_response(&ctx.http, |m|{
-                card.card(m, &cmd.user)
-            }).await{
+            if let Err(why)=cmd.create_response(&ctx.http,card.card(&cmd.user)).await{
                 reg.error.change_error(why.to_string(), "card response", "connection problem".to_string());
                 reg.error.log_error_channel().await;
                 reg.pg.close().await;
@@ -23,7 +21,7 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
         }
     }
 }
-pub async fn run_user(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
+pub async fn run_user(ctx:&Context,cmd:&CommandInteraction,init:&Init){
     let mut err = ErrorLog::new(ctx, init, &cmd.user).await;
     let user =match cmd.data.resolved.users.iter().next(){
         Some((_id,u))=>u,
@@ -50,9 +48,7 @@ pub async fn run_user(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init
             }
             match pg.get_card(dt.cid).await{
                 Ok(card)=>{
-                    if let Err(why)=cmd.create_interaction_response(&ctx.http, |f|{
-                        card.card(f, &user)
-                    }).await{
+                    if let Err(why)=cmd.create_response(&ctx.http,card.card(&user)).await{
                         err.discord_error(why.to_string(), "show card").await;
                         return pg.close().await;
                     }

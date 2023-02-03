@@ -1,4 +1,6 @@
-use serenity::{model::prelude::{interaction::{application_command::{ApplicationCommandInteraction, CommandDataOptionValue}, InteractionResponseType, message_component::MessageComponentInteraction}, component::ButtonStyle, ChannelId, UserId}, builder::{CreateEmbed, CreateActionRow}, prelude::Context};
+use serenity::all::{CommandInteraction, CommandOptionType, CommandDataOptionValue, Attachment, ButtonStyle, ChannelId, ComponentInteraction, UserId};
+use serenity::builder::{CreateEmbed, CreateEmbedAuthor, CreateActionRow, CreateMessage, EditInteractionResponse};
+use serenity::prelude::Context;
 use tokio::io::AsyncWriteExt;
 use tokio::fs::File;
 use crate::{Components,Init,Register,ErrorLog,PgConn};
@@ -10,20 +12,21 @@ pub struct FileSave{
     pub bin:Vec<u8>
 }
 struct SaveJudge<'a> {
-    cmd: &'a ApplicationCommandInteraction,
+    cmd: &'a CommandInteraction,
     files:Vec<FileSave>
 }
 impl<'a> SaveJudge<'a> {
-    async fn get_save(cmd:&'a ApplicationCommandInteraction)->SaveJudge<'a>{
+    async fn get_save(cmd:&'a CommandInteraction)->SaveJudge<'a>{
         let savelist = ["savedata.bin","partner.bin","decomyset.bin",
             "hunternavi.bin","otomoairou.bin","platebox.bin",
             "platedata.bin","platemyset.bin","rengokudata.bin",
             "savemercenary.bin","skin_hist.bin"];
         let mut container = Vec::new();
         for data in &cmd.data.options{
-            if let Some(resolve)= &data.resolved{
-                if let CommandDataOptionValue::Attachment(e)=resolve{
-                    //only accept specifict filename and less than 5mb file
+            if let CommandOptionType::Attachment= &data.kind(){
+                if let CommandDataOptionValue::Attachment(att)=data.value{
+                    let e = Attachment::from(att);
+                    //only accept specifict filename and less than 5mb file 
                     if savelist.contains(&e.filename.as_str())&&e.size<5000000{
                         if let Ok(data)=e.download().await{
                             let file = FileSave{name:e.filename.to_owned(),bin:data};
@@ -43,7 +46,7 @@ impl<'a> SaveJudge<'a> {
         }
         x.push_str("```");
         let mut emb = CreateEmbed::default();
-        emb.title("Save Result").description("The savefile result that already filtered by bot and will be judged by admin later, bot will dm you if savefile is approved by admin.\n**NOTES**\n```dont login into the game untill admin approve or disaprove it then bot dm you, while transfer process run and youare on game, the save file will take no effect, also allow dm permission to let bot dm you```").author(|a|a.name(&self.cmd.user.name).icon_url(self.cmd.user.face())).field("Filtered File(s)",x.as_str(), true).color(Color::Blue.throw());
+        emb.title("Save Result").description("The savefile result that already filtered by bot and will be judged by admin later, bot will dm you if savefile is approved by admin.\n**NOTES**\n```dont login into the game untill admin approve or disaprove it then bot dm you, while transfer process run and youare on game, the save file will take no effect, also allow dm permission to let bot dm you```").author(CreateEmbedAuthor::new(self.cmd.user.name).icon_url(self.cmd.user.face())).field("Filtered File(s)",x.as_str(), true).color(Color::Blue.throw());
         emb
     }
     async fn save_to_file(&self)->Result<(),tokio::io::Error>{
@@ -63,17 +66,15 @@ impl<'a> SaveJudge<'a> {
         Ok(())
     }
     fn make_button(&self)->CreateActionRow{
-        let mut arow = CreateActionRow::default();
-        arow.add_button(
+        CreateActionRow::Buttons(
+            vec![
             Components::normal_button("approve", 
                 &format!("{}_save_a",&self.cmd.user.id.to_string()),
-                ButtonStyle::Primary, "👍")
-        ).add_button(
+                ButtonStyle::Primary, "👍"),
             Components::normal_button("disaprove", 
                 &format!("{}_save_d",&self.cmd.user.id.to_string()),
                 ButtonStyle::Danger,"👎")
-            );
-        arow
+            ])
     }
 }
 struct SaveAcknowladge{
@@ -114,12 +115,14 @@ impl SaveAcknowladge{
 }
 
 
-pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
+pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
     let mut reg = match Register::default(ctx, cmd, &init, "transfer save", false).await {
         Some(r)=>r,
         None=>{return ;}
     };
-    cmd.defer(&ctx.http).await.unwrap();
+    if let Err(why)=cmd.defer(&ctx.http).await{
+        reg.error.discord_error(why.to_string(), "defering save interaction")
+    }
     let data = SaveJudge::get_save(cmd).await;
     if data.files.len()==0{
         reg.error.change_error("no valid file detected".to_string(), "transfer save","please rename your save file properly and dont send any large file".to_string());
@@ -129,9 +132,8 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
     match data.save_to_file().await{
         Ok(_)=>{
             let ch = ChannelId(init.log_channel.transfer_channel);
-            if let Err(why) = ch.send_message(&ctx.http, |m|{
-                m.set_embed(data.make_embed()).components(|c|c.add_action_row(data.make_button()))
-            }).await{
+            if let Err(why) = ch.send_message(&ctx.http,CreateMessage::new()
+                .embed(data.make_embed()).components(data.make_button())).await{
                 reg.error.log_error_channel().await;
                 reg.error.change_error(why.to_string(), "send save to judge", "sorry you need to report this so you could reset your cooldown".to_string());
             }
@@ -145,9 +147,8 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
     match reg.pg.transfer_cd().await{
         Ok(x)=>{
             if x.0{
-                if let Err(why)=cmd.edit_original_interaction_response(&ctx.http, |m|{
-                    m.add_embed(data.make_embed())
-                }).await{
+                if let Err(why)=cmd.edit_response(&ctx.http,EditInteractionResponse::new()
+                    .embed(data.make_embed())).await{
                     reg.error.discord_error(why.to_string(), "transfer response").await;
                 }
 
@@ -162,12 +163,10 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
     };
     reg.pg.close().await;
 }
-pub async fn run_button(data:Vec<&str>,ctx:&Context,cmd:&MessageComponentInteraction,init:&Init){
+pub async fn run_button(data:Vec<&str>,ctx:&Context,cmd:&ComponentInteraction,init:&Init){
     let mut error = ErrorLog::new(ctx, init, &cmd.user).await;
-    if let Err(x)=cmd.create_interaction_response(&ctx.http, |f|{
-        f.kind(InteractionResponseType::ChannelMessageWithSource)
-        .interaction_response_data(|m|m.content("Begin Lengthty Opration Please dont push button again for some time").ephemeral(true))
-    }).await{
+    if let Err(x)=cmd.create_response(&ctx.http, 
+        Components::interaction_response("begin lengthy opration, please dont push button for some time", true)).await{
         error.discord_error(x.to_string(), "reply button").await;
     }
     let check = match SaveAcknowladge::check(data){
@@ -208,13 +207,13 @@ pub async fn run_button(data:Vec<&str>,ctx:&Context,cmd:&MessageComponentInterac
                 return pg.close().await;
             }
         };
-        if let Err(why)=user.direct_message(&ctx.http, |m|m.content(&format!("your save file is already approved by {} you can login into the game now",cmd.user.name))).await{
+        if let Err(why)=user.direct_message(&ctx.http, CreateMessage::new().content(&format!("your save file is already approved by {} you can login into the game now",cmd.user.name))).await{
             error.change_error(why.to_string(), "sending dm",format!("please mention {} that save file is successfully transfered, bot cant send dm to them, maybe beacause they disable dm",user.to_string()));
             error.log_error_channel().await;
         }
         pg.close().await;
     }else {
-        if let Err(why)=user.direct_message(&ctx.http, |m|m.content(&format!("your save file has been rejected by {} you can login into the game now",cmd.user.name))).await{
+        if let Err(why)=user.direct_message(&ctx.http,CreateMessage::new().content(&format!("your save file has been rejected by {} you can login into the game now",cmd.user.name))).await{
             error.change_error(why.to_string(), "sending dm",format!("please mention {} that save file is rejected, bot cant send dm to them, maybe beacause they disable dm",user.to_string()));
             error.log_error_channel().await;
         }

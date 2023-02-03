@@ -1,76 +1,61 @@
-use serenity::{prelude::Context, model::prelude::{interaction::{application_command::ApplicationCommandInteraction, InteractionResponseType, message_component::MessageComponentInteraction}, AttachmentType}};
-
-use crate::{Init,Register, reusable::postgress::account::SaveData};
-use std::borrow::Cow;
+use serenity::{builder::{CreateAttachment, CreateMessage, CreateInteractionResponse, CreateInteractionResponseMessage}, prelude::Context, all::{CommandInteraction, ComponentInteraction}};
+use crate::{Init,Register,Components, reusable::postgress::account::SaveData};
 impl SaveData{
-    fn get_attachment(&self)->Vec<AttachmentType>{
+    fn get_attachment(&self)->Vec<CreateAttachment>{
         let mut x = Vec::new();
         if let Some(y)=&self.savedata{
-            x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
-                filename: "savedata.bin".to_string()});
+            x.push(CreateAttachment::bytes(y, "savedata.bin"))
         }
         if let Some(y)=&self.partner{
-            x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
-                filename: "partner.bin".to_string()});
+            x.push(CreateAttachment::bytes(y, "partner.bin"))
         }
         if let Some(y)=&self.platebox{
-            x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
-                filename: "platebox.bin".to_string()});
+            x.push(CreateAttachment::bytes(y, "platebox.bin"))
         }
         if let Some(y)=&self.skin_hist{
-            x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
-                filename: "skin_hist.bin".to_string()});
+            x.push(CreateAttachment::bytes(y, "skin_hist.bin"))
         }
         if let Some(y)=&self.platedata{
-            x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
-                filename: "platedata.bin".to_string()});
+            x.push(CreateAttachment::bytes(y, "platedata.bin"))
         }
         if let Some(y)=&self.otomoairou{
-            x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
-                filename: "otomoairou.bin".to_string()});
+            x.push(CreateAttachment::bytes(y, "otomoairou.bin"))
         }
         if let Some(y)=&self.decomyset{
-            x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
-                filename: "decomyset.bin".to_string()});
+            x.push(CreateAttachment::bytes(y, "decomyset.bin"))
         }
         if let Some(y)=&self.hunternavi{
-            x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
-                filename: "hunternavi.bin".to_string()});
+            x.push(CreateAttachment::bytes(y, "hunternavi.bin"))
         }
         if let Some(y)=&self.platemyset{
-            x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
-                filename: "platemyset.bin".to_string()});
+            x.push(CreateAttachment::bytes(y, "platemyset.bin"))
         }
         if let Some(y)=&self.rengokudata{
-            x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
-                filename: "rengokudata.bin".to_string()});
+            x.push(CreateAttachment::bytes(y, "rengokudata.bin"))
         }
         if let Some(y)=&self.savemercenary{
-            x.push(AttachmentType::Bytes { data:Cow::from(y.clone()),
-                filename: "savemercenary.bin".to_string()});
+            x.push(CreateAttachment::bytes(y, "savemercenary.bin"))
         }
         x
     }
 }
 
-pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
+pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
     let mut reg = match Register::default(ctx, cmd, init, "dm_save command", false).await{
         Some(r)=>r,
         None=>{return ;}
     };
     match reg.pg.send_save(reg.cid).await{
         Ok(dt)=>{
-            if let Err(why)=cmd.user.direct_message(&ctx.http, |m|{
-                m.content("your save").add_files(dt.get_attachment())
-            }).await{
+            if let Err(why)=cmd.create_response(&ctx.http,CreateInteractionResponse::Message(
+                    CreateInteractionResponseMessage::new().content("trying to dm")
+                    )).await{
+                reg.error.discord_error(why.to_string(), "dm save").await;
+            }
+            if let Err(why)=cmd.user.direct_message(&ctx.http,CreateMessage::new()
+                .content("your save").add_files(dt.get_attachment())).await{
                 reg.error.change_error(why.to_string(), "send dm_save", "maybe you need to enable dm".to_string());
                 reg.error.log_error_channel().await;
-            }
-            if let Err(why)=cmd.create_interaction_response(&ctx.http, |n|{
-                n.kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|m|m.content("tying to dm"))
-            }).await{
-                reg.error.discord_error(why.to_string(), "dm save").await;
             }
         }
         Err(why)=>{
@@ -79,22 +64,18 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
     }
     reg.pg.close().await;
 }
-pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init){
+pub async fn run_button(ctx:&Context,cmd:&ComponentInteraction,init:&Init){
     let mut reg = match Register::default_button(ctx, cmd, init, "dm_save command").await{
         Some(r)=>r,
         None=>{return ;}
     };
     match reg.pg.send_save(reg.cid).await{
         Ok(dt)=>{
-            if let Err(why)=cmd.user.direct_message(&ctx.http, |m|{
-                m.content("your save").add_files(dt.get_attachment())
-            }).await{
+            if let Err(why)=cmd.user.direct_message(&ctx.http,CreateMessage::new().content("your save")
+                .add_files(dt.get_attachment())).await{
                 reg.error.change_error(why.to_string(), "send dm_save", "maybe you need to enable dm".to_string())
             }
-            if let Err(why)=cmd.create_interaction_response(&ctx.http, |n|{
-                n.kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|m|m.content("tying to dm"))
-            }).await{
+            if let Err(why)=cmd.create_response(&ctx.http,Components::interaction_response("truing to dm_save", true)).await{
                 reg.error.discord_error(why.to_string(), "dm save").await;
             }
         }
