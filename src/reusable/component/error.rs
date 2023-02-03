@@ -1,7 +1,8 @@
 use std::path::{Path, PathBuf};
 
-use serenity::builder::{CreateInteractionResponse, CreateEmbed};
-use serenity::model::prelude::{ChannelId, UserId, InteractionResponseType};
+use serenity::all::{CommandInteraction, ComponentInteraction, ModalInteraction};
+use serenity::builder::{CreateInteractionResponse, CreateEmbed, CreateInteractionResponseMessage, EditInteractionResponse, CreateMessage};
+use serenity::model::prelude::{ChannelId, UserId};
 use serenity::model::user::User;
 use serenity::prelude::Context;
 
@@ -42,7 +43,7 @@ impl<'a> ErrorLog<'a>{
         self.err = error;
     }
     fn make_embed(&self)->CreateEmbed{
-        let mut emb = CreateEmbed::default();
+        let mut emb = CreateEmbed::new();
         emb.title("🛑 Error Occured 🛑")
         .description("some cant be handled error occured")
         .fields(vec![
@@ -59,43 +60,37 @@ impl<'a> ErrorLog<'a>{
     }
     pub async fn log_error_channel(&self){
         let ch_id = ChannelId(self.init.log_channel.err_channel.to_owned());
-        if let Err(why) = ch_id.send_message(&self.ctx.http, |msg|{
-            msg.content(&format!("for {}",self.usr.to_string())).set_embed(self.make_embed()).add_file(&self.path)
-        }).await{
+        if let Err(why) = ch_id.send_message(&self.ctx.http,CreateMessage::new()
+            .embed(self.make_embed()).add_file(&self.path).content(format!("for {}",self.usr.to_string()))).await{
             println!("cant send error message to discord channel :{}",why)
         }
     }
-    fn interaction_response(&self,m:&mut CreateInteractionResponse,ephemeral:bool)-> 
-    &mut CreateInteractionResponse{
-        m.kind(InteractionResponseType::ChannelMessageWithSource)
-        .interaction_response_data(|msg|{
-                msg.ephemeral(ephemeral).add_file(&self.path).set_embed(self.make_embed())
-            })
+    fn interaction_response(&self,ephemeral:bool)->CreateInteractionResponse{
+        CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(self.make_embed())
+                                           .add_file(&self.path).ephemeral(ephemeral))
     }
-    pub async fn log_slash(&self,cmd:&ApplicationCommandInteraction,ephemeral:bool){
-        if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
-            self.interaction_response(m,ephemeral)).await{
+    pub async fn log_slash(&self,cmd:&CommandInteraction,ephemeral:bool){
+        if let Err(why) = cmd.create_response(&self.ctx.http,self.interaction_response(ephemeral)).await{
             self.log_error_channel().await;
             println!("{why}");
         }
     }
-    pub async fn log_slash_defer(&self,cmd:&ApplicationCommandInteraction,_ephemeral:bool){
-        if let Err(why) = cmd.edit_original_interaction_response(&self.ctx.http, |m|
-            m.set_embed(self.make_embed())).await{
+    pub async fn log_slash_defer(&self,cmd:&CommandInteraction,_ephemeral:bool){
+        if let Err(why) = cmd.edit_response(&self.ctx.http,EditInteractionResponse::new().embed(self.make_embed()).new_attachment(&self.path)).await{
             self.log_error_channel().await;
             println!("{why}");
         }
     }
-    pub async fn log_button(&self,cmd:&MessageComponentInteraction,ephemeral:bool){
-        if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
-            self.interaction_response(m,ephemeral)).await{
+    pub async fn log_button(&self,cmd:&ComponentInteraction,ephemeral:bool){
+        if let Err(why) = cmd.create_response(&self.ctx.http,
+            self.interaction_response(ephemeral)).await{
             self.log_error_channel().await;
             println!("{why}");
         }
     }
-    pub async fn log_modal(&self,cmd:&ModalSubmitInteraction,ephemeral:bool){
-        if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|
-            self.interaction_response(m,ephemeral)).await{
+    pub async fn log_modal(&self,cmd:&ModalInteraction,ephemeral:bool){
+        if let Err(why) = cmd.create_response(&self.ctx.http,
+            self.interaction_response(ephemeral)).await{
             self.log_error_channel().await;
             println!("{why}");
         }
@@ -104,11 +99,11 @@ impl<'a> ErrorLog<'a>{
         self.change_error(error, on, "discord connection problem, you can consult this problem".to_string());
         self.log_error_channel().await;
     }
-    pub async fn pgcon_error(&mut self,error:String,on:&'a str,cmd:&ApplicationCommandInteraction){
+    pub async fn pgcon_error(&mut self,error:String,on:&'a str,cmd:&CommandInteraction){
         self.change_error(error, on, "connection to database timedout, wait for server to be stable".to_string());
         self.log_slash(cmd, false).await;
     }
-    pub async fn pgcon_error_defer(&mut self,error:String,on:&'a str,cmd:&ApplicationCommandInteraction){
+    pub async fn pgcon_error_defer(&mut self,error:String,on:&'a str,cmd:&CommandInteraction){
         self.change_error(error, on, "connection to database timedout, wait for server to be stable".to_string());
         self.log_slash_defer(cmd, false).await;
     }
@@ -116,7 +111,7 @@ impl<'a> ErrorLog<'a>{
         self.change_error(error, on, "connection to database timedout, wait for server to be stable".to_string());
         self.log_error_channel().await;
     }
-    pub async fn pgcon_error_button(&mut self,error:String,on:&'a str,cmd:&MessageComponentInteraction){
+    pub async fn pgcon_error_button(&mut self,error:String,on:&'a str,cmd:&ComponentInteraction){
         self.change_error(error, on, "connection to database timedout, wait for server to be stable".to_string());
         self.log_button(cmd, true).await;
     }
