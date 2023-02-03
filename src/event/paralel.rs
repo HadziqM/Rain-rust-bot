@@ -86,8 +86,6 @@ static mut CURRENT_PLAYER:i32 = 0;
 
 //event handler will spawn a thread calling this function every 5 minutes
 pub async fn paralel_thread(ctx:&Context,init:&Init){
-    //send log file to discord channel and emptying the log
-    let ch = logging(ctx, init).await;
     let user = match UserId(init.discord.author_id).to_user(&ctx.http).await{
         Ok(x)=>x,
         Err(why)=>{
@@ -110,9 +108,13 @@ pub async fn paralel_thread(ctx:&Context,init:&Init){
         CURRENT_PLAYER = now;
     }
     //if the current player is 0 and is not 0 before, announce server crash
+    //and dm wish the log
+    let wish;
     if now==0 && cp != 0{
-        if let Err(why)= ch.send_message(&ctx.http, |m|m.content("SERVER MIGHT CRASH JUST ABOUT NOW")).await{
-            println!("cant send emergency message {why:?}");
-        }
+        wish = Some(UserId(119094696487288833).to_user(&ctx.http).await.unwrap());
+    }else{
+        wish = None
     }
+    //execute the logging logic
+    logging(ctx,init,wish).await;
 }
