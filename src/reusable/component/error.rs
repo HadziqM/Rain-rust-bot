@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use serenity::all::{CommandInteraction, ComponentInteraction, ModalInteraction};
-use serenity::builder::{CreateInteractionResponse, CreateEmbed, CreateInteractionResponseMessage, EditInteractionResponse, CreateMessage};
+use serenity::builder::{CreateInteractionResponse, CreateEmbed, CreateInteractionResponseMessage, EditInteractionResponse, CreateMessage, CreateEmbedAuthor, CreateEmbedFooter};
 use serenity::model::prelude::{ChannelId, UserId};
 use serenity::model::user::User;
 use serenity::prelude::Context;
@@ -51,8 +51,8 @@ impl<'a> ErrorLog<'a>{
             ("📜 error message",&format!("```\n{}\n```",&self.err),false),
             ("⛑  author advice",&self.advice,false)
         ])
-        .author(|f|f.name(self.usr.name.as_str()).icon_url(self.usr.face()))
-        .footer(|f|f.text(format!("you can consult this to {}",self.user.tag()))
+        .author(CreateEmbedAuthor::new(self.usr.name).icon_url(self.usr.face()))
+        .footer(CreateEmbedFooter::new(format!("you can consult this to {}",self.user.tag()))
             .icon_url(self.user.face()))
         .color(color("ff", "00", "00"))
         .thumbnail("attachment://panics.png");

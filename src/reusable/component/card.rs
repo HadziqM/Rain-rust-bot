@@ -1,14 +1,15 @@
-use serenity::{builder::{CreateInteractionResponse, EditInteractionResponse, CreateEmbed, CreateActionRow}, model::{prelude::{interaction::InteractionResponseType, component::ButtonStyle}, user::User}};
+use serenity::all::{ButtonStyle, User};
+use serenity::builder::{CreateActionRow, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse};
 
 use crate::reusable::{postgress::card::Card, utils::color};
 
 use crate::Components;
 
 fn make_button()->CreateActionRow{
-    let mut arow = CreateActionRow::default();
-    arow.add_button(Components::normal_button("use", "use", ButtonStyle::Primary, "👍"));
-    arow.add_button(Components::normal_button("next", "next", ButtonStyle::Success, "➡️"));
-    arow
+    CreateActionRow::Buttons(vec![
+        Components::normal_button("use", "use", ButtonStyle::Primary, "👍"),
+        Components::normal_button("next", "next", ButtonStyle::Success, "➡️")
+    ])
 }
 impl Card{
     pub fn get_path(&self)->String{
@@ -63,31 +64,25 @@ impl Card{
     }
 
     fn crete_embed(&self,user:&User)->CreateEmbed{
-        let mut emb = CreateEmbed::default();
+        let mut emb = CreateEmbed::new();
         emb.title(self.name.as_str()).fields(vec![
         ("User",&format!("username: {}\nuser_id: {}\nchar_id: {}\nlast_login: {}",&self.username,self.user_id,self.char_id,self.last_login()),false),
         ("Character",&format!("HR: {}\nGR: {}",self.hrp(),self.gr),false),
         ("Guild",&format!("name: {}\nguild_id: {}",&self.g_name(),&self.g_id()),false)
-    ]).footer(|f|f.text(&format!("character owned by {}",user.name)).icon_url(user.face()))
+    ]).footer(CreateEmbedFooter::new(format!("owned by {}",user.name)).icon_url(user.face()))
         .colour(color("ff", "55", "00")).thumbnail(&self.get_path());
         emb
     }
 
-    pub fn card<'a,'b>(&self,m:&'a mut CreateInteractionResponse<'b>,user:&User)->&'a mut CreateInteractionResponse<'b>{
-        m.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|d|{
-            d.add_embed(self.crete_embed(user))
-        })
+    pub fn card(&self,user:&User)->CreateInteractionResponse{
+        CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
+            .embed(self.crete_embed(user)))
     }
-    pub fn bind<'a,'b>(&self,m:&'a mut CreateInteractionResponse<'b>,user:&User)->&'a mut CreateInteractionResponse<'b>{
-        m.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|d|{
-            d.add_embed(self.crete_embed(user)).components(|c|{
-                c.add_action_row(make_button())
-                })
-        })
+    pub fn bind(&self,user:&User)->CreateInteractionResponse{
+        CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
+            .embed(self.crete_embed(user)).components(vec![make_button()]))
     }
-    pub fn edit_bind<'a>(&self,m:&'a mut EditInteractionResponse,user:&User)->&'a mut EditInteractionResponse{
-        m.add_embed(self.crete_embed(user)).components(|c|{
-            c.add_action_row(make_button())
-            })
+    pub fn edit_bind(&self,user:&User)->EditInteractionResponse{
+        EditInteractionResponse::new().embed(self.crete_embed(user)).components(vec![make_button()])
     }
 }

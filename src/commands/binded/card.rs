@@ -1,8 +1,7 @@
-use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
-use serenity::prelude::Context;
+use serenity::{prelude::Context, all::CommandInteraction};
 use crate::{Init,Register,PgConn,ErrorLog};
 
-pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
+pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
     let mut reg = match Register::default(ctx, cmd, init, "card command",false).await{
         Some(r)=>r,
         None=>{return;}

@@ -1,5 +1,5 @@
-use serenity::builder::CreateApplicationCommand;
-use serenity::model::prelude::command::CommandOptionType;
+use serenity::{builder::{CreateCommand, CreateCommandOption}, all::CommandOptionType};
+
 use crate::AppReg;
 
 pub mod card;
@@ -7,23 +7,18 @@ pub mod save;
 pub mod transfer;
 pub mod change;
 
-pub fn reg()->Vec<CreateApplicationCommand>{
-    let mut file = CreateApplicationCommand::default();
-    file.name("transfer").description("transfer your save data to server (dont send empty file)")
-        .create_option(|op|op.name("file0").description("attach your binary")
-        .kind(CommandOptionType::Attachment).required(true))
-        .create_option(|op|op.name("file1").description("attach your binary")
-        .kind(CommandOptionType::Attachment).required(false))
-        .create_option(|op|op.name("file2").description("attach your binary")
-        .kind(CommandOptionType::Attachment).required(false))
-        .create_option(|op|op.name("file3").description("attach your binary")
-        .kind(CommandOptionType::Attachment).required(false))
-        .create_option(|op|op.name("file4").description("attach your binary")
-        .kind(CommandOptionType::Attachment).required(false))
-        .create_option(|op|op.name("file5").description("attach your binary")
-        .kind(CommandOptionType::Attachment).required(false))
-        .create_option(|op|op.name("file6").description("attach your binary")
-        .kind(CommandOptionType::Attachment).required(false));
+pub fn reg()->Vec<CreateCommand>{
+    let file = AppReg::normal_slash("transfer", "transfer your save data to server")
+        .add_option(CreateCommandOption::new(CommandOptionType::Attachment,"file", "attach your savefile .bin").required(true))
+        .add_option(CreateCommandOption::new(CommandOptionType::Attachment,"file1", "attach your savefile .bin"))
+        .add_option(CreateCommandOption::new(CommandOptionType::Attachment,"file2", "attach your savefile .bin"))
+        .add_option(CreateCommandOption::new(CommandOptionType::Attachment,"file3", "attach your savefile .bin"))
+        .add_option(CreateCommandOption::new(CommandOptionType::Attachment,"file4", "attach your savefile .bin"))
+        .add_option(CreateCommandOption::new(CommandOptionType::Attachment,"file5", "attach your savefile .bin"))
+        .add_option(CreateCommandOption::new(CommandOptionType::Attachment,"file6", "attach your savefile .bin"))
+        .add_option(CreateCommandOption::new(CommandOptionType::Attachment,"file7", "attach your savefile .bin"))
+        .add_option(CreateCommandOption::new(CommandOptionType::Attachment,"file8", "attach your savefile .bin"))
+        .add_option(CreateCommandOption::new(CommandOptionType::Attachment,"file9", "attach your savefile .bin"));
     vec![
         AppReg::normal_slash("card", "show your hunter card status"),
         AppReg::user_context("👤 Card"),
