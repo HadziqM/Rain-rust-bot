@@ -1,21 +1,22 @@
-use serenity::{model::{prelude::interaction::{application_command::{ApplicationCommandInteraction, CommandDataOptionValue}, InteractionResponseType}, user::User}, prelude::Context};
-
+use serenity::{all::{CommandInteraction, User, CommandOptionType, CommandDataOptionValue}, prelude::Context, builder::{CreateInteractionResponse, CreateInteractionResponseMessage}};
 
 use crate::{PgConn,ErrorLog,Init};
 
-fn get(cmd:&ApplicationCommandInteraction)->Option<User>{
+async fn get(cmd:&CommandInteraction,ctx:&Context)->Option<User>{
     for i in &cmd.data.options{
-        if let Some(res)=&i.resolved{
-            if let CommandDataOptionValue::User(x,_)=res{
-                return Some(x.to_owned());
+        if let CommandOptionType::User=&i.kind(){
+            if let CommandDataOptionValue::User(x) = i.value{
+                match x.to_user(&ctx.http).await{
+                    Ok(y)=>Some(y),
+                    Err(_)=>None
+                }
             }
         }
     }
-    None
 }
-pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
+pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
     let mut error = ErrorLog::new(ctx, init, &cmd.user).await;
-    let user = match get(cmd){
+    let user = match get(cmd,ctx).await{
         Some(x)=>x,
         None=>{
             error.change_error("idk what you do".to_owned(), "reset cd", "please redo".to_string());
@@ -32,12 +33,8 @@ pub async fn run(ctx:&Context,cmd:&ApplicationCommandInteraction,init:&Init){
     };
     match pg.reset_cd().await{
         Ok(_)=>{
-            if let Err(why) = cmd.create_interaction_response(&ctx.http, |f|{
-                f.kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|m|{
-                        m.content(&format!("{} save transfer cooldown succesfully reseted",user.to_string()))
-                    })
-            }).await{
+            if let Err(why) = cmd.create_response(&ctx.http,CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
+                    .content(format!("{} save cooldown already reseted",user.to_string())))).await{
                 error.discord_error(why.to_string(), "reset cd").await;
             }
         }

@@ -14,6 +14,7 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
         );
     if let Err(why) = cmd.create_response(&ctx.http, CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
                     .embed(emb).components(vec![arow]))).await{
-        println!("wth");
+        let mut err = ErrorLog::new(ctx, init, &cmd.user).await;
+        err.discord_error(why.to_string(), "interface command").await;
     }
 }
