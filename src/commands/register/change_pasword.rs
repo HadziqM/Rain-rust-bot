@@ -1,17 +1,11 @@
-use serenity::model::prelude::interaction::InteractionResponseType;
-use serenity::model::prelude::interaction::application_command::{
-    CommandDataOptionValue, ApplicationCommandInteraction,
-};
 use serenity::prelude::Context;
-use crate::{PgConn,ErrorLog,Init};
+use serenity::all::*;
+use crate::{PgConn,ErrorLog,Init,Components};
 
-pub async fn run(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&Init) {
+pub async fn run(ctx:&Context, cmd:&CommandInteraction,init:&Init) {
     let option = cmd.data.options
         .get(0)
-        .expect("Expected user option")
-        .resolved
-        .as_ref()
-        .expect("Expected user object");
+        .expect("idk").value;
     let mut error = ErrorLog::new(ctx, init,&cmd.user).await;
     if let CommandDataOptionValue::String(pass) = option {
         match PgConn::create(init,cmd.user.id.to_string()).await {
@@ -22,10 +16,7 @@ pub async fn run(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&Init) {
                             true => "your password succesfully changed",
                             false => "you dont have any account in this server",
                         };
-                        if let Err(why) = cmd.create_interaction_response(&ctx.http, |resp| {
-                            resp.kind(InteractionResponseType::ChannelMessageWithSource)
-                                .interaction_response_data(|msg|msg.content(out).ephemeral(true))
-                        }).await{
+                        if let Err(why) = cmd.create_response(&ctx.http,Components::interaction_response(out, true)).await{
                             error.change_error(why.to_string(),"change password", "discord connection problem,please consult".to_string());
                             error.log_error_channel().await;
                         }

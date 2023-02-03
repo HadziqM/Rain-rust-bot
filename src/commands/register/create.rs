@@ -1,13 +1,11 @@
+use std::num::NonZeroU64;
+
 use serenity::builder::{CreateActionRow, CreateInteractionResponse};
 use serenity::model::prelude::{RoleId, Member, ChannelId};
-use serenity::model::prelude::component::{InputTextStyle, ActionRowComponent};
-use serenity::model::prelude::interaction::InteractionResponseType::*;
-use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
-use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
-use serenity::model::application::interaction::modal::ModalSubmitInteraction;
 use serenity::prelude::Context;
 use crate::reusable::utils::color;
-use crate::{PgConn,Init,ErrorLog};
+use crate::{PgConn,Init,ErrorLog,Components};
+use serenity::all::*;
 
 struct RegisterAcknowledged<'a,'b> {
     username: &'a str,
@@ -22,37 +20,29 @@ impl<'a,'b> RegisterAcknowledged<'a,'b>{
         RegisterAcknowledged { username, user, uid,ctx,err }
     }
     async fn add_roles(&mut self){
-        let rid = RoleId(self.err.init.server_role.register_role);
+        let rid = RoleId(NonZeroU64::new(self.err.init.server_role.register_role).unwrap());
         if let Err(why)=self.user.add_role(&self.ctx.http,rid).await{
             self.err.change_error(why.to_string(), "add register role", "ask admin to give you role manually".to_string());
             self.err.log_error_channel().await;
         }
     }
-    async fn log_to_user(&mut self,cmd:&ModalSubmitInteraction){
+    async fn log_to_user(&mut self,cmd:&ModalInteraction){
         let serv =cmd.guild_id.unwrap_or_default();
         let server = serv.to_partial_guild(&self.ctx.http).await.unwrap();
-        let ch = ChannelId(self.err.init.log_channel.account_channel);
-        if let Err(why) = ch.send_message(&self.ctx.http, |m|{
-            m.embed(|e|{
-                e.title("Account Succesfully Created on Server")
+        let ch = ChannelId(NonZeroU64::new(self.err.init.log_channel.account_channel).unwrap());
+        if let Err(why) = ch.send_message(&self.ctx.http,CreateMessage::new().embed(CreateEmbed::new().title("Account Succesfully Created on Server")
                 .description(&format!("{} created an account on server, by creating account here you already aggree to follow our rules to as stated on rules channel, as a member of {} comunity we welcome you to enjoy the game together",self.user.to_string(),server.name)).fields(vec![
                     ("👤 Username",&format!("`{}`",self.username),false),
                     ("🆔 User Id",&format!("`{}`",self.uid),false)
-                ]).author(|a|a.name(self.user.display_name()).icon_url(self.user.face()))
+                ]).author(CreateEmbedAuthor::new(&self.user.user.name).icon_url(self.user.face()))
                 .colour(color("00", "ff", "00"))
-                .image("https://media.discordapp.net/attachments/1068440173479739393/1068458599627620392/cachedImage.png?width=807&height=455")
-            })
-        }).await{
+                .image("https://media.discordapp.net/attachments/1068440173479739393/1068458599627620392/cachedImage.png?width=807&height=455"))).await{
             self.err.change_error(why.to_string(), "log user create", "sorry connection problem we cant send your greeting message".to_string());
             self.err.log_error_channel().await;
         }
     }
-    async fn send_response(&mut self,cmd:&ModalSubmitInteraction){
-        if let Err(why) = cmd.create_interaction_response(&self.ctx.http, |m|{
-            m.kind(ChannelMessageWithSource).interaction_response_data(|i|{
-                i.ephemeral(true).content("account succesfully created")
-            })
-        }).await{
+    async fn send_response(&mut self,cmd:&ModalInteraction){
+        if let Err(why) = cmd.create_response(&self.ctx.http, Components::interaction_response("account succesfully created", true)).await{
             self.err.change_error(why.to_string(), "responding modal", "account succesfully created so dont worry, its just discord connection problem".to_string());
             self.err.log_error_channel().await;
         }
@@ -63,27 +53,16 @@ fn modal_register_row(name:&str,pass:bool)->CreateActionRow{
         false => "your MHFZ username on launcher".to_owned(),
         true => "your MHFZ user password (igonore discord warning)".to_owned(),
     };
-    let mut row = CreateActionRow::default();
-    row.create_input_text(|i|{
-        i.label(name)
-         .custom_id(name)
-         .required(true)
-         .style(InputTextStyle::Short)
-         .placeholder(&placeholder)
-    });
-    row
+    CreateActionRow::InputText(
+        CreateInputText::new(InputTextStyle::Short, name, name).required(true).placeholder(&placeholder)
+    )
 }
 
-fn modal_response<'a,'b>(lt:&'a mut CreateInteractionResponse<'b>)->&'a mut CreateInteractionResponse<'b>{
-    lt.kind(Modal)
-       .interaction_response_data(|m|{
-            m.components(|c|c.add_action_row(modal_register_row("username",false))
-               .add_action_row(modal_register_row("password", true)))
-                .custom_id("register_m")
-                .title("register command")
-    })
+fn modal_response()->CreateInteractionResponse{
+    CreateInteractionResponse::Modal(CreateModal::new("register_m", "Register command")
+        .components(vec![modal_register_row("username", false),modal_register_row("password", true)]))
 }
-pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init){
+pub async fn run_button(ctx:&Context,cmd:&ComponentInteraction,init:&Init){
     let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
     let did = cmd.user.id.to_string();
     match PgConn::create(init, did).await {
@@ -109,14 +88,12 @@ pub async fn run_button(ctx:&Context,cmd:&MessageComponentInteraction,init:&Init
             return;
         }
     };
-    if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
-        modal_response(r)
-    }).await{
+    if let Err(why) = cmd.create_response(&ctx.http,modal_response()).await{
         err.change_error(why.to_string(), "register interface button", "failed to response, most likely your registrasion already done, its just discord error".to_string());
         err.log_error_channel().await;
     }
 }
-pub async fn run_slash(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&Init){
+pub async fn run_slash(ctx:&Context, cmd:&CommandInteraction,init:&Init){
     let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
     let did = cmd.user.id.to_string();
     match PgConn::create(init, did).await {
@@ -142,16 +119,14 @@ pub async fn run_slash(ctx:&Context, cmd:&ApplicationCommandInteraction,init:&In
             return;
         }
     };
-    if let Err(why) = cmd.create_interaction_response(&ctx.http, |r|{
-        modal_response(r)
-    }).await{
+    if let Err(why) = cmd.create_response(&ctx.http,modal_response()).await{
         let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
         err.change_error(why.to_string(), "register interface button", "failed to response, most likely your registrasion already done, its just discord error".to_string());
         err.log_error_channel().await;
     }
 }
 
-pub async fn modal_register(ctx:&Context,cmd:&ModalSubmitInteraction,init:&Init){
+pub async fn modal_register(ctx:&Context,cmd:&ModalInteraction,init:&Init){
     let data = cmd.data.to_owned();
     let mut error = ErrorLog::new(&ctx, init, &cmd.user).await;
     let mut name = String::new();
