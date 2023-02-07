@@ -1,12 +1,6 @@
-use std::collections::HashMap;
-
 use sqlx::FromRow;
-
-use crate::reusable::image_edit::gacha::GachaData;
-
 use super::PgConn;
-use crate::material::items::Items;
-use super::super::bitwise::{Bitwise,BitwiseError};
+use super::super::bitwise::{Bitwise,BitwiseError,ItemCode};
 
 #[derive(FromRow,Debug)]
 pub struct GachaPg{
@@ -18,18 +12,19 @@ impl<'a> PgConn<'a> {
         sqlx::query_as::<_,GachaPg>("SELECT gacha as ticket,pity From discord where discord_id=$1")
         .bind(&self.did).fetch_one(&self.pool).await
     }
-    pub async fn send_distrib(&self,pg:&GachaPg,data:&[GachaData],cid:i32)->Result<(),BitwiseError>{
+    pub async fn send_distrib(&self,pg:&GachaPg,data:&[ItemCode],cid:i32)->Result<(),BitwiseError>{
         sqlx::query("UPDATE discord set gacha=$1,pity=$2 where discord_id=$3").bind(pg.ticket)
         .bind(pg.pity).bind(&self.did).execute(&self.pool).await?;
-        let item = Items::default();
         let byte = Bitwise::new(data);
-        let text = |i:&GachaData|{format!("{}x{}",item.item.get(i.code.key.as_str()).unwrap(),i.code.count)};
         if data.len() == 1{
-            sqlx::query("INSERT into distribution (character_id,data,type,bot,event_name,description) Values ($1,$2,1,true,$3,$4)").bind(cid).bind(byte).bind(&text(&data[0])).bind(&format!("~C05 Congratulation on Getting {}",&text(&data[0]))).execute(&self.pool).await?;
+            let text = match data.first().unwrap().text(){
+                Some(x)=>x,
+                None=>{return Err(BitwiseError::NoItem);}
+            };
+            sqlx::query("INSERT into distribution (character_id,data,type,bot,event_name,description) Values ($1,$2,1,true,$3,$4)").bind(cid).bind(byte.first_item()?).bind(&text).bind(&format!("~C05 Congratulation on Getting {}",&text)).execute(&self.pool).await?;
             return Ok(());
         }
-        let byte = Bitwise::multiple_item(data)?;
-        sqlx::query("INSERT into distribution (character_id,data,type,bot,event_name,description) Values ($1,$2,1,true,$3,$4)").bind(cid).bind(byte).bind("Multi Gacha Reward").bind("~C05 Sorry cant list all the reward in game").execute(&self.pool).await?;
+        sqlx::query("INSERT into distribution (character_id,data,type,bot,event_name,description) Values ($1,$2,1,true,$3,$4)").bind(cid).bind(byte.multiple_item()?).bind("Multi Gacha Reward").bind("~C05 Sorry cant list all the reward in game").execute(&self.pool).await?;
         Ok(())
     }
 }

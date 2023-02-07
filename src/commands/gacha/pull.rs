@@ -168,7 +168,8 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init,multi:bool){
     }
     match raw{
         Ok(x)=>{
-            if let Err(why)=reg.pg.send_distrib(&g_pg, g_data.as_slice(), reg.cid).await{
+            let code:Vec<_> = g_data.iter().map(|e|e.code.to_owned()).collect();
+            if let Err(why)=reg.pg.send_distrib(&g_pg,&code, reg.cid).await{
                 reg.error.pgcon_error_defer(why.to_string(), "sending distribution", cmd).await;
                 return reg.pg.close().await;
             }

@@ -1,8 +1,8 @@
 use std::{path::{Path, PathBuf}, io::Cursor};
-use image::{ImageError, Rgb, ImageBuffer, RgbImage};
+use image::{Rgb, ImageBuffer, RgbImage};
 use rusttype::Font;
 use image::imageops::{FilterType,resize};
-use crate::material::items::Items;
+use super::CustomImageError;
 use super::super::bitwise::ItemCode;
 
 #[derive(Clone)]
@@ -13,7 +13,6 @@ pub struct GachaData{
 pub struct GachaImage{
     rec:Rectangle,
     font:Font<'static>,
-    item:Items<'static>
 }
 #[derive(Clone)]
 pub enum GachaR{
@@ -49,24 +48,24 @@ impl Rectangle{
         }
         false
     }
-    async fn get_rect(url:&str,radius:u32,off_x:u32,off_y:u32)->Result<Option<Rectangle>,ImageError>{
+    async fn get_rect(url:&str,radius:u32,off_x:u32,off_y:u32)->Result<Rectangle,CustomImageError>{
         let client = reqwest::Client::new();
         let bytes =match client.get(url).send().await{
             Ok(resp)=>{
                 match resp.bytes().await{
                     Ok(byt)=>byt,
                     Err(_)=>{
-                        return Ok(None);
+                        return Err(CustomImageError::Custom("cant get response from get request"));
                     }
                 }
             }
             Err(_)=>{
-                return Ok(None);
+                return Err(CustomImageError::Custom("cant get binaries from the get request response"));
             }
         };
         let read = image::io::Reader::new(Cursor::new(bytes)).with_guessed_format()?.decode()?;
         let img = read.resize_exact(radius*2+1, radius*2+1,FilterType::Nearest).to_rgb8();
-        Ok(Some(Rectangle { radius, off_x, off_y, img }))
+        Ok(Rectangle { radius, off_x, off_y, img })
     }
     fn get_rbg_pixel(&self,x:u32,y:u32)->Rgb<u8>{
         //normalize the pixel position
@@ -78,10 +77,10 @@ impl Rectangle{
 }
 
 impl GachaImage {
-    pub async fn new(url:&str)->Result<GachaImage,ImageError>{
+    pub async fn new(url:&str)->Result<GachaImage,CustomImageError>{
         let font = GachaImage::load_font().await;
-        let rec = Rectangle::get_rect(url, 51, 338, 48).await?.unwrap();
-        Ok(GachaImage { rec, font,item:Items::default() })
+        let rec = Rectangle::get_rect(url, 51, 338, 48).await?;
+        Ok(GachaImage { rec, font })
     }
     async fn load_font()->Font<'static>{
         let path = Path::new(".").join("icon").join("NotoSerifJP-Regular.otf");
@@ -92,7 +91,7 @@ impl GachaImage {
         let len = text.len() as i32;
         386-len*16/2
     }
-    async fn image_edit(&self,gacha:&GachaData)->Result<ImageBuffer<Rgb<u8>,Vec<u8>>,ImageError>{
+    async fn image_edit(&self,gacha:&GachaData)->Result<ImageBuffer<Rgb<u8>,Vec<u8>>,CustomImageError>{
         let mut image =  image::open(&gacha.result.path())?.to_rgb8();
         //draw photo profile to image
         for (x,y,px) in image.enumerate_pixels_mut(){
@@ -100,8 +99,11 @@ impl GachaImage {
                 *px = self.rec.get_rbg_pixel(x, y)
             }
         }
-        let text = format!("{}x{}",self.item.item.get(&gacha.code.key.as_str()).unwrap(),gacha.code.count);
         //draw text to image
+        let text = match gacha.code.text(){
+            Some(x)=>x,
+            None=>{return Err(CustomImageError::Custom("the key value on item code was false"));}
+        };
         let res = imageproc::drawing::draw_text(&image,
             Rgb([255,255,255]),
             self.get_x(&text), 510,
@@ -109,7 +111,7 @@ impl GachaImage {
             ,&self.font,&text);
         Ok(res)
     }
-    pub async fn multi_pull(&self,gachas:Vec<GachaData>)->Result<Vec<u8>,ImageError>{
+    pub async fn multi_pull(&self,gachas:Vec<GachaData>)->Result<Vec<u8>,CustomImageError>{
         let mut img:RgbImage = ImageBuffer::new(1028, 615);
         let mut all_buff = Vec::new();
         for i in &gachas{
@@ -124,7 +126,7 @@ impl GachaImage {
         }
         Ok(img.as_raw().to_owned())
     }
-    pub async fn single_pull(&self,gacha:&GachaData)->Result<Vec<u8>,ImageError>{
+    pub async fn single_pull(&self,gacha:&GachaData)->Result<Vec<u8>,CustomImageError>{
         Ok(self.image_edit(gacha).await?.as_raw().to_owned())
     }
 }

@@ -63,7 +63,7 @@ impl ItemList{
             ItemList::Chest(x)=>x,
             ItemList::Leg(x)=>x,
         };
-        val.get(clue)
+        val.get(clue).copied()
     }
 }
 impl ItemPedia{
