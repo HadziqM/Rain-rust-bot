@@ -7,6 +7,7 @@ pub mod distribution;
 #[derive(Debug)]
 pub enum BitwiseError {
     OddLength,
+    InvalidKey,
     ParseInt(ParseIntError),
     Sqlx(sqlx::Error),
 }
@@ -15,6 +16,7 @@ impl fmt::Display for BitwiseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             BitwiseError::OddLength => "input string has an odd number of bytes".fmt(f),
+            BitwiseError::InvalidKey => "the key for converting endian is invalid length".fmt(f),
             BitwiseError::ParseInt(e) => e.fmt(f),
             BitwiseError::Sqlx(e)=>e.fmt(f)
         }

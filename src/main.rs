@@ -2,6 +2,7 @@
 
 pub mod reusable;
 pub mod commands;
+pub mod material;
 mod event;
 
 use reusable::config::{Init,get_config};
