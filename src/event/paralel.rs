@@ -88,21 +88,23 @@ pub async fn paralel_thread(ctx:&Context,init:&Init){
     let cp;
     //run function to update server status on info channel
     let now = serv.edit_msg().await;
-    //sorry to use unsafe, since rust doesnt support global variable
-    //and this thread is completely detached from main thread
-    //so we cant get access to Handler struct
-    unsafe{
-        cp = CURRENT_PLAYER;
-        CURRENT_PLAYER = now;
+    if init.mhfz_config.sending_log{
+        //sorry to use unsafe, since rust doesnt support global variable
+        //and this thread is completely detached from main thread
+        //so we cant get access to Handler struct
+        unsafe{
+            cp = CURRENT_PLAYER;
+            CURRENT_PLAYER = now;
+        }
+        //if the current player is 0 and is not 0 before, announce server crash
+        //and dm wish the log
+        let wish;
+        if now==0 && cp != 0{
+            wish = Some(UserId(NonZeroU64::new(119094696487288833).unwrap()).to_user(&ctx.http).await.unwrap());
+        }else{
+            wish = None
+        }
+        //execute the logging logic
+        logging(ctx,init,wish).await;
     }
-    //if the current player is 0 and is not 0 before, announce server crash
-    //and dm wish the log
-    let wish;
-    if now==0 && cp != 0{
-        wish = Some(UserId(NonZeroU64::new(119094696487288833).unwrap()).to_user(&ctx.http).await.unwrap());
-    }else{
-        wish = None
-    }
-    //execute the logging logic
-    logging(ctx,init,wish).await;
 }

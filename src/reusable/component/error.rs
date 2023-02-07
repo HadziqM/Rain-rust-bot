@@ -25,7 +25,7 @@ pub struct ErrorLog<'a> {
 impl<'a> ErrorLog<'a>{
     pub async fn new(ctx:&'a Context, init:&'a Init,usr:&'a User)->ErrorLog<'a>{
         let user = UserId(NonZeroU64::new(init.discord.author_id).unwrap()).to_user(&ctx.http).await.unwrap_or_default();
-        let path = Path::new(".").join("icon").join("panic.png").as_path().to_owned();
+        let path = Path::new(".").join("icon").join("panics.png").as_path().to_owned();
         ErrorLog { 
             err: String::new(), 
             on: "", advice:String::new(), 

@@ -38,7 +38,8 @@ pub struct Postgress {
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct MhfzConfig {
-    pub(crate) account_creation: bool
+    pub(crate) account_creation: bool,
+    pub(crate) sending_log: bool
 }
 #[derive(Debug,Deserialize,Clone)]
 pub struct BotConfig {
@@ -61,8 +62,8 @@ pub struct LogChannels {
     pub(crate) transfer_channel: u64,
     pub(crate) info_channel: u64,
     pub(crate) info_channel_msg: u64,
-    pub(crate) moderation_channel: u64,
     pub(crate) erupe_channel: u64,
+    pub(crate) moderation_channel: u64,
 }
 
 #[derive(Debug,Deserialize,Clone)]

@@ -15,8 +15,15 @@ pub async fn logging(ctx:&Context,init:&Init,wish:Option<User>){
     let user =UserId(NonZeroU64::new(init.discord.author_id).unwrap()).to_user(&ctx.http).await.unwrap();
     let mut err = ErrorLog::new(ctx,init,&user).await;
     let channel = ChannelId(NonZeroU64::new(init.log_channel.erupe_channel).unwrap());
+    let attachment = match CreateAttachment::path(&path).await{
+        Ok(x)=>x,
+        Err(why)=>{
+            err.change_error(why.to_string(), "sending erupe log", "no file on directory consider tuning this of".to_string());
+            return err.log_error_channel().await;
+        }
+    };
     if let Err(why)=channel.send_message(&ctx.http,CreateMessage::new()
-        .add_file(CreateAttachment::path(&path).await.unwrap()).content(&format!("LOG AT <t:{}:F>"
+        .add_file(attachment).content(&format!("LOG AT <t:{}:F>"
         ,SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs()))).await{
         err.change_error(why.to_string(), "sending log", "failed to send log".to_string());
         err.log_error_channel().await;
