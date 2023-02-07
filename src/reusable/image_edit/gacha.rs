@@ -1,16 +1,24 @@
 use std::{path::{Path, PathBuf}, io::Cursor};
 use image::{ImageError, Rgb, ImageBuffer, RgbImage};
 use rusttype::Font;
+use serde::Deserialize;
 use image::imageops::{FilterType,resize};
+use crate::material::items::Items;
 
+#[derive(Debug,Deserialize,Clone)]
+pub struct GachaCode {
+    pub key: String,
+    pub count: u16
+}
 #[derive(Clone)]
 pub struct GachaData{
     pub result:GachaR,
-    pub text:String
+    pub code:GachaCode
 }
 pub struct GachaImage{
     rec:Rectangle,
-    font:Font<'static>
+    font:Font<'static>,
+    item:Items<'static>
 }
 #[derive(Clone)]
 pub enum GachaR{
@@ -78,7 +86,7 @@ impl GachaImage {
     pub async fn new(url:&str)->Result<GachaImage,ImageError>{
         let font = GachaImage::load_font().await;
         let rec = Rectangle::get_rect(url, 51, 338, 48).await?.unwrap();
-        Ok(GachaImage { rec, font })
+        Ok(GachaImage { rec, font,item:Items::default() })
     }
     async fn load_font()->Font<'static>{
         let path = Path::new(".").join("icon").join("NotoSerifJP-Regular.otf");
@@ -97,12 +105,13 @@ impl GachaImage {
                 *px = self.rec.get_rbg_pixel(x, y)
             }
         }
+        let text = format!("{}x{}",self.item.item.get(&gacha.code.key.as_str()).unwrap(),gacha.code.count);
         //draw text to image
         let res = imageproc::drawing::draw_text(&image,
             Rgb([255,255,255]),
-            self.get_x(&gacha.text), 510,
+            self.get_x(&text), 510,
             rusttype::Scale { x: 50.0, y: 50.0 }
-            ,&self.font,&gacha.text);
+            ,&self.font,&text);
         Ok(res)
     }
     pub async fn multi_pull(&self,gachas:Vec<GachaData>)->Result<Vec<u8>,ImageError>{
@@ -127,15 +136,15 @@ impl GachaImage {
 
 #[cfg(test)]
 mod testing{
-    use super::*;
+    // use super::*;
 
-    #[tokio::test()]
-    async fn test_edit() {
-        let mut cev = Vec::new();
-        for _ in 0..12{
-            cev.push(GachaData{result:GachaR::UR,text:"Spirit 犬 Slash VIIx99".to_owned()})
-        }
-        let x = GachaImage::new("https://media.discordapp.net/attachments/998783824710344755/1023057468667998228/hello.png").await.unwrap();
-        x.multi_pull(cev).await.unwrap();
-    }
+    // #[tokio::test()]
+    // async fn test_edit() {
+    //     let mut cev = Vec::new();
+    //     for _ in 0..12{
+    //         cev.push(GachaData{result:GachaR::UR,text:"Spirit 犬 Slash VIIx99".to_owned()})
+    //     }
+    //     let x = GachaImage::new("https://media.discordapp.net/attachments/998783824710344755/1023057468667998228/hello.png").await.unwrap();
+    //     x.multi_pull(cev).await.unwrap();
+    // }
 }

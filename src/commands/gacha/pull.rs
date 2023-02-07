@@ -2,27 +2,21 @@ use std::path::Path;
 use serde::Deserialize;
 use serenity::builder::CreateEmbed;
 use serenity::all::*;
-use crate::reusable::image_edit::gacha::{GachaData, GachaR, GachaImage};
+use crate::reusable::image_edit::gacha::{GachaData, GachaR, GachaImage,GachaCode};
 use crate::reusable::postgress::gacha::GachaPg;
 use crate::{Init,Register};
 use rand::prelude::*;
 
 #[derive(Debug,Deserialize)]
 struct Gacha {
-    ur: Vec<String>,
-    ssr1: Vec<String>,
-    ssr2: Vec<String>,
-    sr1: Vec<String>,
-    sr2:Vec<String>,
-    sr3: Vec<String>,
-    r1: Vec<String>,
-    r2: Vec<String>,
-    download: Vec<Download>
-}
-#[derive(Deserialize,Debug)]
-struct Download{
-    name:String,
-    distribution:i32
+    ur: Vec<GachaCode>,
+    ssr1: Vec<GachaCode>,
+    ssr2: Vec<GachaCode>,
+    sr1: Vec<GachaCode>,
+    sr2:Vec<GachaCode>,
+    sr3: Vec<GachaCode>,
+    r1: Vec<GachaCode>,
+    r2: Vec<GachaCode>,
 }
 
 impl Gacha{
@@ -37,42 +31,42 @@ impl Gacha{
         if rng<=0.001{
             let mut ur = self.ur.clone();
             ur.shuffle(&mut thread);
-            return GachaData{text:ur[0].to_owned(),result:GachaR::UR};
+            return GachaData{code:ur[0].to_owned(),result:GachaR::UR};
         //define ssr1 = 1%~0.1% = 0.9%
         }else if rng<=0.01{
             let mut ssr1 = self.ssr1.clone();
             ssr1.shuffle(&mut thread);
-            return GachaData{text:ssr1[0].to_owned(),result:GachaR::SSR};
+            return GachaData{code:ssr1[0].to_owned(),result:GachaR::SSR};
         //define ssr2 = 3%~1% = 2%
         }else if rng<=0.03{
             let mut ssr2 = self.ssr2.clone();
             ssr2.shuffle(&mut thread);
-            return GachaData{text:ssr2[0].to_owned(),result:GachaR::SSR};
+            return GachaData{code:ssr2[0].to_owned(),result:GachaR::SSR};
         //define sr1 = 8%~3% = 5%
         }else if rng<=0.08{
             let mut sr1 = self.sr1.clone();
             sr1.shuffle(&mut thread);
-            return GachaData{text:sr1[0].to_owned(),result:GachaR::SR};
+            return GachaData{code:sr1[0].to_owned(),result:GachaR::SR};
         //define sr2 = 8%~18% = 10%
         }else if rng<=0.18{
             let mut sr2 = self.sr2.clone();
             sr2.shuffle(&mut thread);
-            return GachaData{text:sr2[0].to_owned(),result:GachaR::SR};
+            return GachaData{code:sr2[0].to_owned(),result:GachaR::SR};
         //define sr3 = 18%~33% = 15%
         }else if rng<=0.33{
             let mut sr3 = self.sr3.clone();
             sr3.shuffle(&mut thread);
-            return GachaData{text:sr3[0].to_owned(),result:GachaR::SR};
+            return GachaData{code:sr3[0].to_owned(),result:GachaR::SR};
         //define r1 = 33%~63% = 30%
         }else if rng<=0.63{
             let mut r1 = self.r1.clone();
             r1.shuffle(&mut thread);
-            return GachaData{text:r1[0].to_owned(),result:GachaR::R};
+            return GachaData{code:r1[0].to_owned(),result:GachaR::R};
         }
         //define r2 = 63%~100% = 37%
         let mut r2 = self.r2.clone();
         r2.shuffle(&mut thread);
-        GachaData{text:r2[0].to_owned(),result:GachaR::R}
+        GachaData{code:r2[0].to_owned(),result:GachaR::R}
     }
     fn guaranteed(&self)->GachaData{
         let  mut thread = rand::thread_rng();
@@ -81,17 +75,17 @@ impl Gacha{
         if rng<=0.2{
             let mut ur = self.ur.clone();
             ur.shuffle(&mut thread);
-            return GachaData{text:ur[0].to_owned(),result:GachaR::UR};
+            return GachaData{code:ur[0].to_owned(),result:GachaR::UR};
         //define ssr1 = 50%~20% = 30%
         }else if rng<=0.5{
             let mut ssr1 = self.ssr1.clone();
             ssr1.shuffle(&mut thread);
-            return GachaData{text:ssr1[0].to_owned(),result:GachaR::SSR};
+            return GachaData{code:ssr1[0].to_owned(),result:GachaR::SSR};
         //define ssr2 = 50%~100% = 50%
         }
         let mut ssr2 = self.ssr2.clone();
         ssr2.shuffle(&mut thread);
-        GachaData{text:ssr2[0].to_owned(),result:GachaR::SSR}
+        GachaData{code:ssr2[0].to_owned(),result:GachaR::SSR}
     }
     pub fn single_pull(&self,data:&GachaPg)->(GachaPg,GachaData){
         let pity = data.pity+1;
