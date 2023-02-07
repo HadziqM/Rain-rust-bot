@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 
-pub struct Items<'a>{
-    pub item:HashMap<&'a str,&'a str>
+pub struct Items{
+    pub item:HashMap<&'static str,&'static str>
 }
-impl<'a> Default for Items<'a> {
-    fn default() -> Items<'a> {
+impl Default for Items {
+    fn default() -> Self {
         Items { item:HashMap::from([
     ("0000","- - - - - -"),
     ("0100","Book of Combos 1"),

@@ -3,11 +3,19 @@ use std::fmt;
 
 pub mod distribution;
 
+#[derive(Debug,serde::Deserialize,Clone)]
+pub struct ItemCode {
+    pub key: String,
+    pub count: u16,
+    pub types: u8,
+}
+
 //create own error enum
 #[derive(Debug)]
 pub enum BitwiseError {
     OddLength,
     InvalidKey,
+    NoItem,
     ParseInt(ParseIntError),
     Sqlx(sqlx::Error),
 }
@@ -17,6 +25,7 @@ impl fmt::Display for BitwiseError {
         match self {
             BitwiseError::OddLength => "input string has an odd number of bytes".fmt(f),
             BitwiseError::InvalidKey => "the key for converting endian is invalid length".fmt(f),
+            BitwiseError::NoItem => "no item on the selected data".fmt(f),
             BitwiseError::ParseInt(e) => e.fmt(f),
             BitwiseError::Sqlx(e)=>e.fmt(f)
         }
@@ -36,9 +45,11 @@ impl From<sqlx::Error> for BitwiseError{
     }
 }
 
-pub struct Bitwise;
+pub struct Bitwise<'a>{
+    item:&'a [ItemCode]
+}
 
-impl Bitwise{
+impl<'a> Bitwise<'a>{
     pub fn decode(hex_value:&str)->Result<Vec<u8>,BitwiseError>{
         if hex_value.len()%2 != 0{
             return Err(BitwiseError::OddLength);

@@ -2,21 +2,22 @@ use std::path::Path;
 use serde::Deserialize;
 use serenity::builder::CreateEmbed;
 use serenity::all::*;
-use crate::reusable::image_edit::gacha::{GachaData, GachaR, GachaImage,GachaCode};
+use crate::reusable::image_edit::gacha::{GachaData, GachaR, GachaImage};
+use crate::reusable::bitwise::ItemCode;
 use crate::reusable::postgress::gacha::GachaPg;
 use crate::{Init,Register};
 use rand::prelude::*;
 
 #[derive(Debug,Deserialize)]
 struct Gacha {
-    ur: Vec<GachaCode>,
-    ssr1: Vec<GachaCode>,
-    ssr2: Vec<GachaCode>,
-    sr1: Vec<GachaCode>,
-    sr2:Vec<GachaCode>,
-    sr3: Vec<GachaCode>,
-    r1: Vec<GachaCode>,
-    r2: Vec<GachaCode>,
+    ur: Vec<ItemCode>,
+    ssr1: Vec<ItemCode>,
+    ssr2: Vec<ItemCode>,
+    sr1: Vec<ItemCode>,
+    sr2:Vec<ItemCode>,
+    sr3: Vec<ItemCode>,
+    r1: Vec<ItemCode>,
+    r2: Vec<ItemCode>,
 }
 
 impl Gacha{

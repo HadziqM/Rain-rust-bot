@@ -1,19 +1,14 @@
 use std::{path::{Path, PathBuf}, io::Cursor};
 use image::{ImageError, Rgb, ImageBuffer, RgbImage};
 use rusttype::Font;
-use serde::Deserialize;
 use image::imageops::{FilterType,resize};
 use crate::material::items::Items;
+use super::super::bitwise::ItemCode;
 
-#[derive(Debug,Deserialize,Clone)]
-pub struct GachaCode {
-    pub key: String,
-    pub count: u16
-}
 #[derive(Clone)]
 pub struct GachaData{
     pub result:GachaR,
-    pub code:GachaCode
+    pub code:ItemCode
 }
 pub struct GachaImage{
     rec:Rectangle,
