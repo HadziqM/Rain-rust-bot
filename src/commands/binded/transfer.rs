@@ -1,5 +1,5 @@
 use serenity::all::{CommandInteraction, CommandOptionType, CommandDataOptionValue, ButtonStyle, ChannelId, ComponentInteraction, UserId};
-use serenity::builder::{CreateEmbed, CreateEmbedAuthor, CreateActionRow, CreateMessage, EditInteractionResponse};
+use serenity::builder::{CreateEmbed, CreateEmbedAuthor, CreateActionRow, CreateMessage, EditInteractionResponse, EditMessage};
 use serenity::prelude::Context;
 use tokio::io::AsyncWriteExt;
 use tokio::fs::File;
@@ -7,6 +7,7 @@ use crate::{Components,Init,Register,ErrorLog,PgConn};
 use crate::reusable::utils::Color;
 use std::num::NonZeroU64;
 use std::path::Path;
+use std::time::SystemTime;
 
 pub struct FileSave{
     pub name:String,
@@ -130,20 +131,10 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
         reg.error.log_slash_defer(cmd, false).await;
         return ;
     }
-    match data.save_to_file().await{
-        Ok(_)=>{
-            let ch = ChannelId(NonZeroU64::new(init.log_channel.transfer_channel).unwrap());
-            if let Err(why) = ch.send_message(&ctx.http,CreateMessage::new()
-                .embed(data.make_embed()).components(vec![data.make_button()])).await{
-                reg.error.log_error_channel().await;
-                reg.error.change_error(why.to_string(), "send save to judge", "sorry you need to report this so you could reset your cooldown".to_string());
-            }
-        }
-        Err(why)=>{
-            reg.error.change_error(why.to_string(), "saving file to folder", "windows issue".to_string());
-            reg.error.log_slash_defer(cmd, false).await;
-            return ;
-        }
+    if let Err(why)=data.save_to_file().await{
+        reg.error.change_error(why.to_string(), "saving file to folder", "windows issue".to_string());
+        reg.error.log_slash_defer(cmd, false).await;
+        return ;
     }
     match reg.pg.transfer_cd().await{
         Ok(x)=>{
@@ -152,7 +143,12 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
                     .embed(data.make_embed())).await{
                     reg.error.discord_error(why.to_string(), "transfer response").await;
                 }
-
+                let ch = ChannelId(NonZeroU64::new(init.log_channel.transfer_channel).unwrap());
+                if let Err(why) = ch.send_message(&ctx.http,CreateMessage::new()
+                    .embed(data.make_embed()).components(vec![data.make_button()])).await{
+                    reg.error.log_error_channel().await;
+                    reg.error.change_error(why.to_string(), "send save to judge", "sorry you need to report this so you could reset your cooldown".to_string());
+                }
             }else {
                 reg.error.change_error("Youare Still On Cooldown".to_string(), "save transfer", format!("You need to wait till <t:{}:R> to be able to attemp transfer save again",x.1));
                 reg.error.log_slash_defer(cmd, false).await;
@@ -212,15 +208,22 @@ pub async fn run_button(data:Vec<&str>,ctx:&Context,cmd:&ComponentInteraction,in
             error.change_error(why.to_string(), "sending dm",format!("please mention {} that save file is successfully transfered, bot cant send dm to them, maybe beacause they disable dm",user.to_string()));
             error.log_error_channel().await;
         }
+        let mut msg = cmd.message.clone();
+        if let Err(why) =msg.edit(&ctx.http, EditMessage::new()
+                .content(format!("Approved At <t:{}:F>",SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs())).components(vec![])).await{
+            error.change_error(why.to_string(), "erchiving message", "please delete the message manually, the process is already done successfully".to_string());
+            error.log_error_channel().await;
+        }
         pg.close().await;
     }else {
         if let Err(why)=user.direct_message(&ctx.http,CreateMessage::new().content(&format!("your save file has been rejected by {} you can login into the game now",cmd.user.name))).await{
             error.change_error(why.to_string(), "sending dm",format!("please mention {} that save file is rejected, bot cant send dm to them, maybe beacause they disable dm",user.to_string()));
             error.log_error_channel().await;
+        };
+        if let Err(why) = cmd.message.delete(&ctx.http).await{
+            error.change_error(why.to_string(), "deleting message", "please delete the message manually, the process is already done successfully".to_string());
+            error.log_error_channel().await;
         }
-    }
-    if let Err(why) =cmd.message.delete(&ctx.http).await{
-        error.change_error(why.to_string(), "delete judge message", "please delete the message manually, the process is already done successfully".to_string());
-        error.log_error_channel().await;
     }
 }
