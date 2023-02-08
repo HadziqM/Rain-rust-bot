@@ -5,7 +5,7 @@ pub struct Chest{
 }
 impl Default for Chest {
     fn default() -> Self {
-        Chest { item: HashMap::from([
+        Chest { item: HashMap::from_iter([
         //13470-10
     ("0000","No Equipment"),
     ("0100","Leather Mail"),
@@ -13469,6 +13469,6 @@ impl Default for Chest {
     ("9334","Mi Ru ノ装束 ・ D"),
     ("9434","Mi Ru ノ装束 ・ D"),
     ("9534","Hope D Mail"),
-    ])}
+    ].iter().copied())}
     }
 }

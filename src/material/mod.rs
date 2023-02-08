@@ -11,7 +11,7 @@ pub mod waist;
 use std::collections::HashMap;
 
 pub struct ItemPedia{
-    pub types:HashMap<u8,&'static str>,
+    pub types:HashMap<u8,HashMap<&'static str,&'static str>>,
 }
 pub enum ItemList {
     Item(HashMap<&'static str,&'static str>),
@@ -26,14 +26,14 @@ pub enum ItemList {
 impl Default for ItemPedia{
     fn default() -> Self {
         ItemPedia { types:HashMap::from([
-            (0,"legs"),
-            (1,"Head"),
-            (2,"Chest"),
-            (3,"Arms"),
-            (4,"Waist"),
-            (5,"Melee"),
-            (6,"Ranged"),
-            (7,"Item"),
+            (0,leg::Leg::default().item),
+            (1,head::Head::default().item),
+            (2,chest::Chest::default().item),
+            (3,arms::Arms::default().item),
+            (4,waist::Waist::default().item),
+            (5,melee::Melee::default().item),
+            (6,ranged::Ranged::default().item),
+            (7,items::Items::default().item),
         ])
         }
     }
@@ -48,28 +48,41 @@ impl ItemList{
             4=>Some(ItemList::Waist(waist::Waist::default().item)),
             5=>Some(ItemList::Melee(melee::Melee::default().item)),
             6=>Some(ItemList::Ranged(ranged::Ranged::default().item)),
-            7=>Some(ItemList::Leg(items::Items::default().item)),
+            7=>Some(ItemList::Item(items::Items::default().item)),
             _=>None
         }
     }
+    pub fn value(&self)->HashMap<&'static str,&'static str>{
+        match self{
+            ItemList::Item(x)=>x.to_owned(),
+            ItemList::Waist(x)=>x.to_owned(),
+            ItemList::Melee(x)=>x.to_owned(),
+            ItemList::Arms(x)=>x.to_owned(),
+            ItemList::Head(x)=>x.to_owned(),
+            ItemList::Ranged(x)=>x.to_owned(),
+            ItemList::Chest(x)=>x.to_owned(),
+            ItemList::Leg(x)=>x.to_owned(),
+        }
+    }
     fn get(&self,clue:&str)->Option<&'static str>{
-        let val = match self{
-            ItemList::Item(x)=>x,
-            ItemList::Waist(x)=>x,
-            ItemList::Melee(x)=>x,
-            ItemList::Arms(x)=>x,
-            ItemList::Head(x)=>x,
-            ItemList::Ranged(x)=>x,
-            ItemList::Chest(x)=>x,
-            ItemList::Leg(x)=>x,
-        };
-        val.get(clue).copied()
+        self.value().get(clue).copied()
     }
 }
 impl ItemPedia{
     pub fn search(key:u8,clue:&str)->Option<&'static str>{
         ItemList::new(key)?.get(clue)
     }
+    pub fn dictionary(&self,key:u8,clue:&str)->Option<&'static str>{
+        self.types.get(&key)?.get(clue).copied()
+    }
 }
+#[cfg(test)]
+mod test{
+    use super::*;
 
-
+    #[test]
+    fn load_item() {
+        let x = arms::Arms::default().item;
+        assert_eq!(x.get("0000").unwrap().to_owned(),"No Equipment")
+    }
+}

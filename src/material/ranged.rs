@@ -5,7 +5,7 @@ pub struct Ranged{
 }
 impl Default for Ranged {
     fn default() -> Self {
-        Ranged { item: HashMap::from([
+        Ranged { item: HashMap::from_iter([
           //4231-10
     ("0000","None"),
     ("0100","Cross Bowgun"),
@@ -4230,7 +4230,7 @@ impl Default for Ranged {
     ("7410","Gray・Sfera"),
     ("7510","Gray・Gauhara"),
     ("7610","Gray・Pashupata"),
-        ]) }
+        ].iter().copied()) }
     }
 }
 

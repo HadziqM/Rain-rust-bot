@@ -6,7 +6,7 @@ pub struct Arms {
 }
 impl Default for Arms{
     fn default() -> Self {
-        Arms { item: HashMap::from([
+        Arms { item: HashMap::from_iter([
     ("0000","No Equipment"),
     ("0100","Leather Arms"),
     ("0200","Chainmail Arms"),
@@ -13459,6 +13459,6 @@ impl Default for Arms{
     ("8934","Mi Ru ノ Kote ・ D"),
     ("8A34","Mi Ru ノ Kote ・ D"),
     ("8B34","Hope D Arms"),
-    ])}
+    ].iter().copied())}
     }
 }

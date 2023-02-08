@@ -25,20 +25,23 @@ impl<'a> Bitwise<'a> {
     pub fn new(data:&'a [ItemCode])->Bitwise<'a>{
         Bitwise { item: data }
     }
-    pub fn first_item(&self)->Result<Vec<u8>,BitwiseError>{
-        if let Some(data) = self.item.first(){
-            let reversed = data.reverse_key()?;
-            let data = format!("0001{:02X}0000{}0000{:04X}00000000",data.types,&reversed,data.count);
-            Bitwise::decode(&data)
-        }else{
+    fn no_item(&self)->Result<(),BitwiseError>{
+        if self.item.len() == 0{
             Err(BitwiseError::NoItem)
+        }else {
+            Ok(())
         }
     }
+    pub fn first_item(&self)->Result<Vec<u8>,BitwiseError>{
+        self.no_item()?;
+        let code = self.item.first().unwrap();
+        let reversed = code.reverse_key()?;
+        let data = format!("0001{:02X}0000{}0000{:04X}00000000",code.types,reversed,code.count);
+        Bitwise::decode(&data)
+    }
     pub fn multiple_item(&self)->Result<Vec<u8>,BitwiseError>{
-        if self.item.len() == 0{
-            return Err(BitwiseError::NoItem);
-        }
-        let mut data = format!("{:04x}",self.item.len());
+        self.no_item()?;
+        let mut data = format!("{:04X}",self.item.len());
         for code in self.item{
             data.push_str(&format!("{:02X}0000{}0000{:04X}00000000",
                 code.types,code.reverse_key()?,code.count));

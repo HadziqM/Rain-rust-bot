@@ -5,8 +5,8 @@ pub struct Items{
     pub item:HashMap<&'static str,&'static str>
 }
 impl Default for Items {
-    fn default() -> Self {
-        Items { item:HashMap::from([
+    fn default() -> Items {
+        Items { item:HashMap::from_iter([
     ("0000","- - - - - -"),
     ("0100","Book of Combos 1"),
     ("0200","Book of Combos 2"),
@@ -16708,6 +16708,6 @@ impl Default for Items {
     ("3A41","Dummy 16698"),
     ("3B41","Dummy 16699"),
     ("3C41","Dummy 16700"),
-       ])}
+       ].iter().copied())}
     }
 }

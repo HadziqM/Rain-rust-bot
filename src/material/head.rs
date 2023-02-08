@@ -5,7 +5,7 @@ pub struct Head{
 }
 impl Default for Head {
     fn default() -> Self {
-        Head { item: HashMap::from([
+        Head { item: HashMap::from_iter([
         //14602-10
     ("0000","No Equipment"),
     ("0100","Leather Helm"),
@@ -14601,6 +14601,6 @@ impl Default for Head {
     ("FF38","G Poogie D Festa"),
     ("0039","G Gook D Festa"),
     ("0139","G Khezu D Festa"),
-        ]) }
+        ].iter().copied())}
     }
 }

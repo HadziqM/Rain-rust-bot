@@ -22,7 +22,7 @@ struct Gacha {
 
 impl Gacha{
     async fn new()->Gacha{
-        let path = Path::new(".").join("gacha").join("gacha.json");
+        let path = Path::new(".").join("static").join("gacha.json");
         serde_json::from_str(&tokio::fs::read_to_string(&path).await.unwrap()).unwrap()
     }
     fn pull(&self)->GachaData{

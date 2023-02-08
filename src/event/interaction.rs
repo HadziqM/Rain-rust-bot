@@ -40,3 +40,9 @@ pub async fn modal_command(cmd_id:&str,cmd:&ModalInteraction,ctx:&Context,hnd:&I
         _=>{return;}
     }
 }
+pub async fn autocomplete_command(cmd_id:&str,cmd:&CommandInteraction,ctx:&Context,hnd:&Init){
+    match cmd_id{
+        "market"=>commands::admin::market::run_autocomplete(ctx, cmd, hnd).await,
+        _=>{return;}
+    }
+}

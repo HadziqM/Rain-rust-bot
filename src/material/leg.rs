@@ -5,7 +5,7 @@ pub struct Leg{
 }
 impl Default for Leg {
     fn default() -> Self {
-        Leg { item: HashMap::from([
+        Leg { item: HashMap::from_iter([
         //13522-10
     ("0000","No Equipment"),
     ("0100","Green Jersey"),
@@ -13521,7 +13521,7 @@ impl Default for Leg {
     ("C734","Mi Ru ノ Tabi ・ D"),
     ("C834","Mi Ru ノ Tabi ・ D"),
     ("C934","Hope D Greaves"),
-        ]) }
+        ].iter().copied()) }
     }
 }
 

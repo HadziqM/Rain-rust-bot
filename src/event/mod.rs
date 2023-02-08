@@ -26,6 +26,7 @@ impl EventHandler for Handler{
             Modal(cmd)=>modal_command(&cmd.data.custom_id, &cmd, &ctx,&self.config).await,
             Command(cmd) => slash_command(&cmd.data.name, &cmd,&ctx, &self.config).await,
             Component(cmd) => button_command(&cmd.data.custom_id, &cmd,&ctx, &self.config).await,
+            Autocomplete(cmd)=>autocomplete_command(&cmd.data.name, &cmd, &ctx, &self.config).await,
             _=>println!("unhandled interaction")
         }
     }

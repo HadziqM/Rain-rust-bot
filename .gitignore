@@ -1,8 +1,8 @@
 /target
 config.json
-/gacha
 /bounty
 /save/*
 !/save/this_save.txt
+/static/*
 test.jpg
 log.txt

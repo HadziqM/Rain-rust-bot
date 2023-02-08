@@ -5,7 +5,7 @@ pub struct Melee{
 }
 impl Default for Melee {
     fn default() -> Self {
-        Melee { item: HashMap::from([
+        Melee { item: HashMap::from_iter([
         //17577-10
     ("0000","None"),
     ("0A00","Iron Katana"),
@@ -17575,7 +17575,7 @@ impl Default for Melee {
     ("9A44","Volnoborin Ⅲ"),
     ("9B44","Volnoborin Ⅳ"),
     ("6042","Magnica Glanze"),
-        ]) }
+        ].iter().copied()) }
     }
 }
 

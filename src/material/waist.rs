@@ -5,7 +5,7 @@ pub struct Waist{
 }
 impl Default for Waist {
     fn default() -> Self {
-        Waist { item: HashMap::from([
+        Waist { item: HashMap::from_iter([
         //13716-10
     ("0000","No Equipment"),
     ("0100","Leather Belt"),
@@ -13715,7 +13715,7 @@ impl Default for Waist {
     ("8935","Mi Ru ノ Obi ・ D"),
     ("8A35","Mi Ru ノ Obi ・ D"),
     ("8B35","Hope D Faulds"),
-    ])}
+    ].iter().copied())}
     }
 }
 
