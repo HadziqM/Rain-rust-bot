@@ -6,6 +6,7 @@ use crate::AppReg;
 pub mod interface;
 pub mod save_cd;
 pub mod market;
+pub mod purge;
 
 
 pub fn reg()->Vec<CreateCommand>{
@@ -14,7 +15,7 @@ pub fn reg()->Vec<CreateCommand>{
         );
     let user_op = CreateCommandOption::new(CommandOptionType::User, "user","mention the customer").required(true);
     let price_op = CreateCommandOption::new(CommandOptionType::Number, "price","item price (all) not single");
-    let count_op = CreateCommandOption::new(CommandOptionType::Integer, "unit","quantity of the item send").required(true);
+    let count_op = CreateCommandOption::new(CommandOptionType::Integer, "unit","quantity of the item send max 65025").required(true);
     let item_op = CreateCommandOption::new(CommandOptionType::String, "item ", "search one of ~17770 item on the list").required(true).set_autocomplete(true);
     let item = AppReg::admin_slash("market", "send item trough distribution then deduct their bounty coin").add_option(
         CreateCommandOption::new(CommandOptionType::SubCommand, "item","send with item category")
@@ -43,6 +44,9 @@ pub fn reg()->Vec<CreateCommand>{
         );
     vec![
         AppReg::admin_slash("interface", "mhfz user interface"),
+        AppReg::admin_slash("purge", "purge user binded and register data on database").add_option(
+        CreateCommandOption::new(CommandOptionType::User,"user","mention user you want to purge").required(true)
+        ),
         save,
         item
     ]

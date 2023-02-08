@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use serenity::all::{CommandInteraction, ComponentInteraction};
+use serenity::all::{CommandInteraction, ComponentInteraction, User};
 use serenity::builder::{CreateInteractionResponse, CreateInteractionResponseMessage};
 use serenity::futures::StreamExt;
 use serenity::prelude::Context;
@@ -134,5 +134,32 @@ impl<'a> Register<'a> {
         }
         pg.close().await;
         None
+    }
+    pub async fn default_user(ctx:&'a Context,cmd:&'a CommandInteraction,init:&'a Init,on:&'a str,user:&User)->Option<Register<'a>>{
+        let mut err = ErrorLog::new(ctx,init,&cmd.user).await;
+        let mut pg = match PgConn::create(init, user.id.to_string()).await{
+            Ok(p)=>p,
+            Err(why)=>{
+                err.pgcon_error(why.to_string(),on, cmd).await;
+                return None;
+            }
+        };
+        match pg.get_user_data().await{
+            Ok(dt)=>{
+                if dt.cid == 0 {
+                    err.change_error(format!("{} doesnt have character selected",user.name),
+                        on,format!("{} doesnt have account in this server or they doesnt select their character yet with `/switch`",user.to_string()));
+                    err.log_slash(cmd, false).await;
+                    pg.close().await;
+                    return None;
+                }
+                Some(Register { error:err, pg, cid:dt.cid })
+            }
+            Err(why)=>{
+                err.pgcon_error(why.to_string(), on, cmd).await;
+                pg.close().await;
+                None
+            }
+        }
     }
 }

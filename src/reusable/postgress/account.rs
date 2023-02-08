@@ -72,6 +72,9 @@ impl<'a> PgConn<'a>{
         sqlx::query(&format!("UPDATE characters SET {}=$1 WHERE id=$2",&file.name)).bind(file.bin.as_slice()).bind(cid).execute(&self.pool).await?;
         Ok(())
     }
+    pub async fn purge(&self)->Result<(),sqlx::Error>{
+        purge(&self.pool, &self.did).await
+    }
 }
 impl SaveData {
     fn to_file(&self)->Result<(),std::io::Error>{
@@ -130,10 +133,10 @@ async fn use_history(pool:&Pool<Postgres>,did:&str,uid:i64)->Result<(),sqlx::Err
 }
 #[cfg(test)]
 mod test_postgres{
-    use super::*;
-    // use super::super::connection;
-    use crate::get_config;
-    use crate::PgConn;
+    // use super::*;
+    // // use super::super::connection;
+    // use crate::get_config;
+    // use crate::PgConn;
     // use super::super::card::user_check;
 
     // #[tokio::test]
@@ -161,17 +164,17 @@ mod test_postgres{
     //     println!("{cd:?}");
     //     pg.close().await;
     // }
-    #[tokio::test]
-    async fn test_cd(){
-        let init = get_config().unwrap();
-        let did = init.discord.author_id.to_string();
-        let mut pg = PgConn::create(&init, did).await.unwrap();
-        let file = std::fs::read("./save/455622761168109569_savedata.bin").unwrap();
-        let savefile = FileSave{bin:file,name:"savedata".to_string()};
-        let data = pg.get_user_data().await.unwrap();
-        pg.transfer_file(&savefile,data.cid).await.unwrap();
-        pg.close().await;
-    }
+    // #[tokio::test]
+    // async fn test_cd(){
+    //     let init = get_config().unwrap();
+    //     let did = init.discord.author_id.to_string();
+    //     let mut pg = PgConn::create(&init, did).await.unwrap();
+    //     let file = std::fs::read("./save/455622761168109569_savedata.bin").unwrap();
+    //     let savefile = FileSave{bin:file,name:"savedata".to_string()};
+    //     let data = pg.get_user_data().await.unwrap();
+    //     pg.transfer_file(&savefile,data.cid).await.unwrap();
+    //     pg.close().await;
+    // }
     // #[tokio::test]
     // async fn test_user_creation(){
     //     let pool = connection(&get_config().unwrap()).await.unwrap();

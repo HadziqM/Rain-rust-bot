@@ -32,13 +32,6 @@ impl<'a> Bitwise<'a> {
             Ok(())
         }
     }
-    pub fn first_item(&self)->Result<Vec<u8>,BitwiseError>{
-        self.no_item()?;
-        let code = self.item.first().unwrap();
-        let reversed = code.reverse_key()?;
-        let data = format!("0001{:02X}0000{}0000{:04X}00000000",code.types,reversed,code.count);
-        Bitwise::decode(&data)
-    }
     pub fn multiple_item(&self)->Result<Vec<u8>,BitwiseError>{
         self.no_item()?;
         let mut data = format!("{:04X}",self.item.len());

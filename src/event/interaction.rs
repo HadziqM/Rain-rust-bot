@@ -16,6 +16,8 @@ pub async fn slash_command(cmd_id:&str,cmd:&CommandInteraction,ctx:&Context,hnd:
         "dm_save"=>commands::binded::save::run(ctx,cmd,hnd).await,
         "transfer"=>commands::binded::transfer::run(ctx,cmd,hnd).await,
         "reset_save_cd"=>commands::admin::save_cd::run(ctx,cmd,hnd).await,
+        "market"=>commands::admin::market::run(ctx,cmd,hnd).await,
+        "purge"=>commands::admin::purge::run(ctx,cmd,hnd).await,
         _=> {return;}
     }
 }

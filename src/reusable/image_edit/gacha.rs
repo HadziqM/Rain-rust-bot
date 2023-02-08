@@ -29,7 +29,7 @@ struct Rectangle{
 }
 impl GachaR{
     fn path(&self)->PathBuf{
-        let path = Path::new(".").join("gacha");
+        let path = Path::new(".").join("image");
         match self{
             GachaR::R=>path.join("r.jpg"),
             GachaR::SR=>path.join("sr.jpg"),
