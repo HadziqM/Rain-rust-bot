@@ -18,6 +18,7 @@ pub async fn slash_command(cmd_id:&str,cmd:&CommandInteraction,ctx:&Context,hnd:
         "reset_save_cd"=>commands::admin::save_cd::run(ctx,cmd,hnd).await,
         "market"=>commands::admin::market::run(ctx,cmd,hnd).await,
         "purge"=>commands::admin::purge::run(ctx,cmd,hnd).await,
+        "pull"=>commands::gacha::pull::run(ctx, cmd, hnd).await,
         _=> {return;}
     }
 }

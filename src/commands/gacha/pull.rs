@@ -6,6 +6,7 @@ use crate::reusable::image_edit::gacha::{GachaData, GachaR, GachaImage};
 use crate::reusable::bitwise::ItemCode;
 use crate::reusable::postgress::gacha::GachaPg;
 use crate::{Init,Register};
+use crate::reusable::utils::Color;
 use rand::prelude::*;
 
 #[derive(Debug,Deserialize)]
@@ -114,9 +115,17 @@ impl Gacha{
 }
 fn create_embed(user:&User,pg:&GachaPg)->CreateEmbed{
     CreateEmbed::new().title("Mhfz Gacha Result").description(format!("Pity Count: {}\nTicket Remaining: {}",pg.pity,pg.ticket))
-        .author(CreateEmbedAuthor::new(&user.name).icon_url(user.face())).image("attachment://gacha.jpg")
+        .author(CreateEmbedAuthor::new(&user.name).icon_url(user.face())).image("attachment://gacha.jpg").color(Color::Random.throw())
 }
-pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init,multi:bool){
+pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
+    let mut multi = false;
+    for i in &cmd.data.options{
+        if let CommandDataOptionValue::SubCommand(_) = &i.value{
+            if i.name == "multi"{
+                multi = true;
+            }
+        }
+    }
     let mut reg =match Register::default(ctx, cmd, init, "single pull", false).await{
         Some(x)=>x,
         None=>{return;}
@@ -176,7 +185,7 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init,multi:bool){
             let att = CreateAttachment::bytes(x, "gacha.jpg");
             let embed = create_embed(&cmd.user, &g_pg);
             if let Err(why)=cmd.edit_response(&ctx.http,EditInteractionResponse::new()
-                .embed(embed).new_attachment(att)).await{
+                .new_attachment(att).embed(embed)).await{
                 reg.error.discord_error(why.to_string(), "sending gacha result").await;
                 return reg.pg.close().await;
             }

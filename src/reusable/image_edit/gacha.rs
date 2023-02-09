@@ -148,10 +148,15 @@ impl GachaImage {
             let y_position = y as usize - ((index / 4)*205);
             *px = all_buff[index].get_pixel(x_position as u32, y_position as u32).to_owned()
         }
-        Ok(img.as_raw().to_owned())
+        let mut bytes = Vec::new();
+        img.write_to(&mut Cursor::new(&mut bytes), image::ImageOutputFormat::Png)?;
+        Ok(bytes)
     }
     pub async fn single_pull(&self,gacha:&GachaData)->Result<Vec<u8>,CustomImageError>{
-        Ok(self.url_pull(gacha).await?.as_raw().to_owned())
+        let img = self.url_pull(gacha).await?;
+        let mut bytes = Vec::new();
+        img.write_to(&mut Cursor::new(&mut bytes), image::ImageOutputFormat::Png)?;
+        Ok(bytes)
     }
 }
 

@@ -119,7 +119,7 @@ impl SubCommand{
         }
         let item = ItemList::new(self.code())?;
         let out = item.value().iter().filter(|(_,f)|f.to_lowercase()
-            .starts_with(&val.to_lowercase()))
+            .starts_with(&val.to_lowercase()) || f.to_lowercase().contains(&val.to_lowercase()))
             .map(|(&k,&v)|AutocompleteChoice{value:Value::String(k.to_owned())
             ,name:v.to_owned()}).collect::<Vec<_>>();
         if out.len() == 0{
