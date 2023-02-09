@@ -1,4 +1,5 @@
 pub mod pull;
+pub mod ch_gacha;
 
 
 use serenity::builder::{CreateCommand, CreateCommandOption};
@@ -13,8 +14,11 @@ pub fn reg()->Vec<CreateCommand>{
         ).add_option(
         CreateCommandOption::new(CommandOptionType::SubCommand, "multi", "12 gacha pull cost 110 ticket")
         );
+    let ch = AppReg::admin_slash("ch_gacha", "cahnge gacha banner with json").add_option(
+        CreateCommandOption::new(CommandOptionType::Attachment, "attachment", "you gacha.json file (need to be correct name)").required(true)
+        );
     vec![
-        pull
+        pull,ch
     ]
 }
 

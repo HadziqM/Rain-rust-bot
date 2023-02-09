@@ -19,6 +19,7 @@ pub async fn slash_command(cmd_id:&str,cmd:&CommandInteraction,ctx:&Context,hnd:
         "market"=>commands::admin::market::run(ctx,cmd,hnd).await,
         "purge"=>commands::admin::purge::run(ctx,cmd,hnd).await,
         "pull"=>commands::gacha::pull::run(ctx, cmd, hnd).await,
+        "ch_gacha"=>commands::gacha::ch_gacha::run(ctx, cmd, hnd).await,
         _=> {return;}
     }
 }

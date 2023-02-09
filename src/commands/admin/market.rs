@@ -118,11 +118,14 @@ impl SubCommand{
     fn predict(&self)->Option<Vec<AutocompleteChoice>>{
         let val = self.value();
         let item = ItemList::new(self.code())?;
-        let out = item.value().iter().filter(|(_,f)|{
+        let out = item.value().iter().filter(|(k,f)|{
                 if f.len() != 0{
                     let flat_val = val.to_lowercase();
                     let flat_tar = f.to_lowercase();
-                    if flat_tar.starts_with(&flat_val)||flat_tar.contains(&flat_val){
+                    if flat_tar.starts_with(&flat_val)||
+                        flat_tar.contains(&flat_val)||
+                        k.starts_with(&val.to_uppercase())||
+                        k.contains(&val.to_uppercase()){
                         return true;
                     }
                 }
@@ -130,7 +133,7 @@ impl SubCommand{
             }
             )
             .map(|(&k,&v)|{
-                let mut name = v.to_owned();
+                let mut name = format!("{} - {}",k,v);
                 if v.len() > 100{
                     name = name[0..90].to_owned();
                 }
