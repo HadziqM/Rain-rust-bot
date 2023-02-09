@@ -34,9 +34,16 @@ impl EventHandler for Handler{
         ready::ready(&ctx, ready,&self.config).await;
         let init = self.config.clone();
         tokio::spawn(async move {
+            let mut state = 0;
+            let mut log_count:u64 = 0;
             loop {
-                paralel::paralel_thread(&ctx, &init).await;
-                tokio::time::sleep(Duration::from_secs(60*5)).await;
+                let mut log = false;
+                if init.mhfz_config.sending_log && log_count%10 == 0{
+                    log = true
+                }
+                state = paralel::paralel_thread(&ctx, &init,state,log).await;
+                log_count += 1;
+                tokio::time::sleep(Duration::from_secs(60)).await;
             }
         });
     }

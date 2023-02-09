@@ -22,25 +22,25 @@ pub fn reg()->Vec<CreateCommand>{
         .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(count_op.to_owned()).add_sub_option(price_op.to_owned())
         ).add_option(
         CreateCommandOption::new(CommandOptionType::SubCommand, "melee","send with melee weapon category")
-        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(count_op.to_owned()).add_sub_option(price_op.to_owned())
+        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(price_op.to_owned())
         ).add_option(
         CreateCommandOption::new(CommandOptionType::SubCommand, "ranged","send with ranged weapon category")
-        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(count_op.to_owned()).add_sub_option(price_op.to_owned())
+        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(price_op.to_owned())
         ).add_option(
         CreateCommandOption::new(CommandOptionType::SubCommand, "head","send with head armor category")
-        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(count_op.to_owned()).add_sub_option(price_op.to_owned())
+        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(price_op.to_owned())
         ).add_option(
         CreateCommandOption::new(CommandOptionType::SubCommand, "arms","send with arms armor category")
-        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(count_op.to_owned()).add_sub_option(price_op.to_owned())
+        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(price_op.to_owned())
         ).add_option(
         CreateCommandOption::new(CommandOptionType::SubCommand, "chest","send with chest armor category")
-        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(count_op.to_owned()).add_sub_option(price_op.to_owned())
+        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(price_op.to_owned())
         ).add_option(
         CreateCommandOption::new(CommandOptionType::SubCommand, "waist","send with waist armor category")
-        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(count_op.to_owned()).add_sub_option(price_op.to_owned())
+        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(price_op.to_owned())
         ).add_option(
         CreateCommandOption::new(CommandOptionType::SubCommand, "leg","send with leg armor category")
-        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(count_op.to_owned()).add_sub_option(price_op.to_owned())
+        .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(price_op.to_owned())
         );
     vec![
         AppReg::admin_slash("interface", "mhfz user interface"),

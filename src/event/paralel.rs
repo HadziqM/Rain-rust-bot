@@ -70,36 +70,27 @@ impl<'a> Server<'a> {
     }
 }
 
-static mut CURRENT_PLAYER:i32 = 0;
 
-//event handler will spawn a thread calling this function every 5 minutes
-pub async fn paralel_thread(ctx:&Context,init:&Init){
+//event handler will spawn a thread calling this function every 1 minutes and log every crash or 10
+//minutes
+pub async fn paralel_thread(ctx:&Context,init:&Init,state:i32,log:bool)->i32{
     let user = match UserId(NonZeroU64::new(init.discord.author_id).unwrap()).to_user(&ctx.http).await{
         Ok(x)=>x,
         Err(why)=>{
             println!("cant get user {why}");
-            return;
+            return 0;
         }
     };
     let mut serv = match Server::new(init, ctx, &user).await{
         Some(x)=>x,
-        None=>{return;}
+        None=>{return 0;}
     };
-    let cp;
     //run function to update server status on info channel
     let now = serv.edit_msg().await;
-    if init.mhfz_config.sending_log{
-        //sorry to use unsafe, since rust doesnt support global variable
-        //and this thread is completely detached from main thread
-        //so we cant get access to Handler struct
-        unsafe{
-            cp = CURRENT_PLAYER;
-            CURRENT_PLAYER = now;
-        }
-        //if the current player is 0 and is not 0 before, announce server crash
-        //and dm wish the log
+    let crash = now==0 && state != 0; 
+    if log || crash{
         let wish;
-        if now==0 && cp != 0{
+        if crash{
             wish = Some(UserId(NonZeroU64::new(119094696487288833).unwrap()).to_user(&ctx.http).await.unwrap());
         }else{
             wish = None
@@ -107,4 +98,5 @@ pub async fn paralel_thread(ctx:&Context,init:&Init){
         //execute the logging logic
         logging(ctx,init,wish).await;
     }
+    now
 }

@@ -31,10 +31,13 @@ impl MarketHandle {
                     match &opt.value{
                         CommandDataOptionValue::User(x)=>{user=*x}
                         CommandDataOptionValue::Integer(x)=>{
-                            if x > &65025{
+                            count = match u16::try_from(*x){
+                                Ok(y)=>y,
+                                Err(_)=>{return None;}
+                            };
+                            if count == 0 {
                                 return None;
                             }
-                            count = *x as u16;
                         }
                         CommandDataOptionValue::Number(x)=>{price = Some(*x as i32)}
                         CommandDataOptionValue::String(value)=>{
@@ -114,14 +117,25 @@ impl SubCommand{
     }
     fn predict(&self)->Option<Vec<AutocompleteChoice>>{
         let val = self.value();
-        if val == ""{
-            return None;
-        }
         let item = ItemList::new(self.code())?;
-        let out = item.value().iter().filter(|(_,f)|f.to_lowercase()
-            .starts_with(&val.to_lowercase()) || f.to_lowercase().contains(&val.to_lowercase()))
-            .map(|(&k,&v)|AutocompleteChoice{value:Value::String(k.to_owned())
-            ,name:v.to_owned()}).collect::<Vec<_>>();
+        let out = item.value().iter().filter(|(_,f)|{
+                if f.len() != 0{
+                    let flat_val = val.to_lowercase();
+                    let flat_tar = f.to_lowercase();
+                    if flat_tar.starts_with(&flat_val)||flat_tar.contains(&flat_val){
+                        return true;
+                    }
+                }
+                 false
+            }
+            )
+            .map(|(&k,&v)|{
+                let mut name = v.to_owned();
+                if v.len() > 100{
+                    name = name[0..90].to_owned();
+                }
+                AutocompleteChoice{value:Value::String(k.to_owned()),name}
+            }).collect::<Vec<_>>();
         if out.len() == 0{
             return None;
         }else if out.len()>15{

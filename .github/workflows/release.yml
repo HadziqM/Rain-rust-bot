@@ -27,7 +27,7 @@ jobs:
         run: ren ./config.json.example config.json&&copy ./target/release/rain-bot.exe .
       - name: rename linux and mac config and move exutable
         if: matrix.platform != 'windows-latest'
-        run: mv ./config.json.example config.json&&cp ./target/release/rain-bot .&&mkdir save&&touch ./save/this_is_save_folder.txt
+        run: mv ./config.json.example config.json&&cp ./target/release/rain-bot .
 
 
       - name: upload windows-artefact
@@ -41,6 +41,7 @@ jobs:
             icon/
             save/
             query/
+            static/
             Cargo.toml
             config.json
 
@@ -55,6 +56,7 @@ jobs:
             icon/
             save/
             query/
+            static/
             Cargo.toml
             config.json
 
@@ -69,5 +71,6 @@ jobs:
             icon/
             save/
             query/
+            static/
             Cargo.toml
             config.json
