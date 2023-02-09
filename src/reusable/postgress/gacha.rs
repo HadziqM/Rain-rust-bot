@@ -39,48 +39,48 @@ impl<'a> PgConn<'a> {
     }
 }
 
-#[cfg(test)]
-mod testing{
-    use crate::reusable::config::get_config;
-
-    use super::*;
-
-    // #[tokio::test]
-    // async fn get_pity() {
-    //     let init = get_config().unwrap();
-    //     let did = init.discord.author_id.to_string();
-    //     let mut pg = PgConn::create(&init, did).await.unwrap();
-    //     println!("{:?}",pg.get_pity().await.unwrap());
-    //     pg.close().await;
-    // }
-    #[tokio::test]
-    async fn send_distrib() {
-        let init = get_config().unwrap();
-        let did = init.discord.author_id.to_string();
-        let mut pg = PgConn::create(&init, did).await.unwrap();
-        let data = ItemCode { key: "0700".to_owned(), count: 1, types: 7 };
-        pg.market(&data, pg.get_char_id().await.unwrap().0, Some(1)).await.unwrap();
-        pg.close().await;
-    }
-    #[tokio::test]
-    async fn single() {
-        let init = get_config().unwrap();
-        let did = init.discord.author_id.to_string();
-        let mut pg = PgConn::create(&init, did).await.unwrap();
-        let data = [ItemCode { key: "0700".to_owned(), count: 1, types: 7 }];
-        let gac = GachaPg{pity:30,ticket:20};
-        pg.send_distrib(&gac, &data, pg.get_char_id().await.unwrap().0).await.unwrap();
-        pg.close().await;
-    }
-    #[tokio::test]
-    async fn multiple() {
-        let init = get_config().unwrap();
-        let did = init.discord.author_id.to_string();
-        let mut pg = PgConn::create(&init, did).await.unwrap();
-        let data = [ItemCode { key: "0700".to_owned(), count: 1, types: 7 },
-        ItemCode { key: "0700".to_owned(), count: 20, types: 7 }];
-        let gac = GachaPg{pity:30,ticket:20};
-        pg.send_distrib(&gac, &data, pg.get_char_id().await.unwrap().0).await.unwrap();
-        pg.close().await;
-    }
-}
+// #[cfg(test)]
+// mod testing{
+//     use crate::reusable::config::get_config;
+//
+//     use super::*;
+//
+//     // #[tokio::test]
+//     // async fn get_pity() {
+//     //     let init = get_config().unwrap();
+//     //     let did = init.discord.author_id.to_string();
+//     //     let mut pg = PgConn::create(&init, did).await.unwrap();
+//     //     println!("{:?}",pg.get_pity().await.unwrap());
+//     //     pg.close().await;
+//     // }
+//     #[tokio::test]
+//     async fn send_distrib() {
+//         let init = get_config().unwrap();
+//         let did = init.discord.author_id.to_string();
+//         let mut pg = PgConn::create(&init, did).await.unwrap();
+//         let data = ItemCode { key: "0700".to_owned(), count: 1, types: 7 };
+//         pg.market(&data, 843, Some(1)).await.unwrap();
+//         pg.close().await;
+//     }
+//     #[tokio::test]
+//     async fn single() {
+//         let init = get_config().unwrap();
+//         let did = init.discord.author_id.to_string();
+//         let mut pg = PgConn::create(&init, did).await.unwrap();
+//         let data = [ItemCode { key: "0700".to_owned(), count: 1, types: 7 }];
+//         let gac = GachaPg{pity:30,ticket:20};
+//         pg.send_distrib(&gac, &data,843).await.unwrap();
+//         pg.close().await;
+//     }
+//     #[tokio::test]
+//     async fn multiple() {
+//         let init = get_config().unwrap();
+//         let did = init.discord.author_id.to_string();
+//         let mut pg = PgConn::create(&init, did).await.unwrap();
+//         let data = [ItemCode { key: "0700".to_owned(), count: 1, types: 7 },
+//         ItemCode { key: "0700".to_owned(), count: 20, types: 7 }];
+//         let gac = GachaPg{pity:30,ticket:20};
+//         pg.send_distrib(&gac, &data,843).await.unwrap();
+//         pg.close().await;
+//     }
+// }

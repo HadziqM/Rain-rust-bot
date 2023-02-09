@@ -13,7 +13,7 @@ impl ItemCode{
     }
     pub fn text(&self)->Option<String>{
         let item = ItemPedia::search(self.types, &self.key)?;
-        Some(format!("{}x{}",item,self.count))
+        Some(format!("{} x{}",item,self.count))
     }
 } 
 impl<'a> Default for Bitwise<'a> {

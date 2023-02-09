@@ -1,17 +1,15 @@
-use serenity::{all::{CommandInteraction, User, CommandOptionType, CommandDataOptionValue}, prelude::Context, builder::{CreateInteractionResponse, CreateInteractionResponseMessage}};
+use serenity::{all::{CommandInteraction, User, CommandDataOptionValue}, prelude::Context, builder::{CreateInteractionResponse, CreateInteractionResponseMessage}};
 
 use crate::{PgConn,ErrorLog,Init};
 
 async fn get(cmd:&CommandInteraction,ctx:&Context)->Option<User>{
     for i in &cmd.data.options{
-        if let CommandOptionType::User=&i.kind(){
-            if let CommandDataOptionValue::User(x) = i.value{
-                let r = match x.to_user(&ctx.http).await{
-                    Ok(y)=>Some(y),
-                    Err(_)=>{continue;}
-                };
-                return r;
-            }
+        if let CommandDataOptionValue::User(x) = i.value{
+            let r = match x.to_user(&ctx.http).await{
+                Ok(y)=>Some(y),
+                Err(_)=>{continue;}
+            };
+            return r;
         }
     }
     None

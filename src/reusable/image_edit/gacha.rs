@@ -5,6 +5,7 @@ use image::imageops::{FilterType,resize};
 use super::CustomImageError;
 use super::super::bitwise::ItemCode;
 
+
 #[derive(Clone)]
 pub struct GachaData{
     pub result:GachaR,
@@ -37,6 +38,20 @@ impl GachaR{
             GachaR::UR=>path.join("ur.jpg")
         }
     }
+    fn url(&self,multi:bool)->String{
+        let dim;
+        if multi{
+            dim = (258,206)
+        }else{
+            dim = (772,615)
+        }
+        match self{
+            GachaR::R=>format!("https://media.discordapp.net/attachments/1009291538733482055/1032987164943859712/r.jpg?width={}&height={}",dim.0,dim.1),
+            GachaR::SR=>format!("https://media.discordapp.net/attachments/1009291538733482055/1032987165325537380/sr.jpg?width={}&height={}",dim.0,dim.1),
+            GachaR::SSR=>format!("https://media.discordapp.net/attachments/1009291538733482055/1032987165602369566/ssr.jpg?width={}&height={}",dim.0,dim.1),
+            GachaR::UR=>format!("https://media.discordapp.net/attachments/1009291538733482055/1032987165937909851/ur.jpg?width={}&height={}",dim.0,dim.1)
+        }
+    }
 }
 impl Rectangle{
     fn is_in_area(&self,x:u32,y:u32)->bool{
@@ -50,19 +65,7 @@ impl Rectangle{
     }
     async fn get_rect(url:&str,radius:u32,off_x:u32,off_y:u32)->Result<Rectangle,CustomImageError>{
         let client = reqwest::Client::new();
-        let bytes =match client.get(url).send().await{
-            Ok(resp)=>{
-                match resp.bytes().await{
-                    Ok(byt)=>byt,
-                    Err(_)=>{
-                        return Err(CustomImageError::Custom("cant get response from get request"));
-                    }
-                }
-            }
-            Err(_)=>{
-                return Err(CustomImageError::Custom("cant get binaries from the get request response"));
-            }
-        };
+        let bytes =client.get(url).send().await?.bytes().await?;
         let read = image::io::Reader::new(Cursor::new(bytes)).with_guessed_format()?.decode()?;
         let img = read.resize_exact(radius*2+1, radius*2+1,FilterType::Nearest).to_rgb8();
         Ok(Rectangle { radius, off_x, off_y, img })
@@ -111,11 +114,32 @@ impl GachaImage {
             ,&self.font,&text);
         Ok(res)
     }
+    async fn url_pull(&self,gacha:&GachaData)->Result<ImageBuffer<Rgb<u8>,Vec<u8>>,CustomImageError>{
+        let bytes =reqwest::get(&gacha.result.url(false)).await?.bytes().await?;
+        let mut img = image::io::Reader::new(Cursor::new(bytes)).with_guessed_format()?.decode()?.to_rgb8();
+        //draw photo profile to image
+        for (x,y,px) in img.enumerate_pixels_mut(){
+            if self.rec.is_in_area(x, y){
+                *px = self.rec.get_rbg_pixel(x, y)
+            }
+        }
+        //draw text to image
+        let text = match gacha.code.text(){
+            Some(x)=>x,
+            None=>{return Err(CustomImageError::Custom("the key value on item code was false"));}
+        };
+        let res = imageproc::drawing::draw_text(&img,
+            Rgb([255,255,255]),
+            self.get_x(&text), 510,
+            rusttype::Scale { x: 50.0, y: 50.0 }
+            ,&self.font,&text);
+        Ok(res)
+    }
     pub async fn multi_pull(&self,gachas:Vec<GachaData>)->Result<Vec<u8>,CustomImageError>{
         let mut img:RgbImage = ImageBuffer::new(1028, 615);
         let mut all_buff = Vec::new();
         for i in &gachas{
-            let res = &self.image_edit(i).await?;
+            let res = &self.url_pull(i).await?;
             all_buff.push(resize(res,258,206,FilterType::Nearest))
         }
         for (x,y,px) in img.enumerate_pixels_mut(){
@@ -127,21 +151,28 @@ impl GachaImage {
         Ok(img.as_raw().to_owned())
     }
     pub async fn single_pull(&self,gacha:&GachaData)->Result<Vec<u8>,CustomImageError>{
-        Ok(self.image_edit(gacha).await?.as_raw().to_owned())
+        Ok(self.url_pull(gacha).await?.as_raw().to_owned())
     }
 }
 
 #[cfg(test)]
 mod testing{
-    // use super::*;
+    use super::*;
 
-    // #[tokio::test()]
-    // async fn test_edit() {
-    //     let mut cev = Vec::new();
-    //     for _ in 0..12{
-    //         cev.push(GachaData{result:GachaR::UR,text:"Spirit 犬 Slash VIIx99".to_owned()})
-    //     }
+    #[tokio::test()]
+    async fn test_edit() {
+        let mut cev = Vec::new();
+        for _ in 0..12{
+            cev.push(GachaData{result:GachaR::UR,code:ItemCode { key: "0100".to_owned() , count: 1, types:7 }})
+        }
+        let x = GachaImage::new("https://media.discordapp.net/attachments/998783824710344755/1023057468667998228/hello.png").await.unwrap();
+        x.multi_pull(cev).await.unwrap();
+    }
+    // #[tokio::test]
+    // async fn test_single() {
+    //     let cev = GachaData{result:GachaR::UR,code:ItemCode { key: "0000".to_owned() , count: 1, types:7 }};
     //     let x = GachaImage::new("https://media.discordapp.net/attachments/998783824710344755/1023057468667998228/hello.png").await.unwrap();
-    //     x.multi_pull(cev).await.unwrap();
+    //     let y = x.url_pull(&cev).await.unwrap();
+    //     y.save("./test.jpg").unwrap();
     // }
 }

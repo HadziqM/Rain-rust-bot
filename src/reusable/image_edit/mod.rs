@@ -4,7 +4,8 @@ pub mod gacha;
 pub enum CustomImageError{
     Custom(&'static str),
     Tokio(tokio::io::Error),
-    Image(image::ImageError)
+    Image(image::ImageError),
+    Reqwest(reqwest::Error)
 }
 
 impl std::fmt::Display for CustomImageError {
@@ -12,7 +13,8 @@ impl std::fmt::Display for CustomImageError {
         match self {
             CustomImageError::Custom(x)=>x.fmt(f),
             CustomImageError::Tokio(x)=>x.fmt(f),
-            CustomImageError::Image(x)=>x.fmt(f)
+            CustomImageError::Image(x)=>x.fmt(f),
+            CustomImageError::Reqwest(x)=>x.fmt(f),
         }
     }
 }
@@ -27,5 +29,10 @@ impl From<tokio::io::Error> for CustomImageError {
 impl From<image::ImageError> for CustomImageError {
     fn from(value: image::ImageError) -> Self {
         CustomImageError::Image(value)
+    }
+}
+impl From<reqwest::Error> for CustomImageError{
+    fn from(value: reqwest::Error) -> Self {
+        CustomImageError::Reqwest(value)
     }
 }
