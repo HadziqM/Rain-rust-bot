@@ -85,6 +85,8 @@ pub struct ServerRole {
     // pub(crate) member_role: u64,
     // pub(crate) mute_role: u64,
     pub(crate) register_role: u64,
+    pub(crate) judge_role: u64,
+    pub(crate) maintainer_role: u64,
 }
 // #[derive(Debug,Deserialize,Clone)]
 // pub struct BountyChannel {

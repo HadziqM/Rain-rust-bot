@@ -26,12 +26,13 @@ impl<'a,'b> RegisterAcknowledged<'a,'b>{
             self.err.log_error_channel().await;
         }
     }
-    async fn log_to_user(&mut self,cmd:&ModalInteraction){
+    async fn log_to_user(&mut self,cmd:&ModalInteraction,reg:bool){
+        let word = || {if reg{return "Created";}"binded"};
         let serv =cmd.guild_id.unwrap_or_default();
         let server = serv.to_partial_guild(&self.ctx.http).await.unwrap();
         let ch = ChannelId(NonZeroU64::new(self.err.init.log_channel.account_channel).unwrap());
-        if let Err(why) = ch.send_message(&self.ctx.http,CreateMessage::new().embed(CreateEmbed::new().title("Account Succesfully Created on Server")
-                .description(&format!("{} created an account on server, by creating account here you already aggree to follow our rules to as stated on rules channel, as a member of {} comunity we welcome you to enjoy the game together",self.user.to_string(),server.name)).fields(vec![
+        if let Err(why) = ch.send_message(&self.ctx.http,CreateMessage::new().embed(CreateEmbed::new().title(format!("Account Succesfully {} on Server",word()))
+                .description(&format!("{} {} an account on server, by creating account here you already aggree to follow our rules to as stated on rules channel, as a member of {} comunity we welcome you to enjoy the game together",self.user.to_string(),word(),server.name)).fields(vec![
                     ("👤 Username",&format!("`{}`",self.username),false),
                     ("🆔 User Id",&format!("`{}`",self.uid),false)
                 ]).author(CreateEmbedAuthor::new(&self.user.user.name).icon_url(self.user.face()))
@@ -58,11 +59,20 @@ fn modal_register_row(name:&str,pass:bool)->CreateActionRow{
     )
 }
 
-fn modal_response()->CreateInteractionResponse{
-    CreateInteractionResponse::Modal(CreateModal::new("register_m", "Register command")
+fn modal_response(reg:bool)->CreateInteractionResponse{
+    let name;
+    let title;
+    if reg{
+        name="register_m";
+        title="Register Command";
+    }else{
+        name="bind_m";
+        title="Bind Command";
+    }
+    CreateInteractionResponse::Modal(CreateModal::new(name, title)
         .components(vec![modal_register_row("username", false),modal_register_row("password", true)]))
 }
-pub async fn run_button(ctx:&Context,cmd:&ComponentInteraction,init:&Init){
+pub async fn run_button(ctx:&Context,cmd:&ComponentInteraction,init:&Init,regist:bool){
     let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
     let did = cmd.user.id.to_string();
     match PgConn::create(init, did).await {
@@ -88,12 +98,12 @@ pub async fn run_button(ctx:&Context,cmd:&ComponentInteraction,init:&Init){
             return;
         }
     };
-    if let Err(why) = cmd.create_response(&ctx.http,modal_response()).await{
+    if let Err(why) = cmd.create_response(&ctx.http,modal_response(regist)).await{
         err.change_error(why.to_string(), "register interface button", "failed to response, most likely your registrasion already done, its just discord error".to_string());
         err.log_error_channel().await;
     }
 }
-pub async fn run_slash(ctx:&Context, cmd:&CommandInteraction,init:&Init){
+pub async fn run_slash(ctx:&Context, cmd:&CommandInteraction,init:&Init,regist:bool){
     let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
     let did = cmd.user.id.to_string();
     match PgConn::create(init, did).await {
@@ -119,14 +129,13 @@ pub async fn run_slash(ctx:&Context, cmd:&CommandInteraction,init:&Init){
             return;
         }
     };
-    if let Err(why) = cmd.create_response(&ctx.http,modal_response()).await{
+    if let Err(why) = cmd.create_response(&ctx.http,modal_response(regist)).await{
         let mut err = ErrorLog::new(&ctx, init, &cmd.user).await;
         err.change_error(why.to_string(), "register interface button", "failed to response, most likely your registrasion already done, its just discord error".to_string());
         err.log_error_channel().await;
     }
 }
-
-pub async fn modal_register(ctx:&Context,cmd:&ModalInteraction,init:&Init){
+pub async fn modal_register(ctx:&Context,cmd:&ModalInteraction,init:&Init,regist:bool){
     let data = cmd.data.to_owned();
     let mut error = ErrorLog::new(&ctx, init, &cmd.user).await;
     let mut name = String::new();
@@ -142,21 +151,13 @@ pub async fn modal_register(ctx:&Context,cmd:&ModalInteraction,init:&Init){
     }
     match PgConn::create(init, cmd.user.id.to_string()).await{
         Ok(mut pg)=>{
-            match pg.create_account(&name, &password).await{
-                Ok(id)=>{
-                    match id {
-                        Some(cid) => {
-                            let mut member = cmd.member.to_owned().unwrap();
-                            let mut reg = RegisterAcknowledged::new(&name,&mut member, cid.id, ctx, &mut error);
-                            reg.send_response(cmd).await;
-                            reg.add_roles().await;
-                            reg.log_to_user(cmd).await;
-                        }
-                        None => {
-                            error.change_error("no error message".to_string(), "submit register", "you already have account on the server run `/check` to check your username,`/change_pass` to change your password".to_string());
-                            error.log_modal(cmd,true).await;
-                        }
-                    }
+            match pg.create_account(&name, &password,regist).await{
+                Ok(cid)=>{
+                    let mut member = cmd.member.to_owned().unwrap();
+                    let mut reg = RegisterAcknowledged::new(&name,&mut member, cid.id, ctx, &mut error);
+                    reg.send_response(cmd).await;
+                    reg.add_roles().await;
+                    reg.log_to_user(cmd,regist).await;
                 }
                 Err(why)=>{
                     error.change_error(why.to_string(), "submit register", "failed to create account, maybe the user is already taken, and dont use special character like `'` on name or password".to_string());

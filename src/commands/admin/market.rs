@@ -119,17 +119,15 @@ impl SubCommand{
         let val = self.value();
         let item = ItemList::new(self.code())?;
         let out = item.value().iter().filter(|(k,f)|{
-                if f.len() != 0{
-                    let flat_val = val.to_lowercase();
-                    let flat_tar = f.to_lowercase();
-                    if flat_tar.starts_with(&flat_val)||
-                        flat_tar.contains(&flat_val)||
-                        k.starts_with(&val.to_uppercase())||
-                        k.contains(&val.to_uppercase()){
-                        return true;
-                    }
-                }
-                 false
+                let flat_val = val.to_lowercase();
+                let flat_tar = f.to_lowercase();
+                if flat_tar.starts_with(&flat_val)||
+                    flat_tar.contains(&flat_val)||
+                    k.starts_with(&val.to_uppercase())||
+                    k.contains(&val.to_uppercase()){
+                    return true;
+            }
+             false
             }
             )
             .map(|(&k,&v)|{

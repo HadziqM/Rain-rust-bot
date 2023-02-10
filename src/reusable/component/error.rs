@@ -11,6 +11,7 @@ use serenity::prelude::Context;
 use super::super::config::Init;
 use super::super::utils::color;
 
+#[derive(Clone)]
 pub struct ErrorLog<'a> {
     pub(crate) err: String,
     pub(crate) on:&'a str,

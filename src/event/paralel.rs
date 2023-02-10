@@ -1,10 +1,9 @@
-use std::{time::SystemTime, num::NonZeroU64};
+use std::{time::SystemTime, num::NonZeroU64, path::Path};
 
-use serenity::{prelude::Context, model::{prelude::{ChannelId, Message, UserId}, user::User}, builder::{CreateEmbed, EditMessage}};
+use serenity::{prelude::Context, model::{prelude::{ChannelId, Message, UserId}, user::User}, builder::{CreateEmbed, EditMessage, CreateAttachment, CreateMessage}};
 use crate::{Init,PgConn,ErrorLog};
 use crate::reusable::postgress::server::Servers;
 use crate::reusable::utils::Color;
-use super::log::logging;
 
 
 struct Server<'a>{
@@ -99,4 +98,57 @@ pub async fn paralel_thread(ctx:&Context,init:&Init,state:i32,log:bool)->i32{
         logging(ctx,init,wish).await;
     }
     now
+}
+async fn emptying_log(path:&Path)->Result<(),tokio::io::Error>{
+    tokio::fs::remove_file(path).await?;
+    tokio::fs::File::create(path).await?;
+    Ok(())
+}
+
+async fn announce_crash(channel:&ChannelId,err:&mut ErrorLog<'_>,ctx:&Context,init:&Init){
+    let maintainer = format!("<@&{}>",init.server_role.maintainer_role);
+    if let Err(why)= channel.send_message(&ctx.http, CreateMessage::new()
+            .content(format!("SERVER MIGHT CRASH JUST ABOUT NOW {}",maintainer))).await{
+        err.change_error(why.to_string(), "sending emergency message", "server crash now".to_string());
+        err.log_error_channel().await;
+    }
+}
+async fn logging(ctx:&Context,init:&Init,wish:Option<User>){
+    let path = Path::new(".").join("log.txt").as_path().to_owned();
+    let user =UserId(NonZeroU64::new(init.discord.author_id).unwrap()).to_user(&ctx.http).await.unwrap();
+    let mut err = ErrorLog::new(ctx,init,&user).await;
+    let channel = ChannelId(NonZeroU64::new(init.log_channel.erupe_channel).unwrap());
+    if !init.mhfz_config.sending_log{
+        if wish.is_some(){
+            announce_crash(&channel,&mut err,ctx,init).await;
+        }
+        return ;
+    }
+    let attachment = match CreateAttachment::path(&path).await{
+        Ok(x)=>x,
+        Err(why)=>{
+            err.change_error(why.to_string(), "sending erupe log", "no file on directory consider tuning this of".to_string());
+            return err.log_error_channel().await;
+        }
+    };
+    if let Err(why)=channel.send_message(&ctx.http,CreateMessage::new()
+        .add_file(attachment).content(&format!("LOG AT <t:{}:F>"
+        ,SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs()))).await{
+        err.change_error(why.to_string(), "sending log", "failed to send log".to_string());
+        err.log_error_channel().await;
+    };
+    //send dm to wish if servercrash
+    if let Some(wish)=wish{
+        announce_crash(&channel,&mut err,ctx,init).await;
+        if let Err(why)= wish.dm(&ctx.http,CreateMessage::new()
+                .content("server crash on about now or few minutes before, please check the log")
+                .add_file(CreateAttachment::path(&path).await.unwrap())).await{
+            err.change_error(why.to_string(),"dm wish the log File", "please investigate".to_string());
+            err.log_error_channel().await;
+        }
+    }
+    if let Err(why)=emptying_log(&path).await{
+        err.change_error(why.to_string(), "empetying log", "please do it manually".to_string());
+        err.log_error_channel().await;
+    }
 }

@@ -16,7 +16,7 @@ pub async fn ready(ctx:&Context, ready:Ready, init:&Init){
     println!("🤖 Bot is running as {}",ready.user.tag());
     println!("🛠 {} is acknowledged as author",user.tag());
     let mut command = Vec::new();
-    command.append(&mut commands::register::reg());
+    command.append(&mut commands::register::reg(init));
     command.append(&mut commands::binded::reg());
     command.append(&mut commands::admin::reg());
     if init.bot_config.gacha{

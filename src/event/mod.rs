@@ -1,7 +1,6 @@
 mod interaction;
 mod ready;
 mod paralel;
-mod log;
 
 
 use std::time::Duration;
@@ -38,7 +37,7 @@ impl EventHandler for Handler{
             let mut log_count:u64 = 0;
             loop {
                 let mut log = false;
-                if init.mhfz_config.sending_log && log_count%10 == 0{
+                if log_count%5 == 0{
                     log = true
                 }
                 state = paralel::paralel_thread(&ctx, &init,state,log).await;

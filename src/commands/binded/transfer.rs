@@ -145,6 +145,7 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
                 }
                 let ch = ChannelId(NonZeroU64::new(init.log_channel.transfer_channel).unwrap());
                 if let Err(why) = ch.send_message(&ctx.http,CreateMessage::new()
+                    .content(format!("<@&{}>",init.server_role.judge_role))
                     .embed(data.make_embed()).components(vec![data.make_button()])).await{
                     reg.error.log_error_channel().await;
                     reg.error.change_error(why.to_string(), "send save to judge", "sorry you need to report this so you could reset your cooldown".to_string());
@@ -210,7 +211,7 @@ pub async fn run_button(data:Vec<&str>,ctx:&Context,cmd:&ComponentInteraction,in
         }
         let mut msg = cmd.message.clone();
         if let Err(why) =msg.edit(&ctx.http, EditMessage::new()
-                .content(format!("Approved At <t:{}:F>",SystemTime::now()
+                .content(format!("Approved by {} At <t:{}:F>",cmd.user.name,SystemTime::now()
                     .duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs())).components(vec![])).await{
             error.change_error(why.to_string(), "erchiving message", "please delete the message manually, the process is already done successfully".to_string());
             error.log_error_channel().await;

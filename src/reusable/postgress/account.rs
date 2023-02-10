@@ -39,14 +39,15 @@ impl<'a> PgConn<'a>{
         }
         Ok(false)
     }
-    pub async fn create_account(&self,user:&str,pass:&str)->Result<Option<AccountData>,sqlx::Error>{
-        let check = self.get_user_data().await?;
-        if check.cid != 0 || check.rid != 0{
-            return Ok(None);
+    pub async fn create_account(&self,user:&str,pass:&str,reg:bool)->Result<AccountData,sqlx::Error>{
+        let uid;
+        if reg{
+            uid = create_account(&self.pool, user, pass).await?;
+        }else {
+            uid = sqlx::query_as::<_,AccountData>("SELECT id,username from users where username=$1").bind(user).fetch_one(&self.pool).await?;
         }
-        let uid = create_account(&self.pool, user, pass).await?;
         use_history(&self.pool, &self.did, uid.id as i64).await?;
-        Ok(Some(uid))
+        Ok(uid)
     }
     pub async fn switch(&self,cid:i32)->Result<(),sqlx::Error>{
         switch_character(cid, &self.did, &self.pool).await

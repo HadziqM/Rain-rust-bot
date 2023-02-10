@@ -27,6 +27,8 @@
     "erupe_channel":1031774270512169070
    },
   "server_role":{
-    "register_role":1031595216538452038
+    "register_role":1031595216538452038,
+    "judge_role":1017643913667936318,
+    "maintainer_role":1017643913667936318
   }
 }

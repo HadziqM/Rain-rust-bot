@@ -20,6 +20,8 @@ jobs:
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
+      - uses: Swatinem/rust-cache@v2
+
       - name: build release
         run: cargo build --release
       - name: rename windows config and move exutable
