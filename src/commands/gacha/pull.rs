@@ -5,12 +5,12 @@ use serenity::all::*;
 use crate::reusable::image_edit::gacha::{GachaData, GachaR, GachaImage};
 use crate::reusable::bitwise::ItemCode;
 use crate::reusable::postgress::gacha::GachaPg;
-use crate::{Init,Register};
+use crate::{Init,Register,ItemPedia};
 use crate::reusable::utils::Color;
 use rand::prelude::*;
 
 #[derive(Debug,Deserialize)]
-struct Gacha {
+pub struct Gacha {
     ur: Vec<ItemCode>,
     ssr1: Vec<ItemCode>,
     ssr2: Vec<ItemCode>,
@@ -92,7 +92,7 @@ impl Gacha{
     pub fn single_pull(&self,data:&GachaPg)->(GachaPg,GachaData){
         let pity = data.pity+1;
         let ticket = data.ticket-10;
-        if pity==50{
+        if pity==30{
             return (GachaPg{pity:0,ticket},self.guaranteed());
         }
         (GachaPg{pity,ticket},self.pull())
@@ -107,7 +107,11 @@ impl Gacha{
                 res.push(self.guaranteed());
                 pity = 0
             }else{
-                res.push(self.pull());
+                let pull = self.pull();
+                if pull.result == GachaR::SSR || pull.result == GachaR::UR{
+                    pity = 0
+                }
+                res.push(pull);
             }
         }
         return (GachaPg{pity,ticket},res);
@@ -117,7 +121,7 @@ fn create_embed(user:&User,pg:&GachaPg)->CreateEmbed{
     CreateEmbed::new().title("Mhfz Gacha Result").description(format!("Pity Count: {}\nTicket Remaining: {}",pg.pity,pg.ticket))
         .author(CreateEmbedAuthor::new(&user.name).icon_url(user.face())).image("attachment://gacha.jpg").color(Color::Random.throw())
 }
-pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
+pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init,pedia:&ItemPedia){
     let mut multi = false;
     for i in &cmd.data.options{
         if let CommandDataOptionValue::SubCommand(_) = &i.value{
@@ -167,18 +171,18 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
     if !multi{
         let result = gacha.single_pull(&data);
         g_pg = result.0;
-        raw =image.single_pull(&result.1).await;
+        raw =image.single_pull(&result.1,pedia).await;
         g_data = vec![result.1];
     }else{
         let result = gacha.multi_pull(&data);
         g_pg=result.0;
-        raw = image.multi_pull(result.1.clone()).await;
+        raw = image.multi_pull(result.1.clone(),pedia).await;
         g_data = result.1;
     }
     match raw{
         Ok(x)=>{
             let code:Vec<_> = g_data.iter().map(|e|e.code.to_owned()).collect();
-            if let Err(why)=reg.pg.send_distrib(&g_pg,&code, reg.cid).await{
+            if let Err(why)=reg.pg.send_distrib(&g_pg,&code, reg.cid, pedia).await{
                 reg.error.pgcon_error_defer(why.to_string(), "sending distribution", cmd).await;
                 return reg.pg.close().await;
             }

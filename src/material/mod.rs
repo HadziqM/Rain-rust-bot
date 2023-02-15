@@ -6,10 +6,19 @@ pub mod leg;
 pub mod melee;
 pub mod ranged;
 pub mod waist;
+pub mod items_jp;
+pub mod arms_jp;
+pub mod chest_jp;
+pub mod head_jp;
+pub mod leg_jp;
+pub mod melee_jp;
+pub mod ranged_jp;
+pub mod waist_jp;
 
 
 use std::collections::HashMap;
 
+#[derive(Debug,Clone)]
 pub struct ItemPedia{
     pub types:HashMap<u8,HashMap<&'static str,&'static str>>,
 }
@@ -26,14 +35,14 @@ pub enum ItemList {
 impl Default for ItemPedia{
     fn default() -> Self {
         ItemPedia { types:HashMap::from([
-            (0,leg::Leg::default().item),
-            (1,head::Head::default().item),
-            (2,chest::Chest::default().item),
-            (3,arms::Arms::default().item),
-            (4,waist::Waist::default().item),
-            (5,melee::Melee::default().item),
-            (6,ranged::Ranged::default().item),
-            (7,items::Items::default().item),
+            (0,ItemPedia::matching(leg::Leg::default().item, leg_jp::Leg::default().item)),
+            (1,ItemPedia::matching(head::Head::default().item,head_jp::Head::default().item)),
+            (2,ItemPedia::matching(chest::Chest::default().item,chest_jp::Chest::default().item)),
+            (3,ItemPedia::matching(arms::Arms::default().item,arms_jp::Arms::default().item)),
+            (4,ItemPedia::matching(waist::Waist::default().item,waist_jp::Waist::default().item)),
+            (5,ItemPedia::matching(melee::Melee::default().item,melee_jp::Melee::default().item)),
+            (6,ItemPedia::matching(ranged::Ranged::default().item,ranged_jp::Ranged::default().item)),
+            (7,ItemPedia::matching(items::Items::default().item,items_jp::Items::default().item)),
         ])
         }
     }
@@ -69,6 +78,21 @@ impl ItemList{
     }
 }
 impl ItemPedia{
+    fn matching<'a>(en:HashMap<&'a str,&'a str>,jp:HashMap<&'a str,&'a str>)->HashMap<&'a str,&'a str>{
+        let mut out = HashMap::new();
+        for (k,v) in en{
+            if v.len() == 0{
+                let val = match jp.get(k){
+                    Some(x)=>x.to_owned(),
+                    None=>"No name"
+                };
+                out.insert(k,val);
+            }else {
+                out.insert(k, v);
+            }
+        }
+        out
+    }
     pub fn search(key:u8,clue:&str)->Option<&'static str>{
         ItemList::new(key)?.get(clue)
     }
@@ -82,7 +106,7 @@ mod test{
 
     #[test]
     fn load_item() {
-        let x = arms::Arms::default().item;
-        assert_eq!(x.get("0000").unwrap().to_owned(),"No Equipment")
+        let pedia = ItemPedia::default();
+        assert_eq!(pedia.dictionary(7, "4404"),Some("父への憧憬"))
     }
 }

@@ -11,6 +11,7 @@ use reusable::component::registered::Register;
 use reusable::postgress::PgConn;
 use reusable::component::Components;
 use reusable::component::discord::AppReg;
+use material::ItemPedia;
 use serenity::prelude::*;
 use event::Handler;
 
@@ -21,7 +22,7 @@ async fn main() {
     match get_config(){
         Ok(conf)=> {
             let mut client = Client::builder(conf.discord.token.to_owned(), intents)
-                .event_handler(Handler{config:conf})
+                .event_handler(Handler{config:conf,pedia:ItemPedia::default()})
                 .await
                 .expect("Error creating client");
             if let Err(why) = client.start().await {

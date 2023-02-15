@@ -2,9 +2,9 @@ use serenity::all::{CommandInteraction, ComponentInteraction, ModalInteraction};
 use serenity::prelude::Context;
 
 use crate::commands;
-use crate::reusable::config::Init;
+use crate::{Init,ItemPedia};
 
-pub async fn slash_command(cmd_id:&str,cmd:&CommandInteraction,ctx:&Context,hnd:&Init){
+pub async fn slash_command(cmd_id:&str,cmd:&CommandInteraction,ctx:&Context,hnd:&Init,pedia:&ItemPedia){
     match cmd_id{
         "interface"=>commands::admin::interface::run(ctx,cmd,hnd).await,
         "create"=>commands::register::create::run_slash(ctx,cmd,hnd,true).await,
@@ -17,9 +17,9 @@ pub async fn slash_command(cmd_id:&str,cmd:&CommandInteraction,ctx:&Context,hnd:
         "dm_save"=>commands::binded::save::run(ctx,cmd,hnd).await,
         "transfer"=>commands::binded::transfer::run(ctx,cmd,hnd).await,
         "reset_save_cd"=>commands::admin::save_cd::run(ctx,cmd,hnd).await,
-        "market"=>commands::admin::market::run(ctx,cmd,hnd).await,
+        "market"=>commands::admin::market::run(ctx,cmd,hnd,pedia).await,
         "purge"=>commands::admin::purge::run(ctx,cmd,hnd).await,
-        "pull"=>commands::gacha::pull::run(ctx, cmd, hnd).await,
+        "pull"=>commands::gacha::pull::run(ctx, cmd, hnd,pedia).await,
         "ch_gacha"=>commands::gacha::ch_gacha::run(ctx, cmd, hnd).await,
         _=> {return;}
     }
@@ -47,9 +47,9 @@ pub async fn modal_command(cmd_id:&str,cmd:&ModalInteraction,ctx:&Context,hnd:&I
         _=>{return;}
     }
 }
-pub async fn autocomplete_command(cmd_id:&str,cmd:&CommandInteraction,ctx:&Context,hnd:&Init){
+pub async fn autocomplete_command(cmd_id:&str,cmd:&CommandInteraction,ctx:&Context,hnd:&Init,pedia:&ItemPedia){
     match cmd_id{
-        "market"=>commands::admin::market::run_autocomplete(ctx, cmd, hnd).await,
+        "market"=>commands::admin::market::run_autocomplete(ctx, cmd, hnd,pedia).await,
         _=>{return;}
     }
 }

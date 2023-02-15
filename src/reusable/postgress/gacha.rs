@@ -1,4 +1,5 @@
 use sqlx::FromRow;
+use crate::material::ItemPedia;
 use super::PgConn;
 use super::super::bitwise::{Bitwise,BitwiseError,ItemCode};
 
@@ -12,12 +13,12 @@ impl<'a> PgConn<'a> {
         sqlx::query_as::<_,GachaPg>("SELECT gacha as ticket,pity From discord where discord_id=$1")
         .bind(&self.did).fetch_one(&self.pool).await
     }
-    pub async fn send_distrib(&self,pg:&GachaPg,data:&[ItemCode],cid:i32)->Result<(),BitwiseError>{
+    pub async fn send_distrib(&self,pg:&GachaPg,data:&[ItemCode],cid:i32,pedia:&ItemPedia)->Result<(),BitwiseError>{
         sqlx::query("UPDATE discord set gacha=$1,pity=$2 where discord_id=$3").bind(pg.ticket)
         .bind(pg.pity).bind(&self.did).execute(&self.pool).await?;
         let byte = Bitwise::new(data);
         if data.len() == 1{
-            let text = match data.first().unwrap().text(){
+            let text = match data.first().unwrap().text(pedia){
                 Some(x)=>x,
                 None=>{return Err(BitwiseError::NoItem);}
             };
@@ -27,14 +28,14 @@ impl<'a> PgConn<'a> {
         sqlx::query("INSERT into distribution (character_id,data,type,bot,event_name,description) Values ($1,$2,1,true,$3,$4)").bind(cid).bind(byte.multiple_item()?).bind("Multi Gacha Reward").bind("~C05 Sorry cant list all the reward in game").execute(&self.pool).await?;
         Ok(())
     }
-    pub async fn market(&self,data:&ItemCode,cid:i32,price:Option<i32>)->Result<(),BitwiseError>{
+    pub async fn market(&self,data:&ItemCode,cid:i32,price:Option<i32>,pedia:&ItemPedia)->Result<(),BitwiseError>{
         if let Some(x) = price{
             sqlx::query("UPDATE discord set bounty=bounty-$1 where discord_id=$2").bind(x)
             .bind(&self.did).execute(&self.pool).await?;
         }
         let array = [data.clone()];
         let byte = Bitwise::new(&array);
-        sqlx::query("INSERT into distribution (character_id,data,type,bot,event_name,description) Values ($1,$2,1,true,$3,$4)").bind(cid).bind(byte.multiple_item()?).bind(data.text().unwrap()).bind("~C05 The item distributed by admin").execute(&self.pool).await?;
+        sqlx::query("INSERT into distribution (character_id,data,type,bot,event_name,description) Values ($1,$2,1,true,$3,$4)").bind(cid).bind(byte.multiple_item()?).bind(data.text(pedia).unwrap()).bind("~C05 The item distributed by admin").execute(&self.pool).await?;
         Ok(())
     }
 }

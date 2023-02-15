@@ -1,7 +1,7 @@
 use serenity::all::*;
-use crate::{material::ItemList, reusable::bitwise::ItemCode};
+use crate::reusable::bitwise::ItemCode;
 use serde_json::Value;
-use crate::{Init,ErrorLog,Register,Components};
+use crate::{Init,ErrorLog,Register,Components,ItemPedia};
 
 enum SubCommand{
     Item(String),
@@ -115,10 +115,10 @@ impl SubCommand{
             SubCommand::Item(val)=>val
         }
     }
-    fn predict(&self)->Option<Vec<AutocompleteChoice>>{
+    fn predict(&self,pedia:&ItemPedia)->Option<Vec<AutocompleteChoice>>{
         let val = self.value();
-        let item = ItemList::new(self.code())?;
-        let out = item.value().iter().filter(|(k,f)|{
+        let item = pedia.types.get(&self.code())?;
+        let out = item.iter().filter(|(k,f)|{
                 let flat_val = val.to_lowercase();
                 let flat_tar = f.to_lowercase();
                 if flat_tar.starts_with(&flat_val)||
@@ -145,13 +145,13 @@ impl SubCommand{
         Some(out)
     }
 }
-pub async fn run_autocomplete(ctx:&Context,cmd:&CommandInteraction,init:&Init){
+pub async fn run_autocomplete(ctx:&Context,cmd:&CommandInteraction,init:&Init,pedia:&ItemPedia){
     let mut err = ErrorLog::new(ctx, init, &cmd.user).await;
     let option = match SubCommand::new(cmd){
         Some(x)=>x,
         None=>{return ;}
     };
-    let choice = match option.predict(){
+    let choice = match option.predict(pedia){
         Some(x)=>x,
         None=>{return;}
     };
@@ -160,7 +160,7 @@ pub async fn run_autocomplete(ctx:&Context,cmd:&CommandInteraction,init:&Init){
         err.discord_error(why.to_string(),"item autocomplete response").await;
     }
 }
-pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
+pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init,pedia:&ItemPedia){
     let mut err = ErrorLog::new(ctx, init, &cmd.user).await;
     let option = match MarketHandle::new(cmd){
         Some(x)=>x,
@@ -174,7 +174,7 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
         Some(x)=>x,
         None=>{return;}
     };
-    match reg.pg.market(&option.code(), reg.cid, option.price).await{
+    match reg.pg.market(&option.code(), reg.cid, option.price,pedia).await{
         Ok(_)=>{
             if let Err(why)=cmd.create_response(&ctx.http, Components::interaction_response("sended distribution data", true)).await{
                 err.discord_error(why.to_string(), "letting know market is done").await;

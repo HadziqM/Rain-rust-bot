@@ -11,8 +11,8 @@ impl ItemCode{
             Ok([key[2],key[3],key[0],key[1]].iter().collect::<String>())
         }
     }
-    pub fn text(&self)->Option<String>{
-        let item = ItemPedia::search(self.types, &self.key)?;
+    pub fn text(&self,item:&ItemPedia)->Option<String>{
+        let item = item.dictionary(self.types, &self.key)?;
         Some(format!("{} x{}",item,self.count))
     }
 } 

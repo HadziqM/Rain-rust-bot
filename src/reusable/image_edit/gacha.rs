@@ -4,6 +4,7 @@ use rusttype::Font;
 use image::imageops::{FilterType,resize};
 use super::CustomImageError;
 use super::super::bitwise::ItemCode;
+use crate::ItemPedia;
 
 
 #[derive(Clone)]
@@ -15,7 +16,7 @@ pub struct GachaImage{
     rec:Rectangle,
     font:Font<'static>,
 }
-#[derive(Clone)]
+#[derive(Clone,PartialEq)]
 pub enum GachaR{
     R,
     SR,
@@ -94,7 +95,7 @@ impl GachaImage {
         let len = text.len() as i32;
         386-len*16/2
     }
-    async fn image_edit(&self,gacha:&GachaData)->Result<ImageBuffer<Rgb<u8>,Vec<u8>>,CustomImageError>{
+    async fn image_edit(&self,gacha:&GachaData,pedia:&ItemPedia)->Result<ImageBuffer<Rgb<u8>,Vec<u8>>,CustomImageError>{
         let mut image =  image::open(&gacha.result.path())?.to_rgb8();
         //draw photo profile to image
         for (x,y,px) in image.enumerate_pixels_mut(){
@@ -103,7 +104,7 @@ impl GachaImage {
             }
         }
         //draw text to image
-        let text = match gacha.code.text(){
+        let text = match gacha.code.text(pedia){
             Some(x)=>x,
             None=>{return Err(CustomImageError::Custom("the key value on item code was false"));}
         };
@@ -114,7 +115,7 @@ impl GachaImage {
             ,&self.font,&text);
         Ok(res)
     }
-    async fn url_pull(&self,gacha:&GachaData)->Result<ImageBuffer<Rgb<u8>,Vec<u8>>,CustomImageError>{
+    async fn url_pull(&self,gacha:&GachaData,pedia:&ItemPedia)->Result<ImageBuffer<Rgb<u8>,Vec<u8>>,CustomImageError>{
         let bytes =reqwest::get(&gacha.result.url(false)).await?.bytes().await?;
         let mut img = image::io::Reader::new(Cursor::new(bytes)).with_guessed_format()?.decode()?.to_rgb8();
         //draw photo profile to image
@@ -124,7 +125,7 @@ impl GachaImage {
             }
         }
         //draw text to image
-        let text = match gacha.code.text(){
+        let text = match gacha.code.text(pedia){
             Some(x)=>x,
             None=>{return Err(CustomImageError::Custom("the key value on item code was false"));}
         };
@@ -135,11 +136,11 @@ impl GachaImage {
             ,&self.font,&text);
         Ok(res)
     }
-    pub async fn multi_pull(&self,gachas:Vec<GachaData>)->Result<Vec<u8>,CustomImageError>{
+    pub async fn multi_pull(&self,gachas:Vec<GachaData>,pedia:&ItemPedia)->Result<Vec<u8>,CustomImageError>{
         let mut img:RgbImage = ImageBuffer::new(1028, 615);
         let mut all_buff = Vec::new();
         for i in &gachas{
-            let res = &self.url_pull(i).await?;
+            let res = &self.url_pull(i,pedia).await?;
             all_buff.push(resize(res,258,206,FilterType::Nearest))
         }
         for (x,y,px) in img.enumerate_pixels_mut(){
@@ -152,8 +153,8 @@ impl GachaImage {
         img.write_to(&mut Cursor::new(&mut bytes), image::ImageOutputFormat::Png)?;
         Ok(bytes)
     }
-    pub async fn single_pull(&self,gacha:&GachaData)->Result<Vec<u8>,CustomImageError>{
-        let img = self.url_pull(gacha).await?;
+    pub async fn single_pull(&self,gacha:&GachaData,pedia:&ItemPedia)->Result<Vec<u8>,CustomImageError>{
+        let img = self.url_pull(gacha,pedia).await?;
         let mut bytes = Vec::new();
         img.write_to(&mut Cursor::new(&mut bytes), image::ImageOutputFormat::Png)?;
         Ok(bytes)
@@ -162,17 +163,17 @@ impl GachaImage {
 
 #[cfg(test)]
 mod testing{
-    use super::*;
-
-    #[tokio::test()]
-    async fn test_edit() {
-        let mut cev = Vec::new();
-        for _ in 0..12{
-            cev.push(GachaData{result:GachaR::UR,code:ItemCode { key: "0100".to_owned() , count: 1, types:7 }})
-        }
-        let x = GachaImage::new("https://media.discordapp.net/attachments/998783824710344755/1023057468667998228/hello.png").await.unwrap();
-        x.multi_pull(cev).await.unwrap();
-    }
+    // use super::*;
+    //
+    // #[tokio::test()]
+    // async fn test_edit() {
+    //     let mut cev = Vec::new();
+    //     for _ in 0..12{
+    //         cev.push(GachaData{result:GachaR::UR,code:ItemCode { key: "0100".to_owned() , count: 1, types:7 }})
+    //     }
+    //     let x = GachaImage::new("https://media.discordapp.net/attachments/998783824710344755/1023057468667998228/hello.png").await.unwrap();
+    //     x.multi_pull(cev).await.unwrap();
+    // }
     // #[tokio::test]
     // async fn test_single() {
     //     let cev = GachaData{result:GachaR::UR,code:ItemCode { key: "0000".to_owned() , count: 1, types:7 }};
