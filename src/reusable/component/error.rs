@@ -45,7 +45,7 @@ impl<'a> ErrorLog<'a>{
     pub fn change_why(&mut self,error:String){
         self.err = error;
     }
-    fn make_embed(&self)->CreateEmbed{
+    pub fn make_embed(&self)->CreateEmbed{
         CreateEmbed::new()
         .title("🛑 Error Occured 🛑")
         .description("some cant be handled error occured")
@@ -67,9 +67,12 @@ impl<'a> ErrorLog<'a>{
             println!("cant send error message to discord channel :{}",why)
         }
     }
-    fn interaction_response(&self,ephemeral:bool)->CreateInteractionResponse{
+    pub fn interaction_response(&self,ephemeral:bool)->CreateInteractionResponse{
         CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(self.make_embed())
-                                           .add_file(self.att.to_owned()).ephemeral(ephemeral))
+            .add_file(self.att.to_owned()).ephemeral(ephemeral))
+    }
+    pub fn defer_response(&self)->EditInteractionResponse{
+        EditInteractionResponse::new().embed(self.make_embed()).new_attachment(self.att.to_owned())
     }
     pub async fn log_slash(&self,cmd:&CommandInteraction,ephemeral:bool){
         if let Err(why) = cmd.create_response(&self.ctx.http,self.interaction_response(ephemeral)).await{
