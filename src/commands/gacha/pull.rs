@@ -20,6 +20,12 @@ pub struct Gacha {
     r1: Vec<ItemCode>,
     r2: Vec<ItemCode>,
 }
+impl Default for Gacha {
+    fn default() -> Self {
+        Gacha { ur: Vec::new(), ssr1: Vec::new(), ssr2: Vec::new(), sr1: Vec::new()
+            , sr2: Vec::new(), sr3: Vec::new(), r1: Vec::new(), r2: Vec::new() }
+    }
+}
 
 impl Gacha{
     async fn new()->Gacha{

@@ -1,13 +1,19 @@
 use std::num::ParseIntError;
 use std::fmt;
+use serde::{Serialize,Deserialize};
 
 pub mod distribution;
 
-#[derive(Debug,serde::Deserialize,Clone)]
+#[derive(Debug,Serialize,Deserialize,Clone,PartialEq)]
 pub struct ItemCode {
     pub key: String,
     pub count: u16,
     pub types: u8,
+}
+impl Default for ItemCode {
+    fn default() -> Self {
+        ItemCode { key: "0000".to_string(), count: 1, types: 7 }
+    }
 }
 
 //create own error enum

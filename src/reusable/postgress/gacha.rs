@@ -1,4 +1,4 @@
-use sqlx::FromRow;
+use sqlx::{FromRow, Row};
 use crate::material::ItemPedia;
 use super::PgConn;
 use super::super::bitwise::{Bitwise,BitwiseError,ItemCode};
@@ -9,6 +9,10 @@ pub struct GachaPg{
     pub ticket:i32
 }
 impl<'a> PgConn<'a> {
+    pub async fn get_coin(&self)->Result<i32,BitwiseError>{
+        Ok(sqlx::query("SELECT bounty From discord where discord_id=$1")
+        .bind(&self.did).fetch_one(&self.pool).await?.get("bounty"))
+    }
     pub async fn get_pity(&self)->Result<GachaPg,sqlx::Error>{
         sqlx::query_as::<_,GachaPg>("SELECT gacha as ticket,pity From discord where discord_id=$1")
         .bind(&self.did).fetch_one(&self.pool).await
@@ -36,6 +40,14 @@ impl<'a> PgConn<'a> {
         let array = [data.clone()];
         let byte = Bitwise::new(&array);
         sqlx::query("INSERT into distribution (character_id,data,type,bot,event_name,description) Values ($1,$2,1,true,$3,$4)").bind(cid).bind(byte.multiple_item()?).bind(data.text(pedia).unwrap()).bind("~C05 The item distributed by admin").execute(&self.pool).await?;
+        Ok(())
+    }
+    pub async fn market_user(&self,data:&ItemCode,cid:i32,price:u32,pedia:&ItemPedia)->Result<(),BitwiseError>{
+        sqlx::query("UPDATE discord set bounty=bounty-$1 where discord_id=$2").bind(i32::try_from(price).unwrap())
+            .bind(&self.did).execute(&self.pool).await?;
+        let array = [data.clone()];
+        let byte = Bitwise::new(&array);
+        sqlx::query("INSERT into distribution (character_id,data,type,bot,event_name,description) Values ($1,$2,1,true,$3,$4)").bind(cid).bind(byte.multiple_item()?).bind(data.text(pedia).unwrap()).bind("~C05 The market transaction delivery").execute(&self.pool).await?;
         Ok(())
     }
 }

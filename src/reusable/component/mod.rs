@@ -5,6 +5,7 @@ pub mod card;
 pub mod registered;
 pub mod discord;
 pub mod json;
+pub mod new_error;
 
 pub struct Components;
 
@@ -13,7 +14,9 @@ pub enum MyErr{
     Serenity(serenity::Error),
     Tokio(tokio::io::Error),
     Utf8(std::str::Utf8Error),
-    Serde(serde_json::Error)
+    Serde(serde_json::Error),
+    ByteWise(super::bitwise::BitwiseError),
+    Custom(String)
 }
 impl std::error::Error for MyErr {}
 impl std::fmt::Display for MyErr{
@@ -22,8 +25,15 @@ impl std::fmt::Display for MyErr{
             MyErr::Tokio(x)=>x.fmt(f),
             MyErr::Serenity(x)=>x.fmt(f),
             MyErr::Utf8(x)=>x.fmt(f),
-            MyErr::Serde(x)=>x.fmt(f)
+            MyErr::Serde(x)=>x.fmt(f),
+            MyErr::Custom(x)=>x.fmt(f),
+            MyErr::ByteWise(x)=>x.fmt(f)
         }
+    }
+}
+impl From<super::bitwise::BitwiseError> for MyErr {
+    fn from(value: super::bitwise::BitwiseError) -> Self {
+        MyErr::ByteWise(value)
     }
 }
 impl From<tokio::io::Error> for MyErr{

@@ -1,9 +1,9 @@
-use std::fs::read_to_string;
-use serde::Deserialize;
-use std::error::Error;
+use std::path::{Path, PathBuf};
+use serde::{Deserialize,Serialize};
+use crate::MyErr;
 
 
-#[derive(Debug,Deserialize,Clone)]
+#[derive(Debug,Deserialize,Serialize,Clone)]
 pub struct Init {
     // pub(crate) server_market: ServerMarket,
     // pub(crate) speedrun_contest: SpeedrunContest,
@@ -22,13 +22,13 @@ pub struct Init {
     pub(crate) postgress:Postgress,
     pub(crate) discord:Discord
 }
-#[derive(Debug,Deserialize,Clone)]
+#[derive(Debug,Deserialize,Clone,Serialize)]
 pub struct Discord {
     pub(crate) token: String,
     pub(crate) prefix: String,
     pub(crate) author_id:u64
 }
-#[derive(Debug,Deserialize,Clone)]
+#[derive(Debug,Deserialize,Clone,Serialize)]
 pub struct Postgress {
     pub(crate) host: String,
     pub(crate) password: String,
@@ -36,12 +36,12 @@ pub struct Postgress {
     pub(crate) database: String,
     pub(crate) user:String
 }
-#[derive(Debug,Deserialize,Clone)]
+#[derive(Debug,Deserialize,Clone,Serialize)]
 pub struct MhfzConfig {
     pub(crate) account_creation: bool,
     pub(crate) sending_log: bool
 }
-#[derive(Debug,Deserialize,Clone)]
+#[derive(Debug,Deserialize,Clone,Serialize)]
 pub struct BotConfig {
     // pub(crate) member_join: bool,
     // pub(crate) member_leave: bool,
@@ -51,18 +51,20 @@ pub struct BotConfig {
     // pub(crate) bounty: bool,
     // pub(crate) transmog_contest: bool,
     // pub(crate) mezfes_contest: bool,
-    // pub(crate) server_market: bool,
+    pub(crate) server_market: bool,
     // pub(crate) pvp_contest: bool,
     // pub(crate) speedrun_contest: bool,
 }
-#[derive(Debug,Deserialize,Clone)]
+#[derive(Debug,Deserialize,Clone,Serialize)]
 pub struct LogChannels {
     pub(crate) err_channel: u64,
     pub(crate) account_channel: u64,
     pub(crate) transfer_channel: u64,
+    pub(crate) erupe_channel: u64,
     pub(crate) info_channel: u64,
     pub(crate) info_channel_msg: u64,
-    pub(crate) erupe_channel: u64,
+    pub(crate) market_channel: u64,
+    pub(crate) market_channel_msg: u64,
     // pub(crate) moderation_channel: u64,
 }
 
@@ -79,9 +81,9 @@ pub struct LogChannels {
 //     pub(crate) game_channel: u64,
 //     pub(crate) bot_channel: u64,
 // }
-#[derive(Debug,Deserialize,Clone)]
+#[derive(Debug,Deserialize,Clone,Serialize)]
 pub struct ServerRole {
-    // pub(crate) admin_role: u64,
+    pub(crate) admin_role: u64,
     // pub(crate) member_role: u64,
     // pub(crate) mute_role: u64,
     pub(crate) register_role: u64,
@@ -129,19 +131,27 @@ pub struct ServerRole {
 //     pub(crate) market_channel: u64,
 // }
 
-pub fn get_config()->Result<Init,Box<dyn Error>>{
-    let input = read_to_string("./config.json")?;
-    Ok(serde_json::from_str(&input)?)
-}
-
-#[cfg(test)]
-mod tests{
-    use super::*;
-
-    #[test]
-    fn config() {
-        let idk = get_config().unwrap();
-        println!("{}",cfg!(unix));
-        assert_eq!(idk.discord.prefix,"%".to_string());
+impl Init {
+    fn path()->PathBuf{
+        Path::new(".").join("config.json")
+    }
+    pub async fn save(&self)->Result<(),MyErr>{
+        Ok(tokio::fs::write(&Init::path(), serde_json::to_string_pretty(&self)?).await?)
+    }
+    pub async fn new()->Result<Init,MyErr>{
+        let input = tokio::fs::read_to_string(&Init::path()).await?;
+        Ok(serde_json::from_str(&input)?)
     }
 }
+
+// #[cfg(test)]
+// mod tests{
+//     use super::*;
+//
+//     #[test]
+//     fn config() {
+//         let idk = get_config().unwrap();
+//         println!("{}",cfg!(unix));
+//         assert_eq!(idk.discord.prefix,"%".to_string());
+//     }
+// }
