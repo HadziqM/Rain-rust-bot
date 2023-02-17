@@ -5,6 +5,7 @@ use image::imageops::{FilterType,resize};
 use super::CustomImageError;
 use super::super::bitwise::ItemCode;
 use crate::ItemPedia;
+use super::Images;
 
 
 #[derive(Clone)]
@@ -39,18 +40,21 @@ impl GachaR{
             GachaR::UR=>path.join("ur.jpg")
         }
     }
-    fn url(&self,multi:bool)->String{
-        let dim;
-        if multi{
-            dim = (258,206)
-        }else{
-            dim = (772,615)
-        }
+    pub(super) fn url(&self)->String{
+        let dim = (772,615);
         match self{
             GachaR::R=>format!("https://media.discordapp.net/attachments/1009291538733482055/1032987164943859712/r.jpg?width={}&height={}",dim.0,dim.1),
             GachaR::SR=>format!("https://media.discordapp.net/attachments/1009291538733482055/1032987165325537380/sr.jpg?width={}&height={}",dim.0,dim.1),
             GachaR::SSR=>format!("https://media.discordapp.net/attachments/1009291538733482055/1032987165602369566/ssr.jpg?width={}&height={}",dim.0,dim.1),
             GachaR::UR=>format!("https://media.discordapp.net/attachments/1009291538733482055/1032987165937909851/ur.jpg?width={}&height={}",dim.0,dim.1)
+        }
+    }
+    fn raw(&self,img:&Images)->Vec<u8>{
+        match self{
+            GachaR::R=>img.gacha.r.to_owned(),
+            GachaR::SR=>img.gacha.sr.to_owned(),
+            GachaR::UR=>img.gacha.ur.to_owned(),
+            GachaR::SSR=>img.gacha.ssr.to_owned()
         }
     }
 }
@@ -95,28 +99,8 @@ impl GachaImage {
         let len = text.len() as i32;
         386-len*16/2
     }
-    async fn image_edit(&self,gacha:&GachaData,pedia:&ItemPedia)->Result<ImageBuffer<Rgb<u8>,Vec<u8>>,CustomImageError>{
-        let mut image =  image::open(&gacha.result.path())?.to_rgb8();
-        //draw photo profile to image
-        for (x,y,px) in image.enumerate_pixels_mut(){
-            if self.rec.is_in_area(x, y){
-                *px = self.rec.get_rbg_pixel(x, y)
-            }
-        }
-        //draw text to image
-        let text = match gacha.code.text(pedia){
-            Some(x)=>x,
-            None=>{return Err(CustomImageError::Custom("the key value on item code was false"));}
-        };
-        let res = imageproc::drawing::draw_text(&image,
-            Rgb([255,255,255]),
-            self.get_x(&text), 510,
-            rusttype::Scale { x: 50.0, y: 50.0 }
-            ,&self.font,&text);
-        Ok(res)
-    }
-    async fn url_pull(&self,gacha:&GachaData,pedia:&ItemPedia)->Result<ImageBuffer<Rgb<u8>,Vec<u8>>,CustomImageError>{
-        let bytes =reqwest::get(&gacha.result.url(false)).await?.bytes().await?;
+    async fn url_pull(&self,gacha:&GachaData,pedia:&ItemPedia,imgg:&Images)->Result<ImageBuffer<Rgb<u8>,Vec<u8>>,CustomImageError>{
+        let bytes =gacha.result.raw(imgg);
         let mut img = image::io::Reader::new(Cursor::new(bytes)).with_guessed_format()?.decode()?.to_rgb8();
         //draw photo profile to image
         for (x,y,px) in img.enumerate_pixels_mut(){
@@ -136,11 +120,11 @@ impl GachaImage {
             ,&self.font,&text);
         Ok(res)
     }
-    pub async fn multi_pull(&self,gachas:Vec<GachaData>,pedia:&ItemPedia)->Result<Vec<u8>,CustomImageError>{
+    pub async fn multi_pull(&self,gachas:Vec<GachaData>,pedia:&ItemPedia,imgg:&Images)->Result<Vec<u8>,CustomImageError>{
         let mut img:RgbImage = ImageBuffer::new(1028, 615);
         let mut all_buff = Vec::new();
         for i in &gachas{
-            let res = &self.url_pull(i,pedia).await?;
+            let res = &self.url_pull(i,pedia,imgg).await?;
             all_buff.push(resize(res,258,206,FilterType::Nearest))
         }
         for (x,y,px) in img.enumerate_pixels_mut(){
@@ -153,8 +137,8 @@ impl GachaImage {
         img.write_to(&mut Cursor::new(&mut bytes), image::ImageOutputFormat::Png)?;
         Ok(bytes)
     }
-    pub async fn single_pull(&self,gacha:&GachaData,pedia:&ItemPedia)->Result<Vec<u8>,CustomImageError>{
-        let img = self.url_pull(gacha,pedia).await?;
+    pub async fn single_pull(&self,gacha:&GachaData,pedia:&ItemPedia,imgg:&Images)->Result<Vec<u8>,CustomImageError>{
+        let img = self.url_pull(gacha,pedia,imgg).await?;
         let mut bytes = Vec::new();
         img.write_to(&mut Cursor::new(&mut bytes), image::ImageOutputFormat::Png)?;
         Ok(bytes)

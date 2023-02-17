@@ -5,7 +5,7 @@ use std::io::prelude::*;
 use chrono::NaiveDateTime;
 use crate::commands::binded::transfer::FileSave;
 
-use super::PgConn;
+use super::{PgConn,BitwiseError};
 
 #[derive(Debug,FromRow)]
 pub struct AccountData {
@@ -30,16 +30,14 @@ impl<'a> PgConn<'a>{
     pub async fn check_user_password(&self,cid:i32,pass:&str)->Result<bool,sqlx::Error>{
         check_password(&self.pool, cid, pass).await
     }
-    pub async fn change_user_password(&self,pass:&str)->Result<bool,sqlx::Error>{
-        let check = self.get_user_data().await?;
-        if check.cid != 0 || check.rid != 0{
-            let cid = self.get_char_id().await?;
-            change_password(&self.pool, cid.0, pass).await?;
-            return Ok(true);
-        }
-        Ok(false)
+    pub async fn change_user_password(&self,pass:&str,cid:i32)->Result<(),BitwiseError>{
+        let uid:i64 = sqlx::query("SELECT user_id FROM characters where id=$1").bind(cid)
+            .fetch_one(&self.pool).await?.try_get("user_id")?;
+        let hased = bcrypt::hash(pass, 10).unwrap_or_default();
+        sqlx::query(&format!("UPDATE users SET password='{hased}' where id={uid}")).execute(&self.pool).await?;
+        Ok(())
     }
-    pub async fn create_account(&self,user:&str,pass:&str,reg:bool)->Result<AccountData,sqlx::Error>{
+    pub async fn create_account(&self,user:&str,pass:&str,reg:bool)->Result<AccountData,BitwiseError>{
         let uid;
         if reg{
             uid = create_account(&self.pool, user, pass).await?;
@@ -49,15 +47,16 @@ impl<'a> PgConn<'a>{
         use_history(&self.pool, &self.did, uid.id as i64).await?;
         Ok(uid)
     }
-    pub async fn switch(&self,cid:i32)->Result<(),sqlx::Error>{
-        switch_character(cid, &self.did, &self.pool).await
+    pub async fn switch(&self,cid:i32)->Result<(),BitwiseError>{
+        sqlx::query("INSERT INTO discord (discord_id,char_id,gacha) VALUES ($1,$2,100) ON CONFLICT (discord_id) DO UPDATE SET char_id=$2").bind(&self.did).bind(cid).execute(&self.pool).await?;
+        Ok(())
     }
     pub async fn reset_cd(&self)->Result<(),sqlx::Error>{
         sqlx::query("UPDATE discord SET transfercd=0 WHERE discord_id=$1").bind(&self.did).execute(&self.pool).await?;
         Ok(())
     }
-    pub async fn send_save(&self,cid:i32)->Result<SaveData,sqlx::Error>{
-        get_save(&self.pool, cid).await
+    pub async fn send_save(&self,cid:i32)->Result<SaveData,BitwiseError>{
+        Ok(sqlx::query_as("SELECT * FROM characters WHERE id=$1").bind(cid).fetch_one(&self.pool).await?)
     }
     pub async fn transfer_cd(&self)->Result<(bool,i64),sqlx::Error>{
         let cd:i64 = sqlx::query("SELECT transfercd from discord where discord_id=$1").bind(&self.did).fetch_one(&self.pool).await?.try_get("transfercd")?;
@@ -69,12 +68,14 @@ impl<'a> PgConn<'a>{
         }
         Ok((false,cd))
     }
-    pub async fn transfer_file(&self,file:&FileSave,cid:i32)->Result<(),sqlx::Error>{
+    pub async fn transfer_file(&self,file:&FileSave,cid:i32)->Result<(),BitwiseError>{
         sqlx::query(&format!("UPDATE characters SET {}=$1 WHERE id=$2",&file.name)).bind(file.bin.as_slice()).bind(cid).execute(&self.pool).await?;
         Ok(())
     }
-    pub async fn purge(&self)->Result<(),sqlx::Error>{
-        purge(&self.pool, &self.did).await
+    pub async fn purge(&self)->Result<(),BitwiseError>{
+        sqlx::query("DELETE from discord_register WHERE discord_id=$1").bind(&self.did).execute(&self.pool).await?;
+        sqlx::query("DELETE from discord WHERE discord_id=$1").bind(&self.did).execute(&self.pool).await?;
+        Ok(())
     }
 }
 impl SaveData {

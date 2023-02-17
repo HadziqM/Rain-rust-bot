@@ -1,7 +1,7 @@
 use serenity::all::*;
 use crate::reusable::bitwise::ItemCode;
 use serde_json::Value;
-use crate::{Init,ErrorLog,Register,Components,ItemPedia};
+use crate::{Reg,Components,ItemPedia,SlashBundle,MyErr};
 
 enum SubCommand{
     Item(String),
@@ -20,7 +20,8 @@ struct MarketHandle{
     price:Option<i32>
 }
 impl MarketHandle {
-    fn new(cmd:&CommandInteraction)->Option<MarketHandle>{
+    fn new(cmd:&CommandInteraction)->Result<MarketHandle,MyErr>{
+        let err = MyErr::Custom("invalid input, please check your input especially on unit".to_string());
         for sub in &cmd.data.options{
             if let CommandDataOptionValue::SubCommand(cmx) = &sub.value{
                 let mut user = UserId::default();
@@ -31,15 +32,21 @@ impl MarketHandle {
                     match &opt.value{
                         CommandDataOptionValue::User(x)=>{user=*x}
                         CommandDataOptionValue::Integer(x)=>{
-                            count = match u16::try_from(*x){
-                                Ok(y)=>y,
-                                Err(_)=>{return None;}
-                            };
-                            if count == 0 {
-                                return None;
+                            if &opt.name == "price"{
+                                price  = match i32::try_from(*x){
+                                    Ok(y)=>Some(y),
+                                    Err(_)=>{return Err(err);}
+                                }
+                            }else{
+                                count = match u16::try_from(*x){
+                                    Ok(y)=>y,
+                                    Err(_)=>{return Err(err);}
+                                };
+                                if count == 0 {
+                                    return Err(err);
+                                }
                             }
                         }
-                        CommandDataOptionValue::Number(x)=>{price = Some(*x as i32)}
                         CommandDataOptionValue::String(value)=>{
                             let value = value.to_owned();
                             data = match sub.name.as_str(){
@@ -57,17 +64,17 @@ impl MarketHandle {
                         _=>{continue;}
                     }
                 }
-                return Some(MarketHandle{data,user,count,price});
+                return Ok(MarketHandle{data,user,count,price});
             }
         }
-        None
+        Err(err)
     }
     fn code(&self)->ItemCode{
         ItemCode { key: self.data.value().to_owned(), count:self.count, types: self.data.code() }
     }
 }
 impl SubCommand{
-    fn new(cmd:&CommandInteraction)->Option<SubCommand>{
+    fn new(cmd:&CommandInteraction)->Result<SubCommand,MyErr>{
         for sub in &cmd.data.options{
             if let CommandDataOptionValue::SubCommand(cmx) = &sub.value{
                 for opt in cmx{
@@ -84,12 +91,12 @@ impl SubCommand{
                             "ranged"=>SubCommand::Ranged(value),
                             _=>{continue;}
                         };
-                        return Some(data);
+                        return Ok(data);
                     }
                 }
             }
         }
-        None
+        Err(MyErr::Custom("cant get the data option".to_string()))
     }
     fn code(&self)->u8{
         match self{
@@ -115,9 +122,9 @@ impl SubCommand{
             SubCommand::Item(val)=>val
         }
     }
-    fn predict(&self,pedia:&ItemPedia)->Option<Vec<AutocompleteChoice>>{
+    fn predict(&self,pedia:&ItemPedia)->Result<Vec<AutocompleteChoice>,MyErr>{
         let val = self.value();
-        let item = pedia.types.get(&self.code())?;
+        let item = pedia.types.get(&self.code()).unwrap();
         let out = item.iter().filter(|(k,f)|{
                 let flat_val = val.to_lowercase();
                 let flat_tar = f.to_lowercase();
@@ -138,51 +145,26 @@ impl SubCommand{
                 AutocompleteChoice{value:Value::String(k.to_owned()),name}
             }).collect::<Vec<_>>();
         if out.len() == 0{
-            return None;
+            return Err(MyErr::Custom("no result match for your input".to_string()));
         }else if out.len()>15{
-            return Some(out[0..15].to_owned());
+            return Ok(out[0..15].to_owned());
         }
-        Some(out)
+        Ok(out)
     }
 }
-pub async fn run_autocomplete(ctx:&Context,cmd:&CommandInteraction,init:&Init,pedia:&ItemPedia){
-    let mut err = ErrorLog::new(ctx, init, &cmd.user).await;
-    let option = match SubCommand::new(cmd){
-        Some(x)=>x,
-        None=>{return ;}
-    };
-    let choice = match option.predict(pedia){
-        Some(x)=>x,
-        None=>{return;}
-    };
-    if let Err(why) = cmd.create_response(&ctx.http, CreateInteractionResponse::Autocomplete(
-        CreateAutocompleteResponse::new().set_choices(choice))).await{
-        err.discord_error(why.to_string(),"item autocomplete response").await;
-    }
+pub async fn auto(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+    let option = SubCommand::new(bnd.cmd)?;
+    let choice = option.predict(bnd.pedia)?;
+    let content = CreateInteractionResponse::Autocomplete(CreateAutocompleteResponse::new().set_choices(choice));
+    Components::response_adv(bnd, content).await?;
+    Ok(())
 }
-pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init,pedia:&ItemPedia){
-    let mut err = ErrorLog::new(ctx, init, &cmd.user).await;
-    let option = match MarketHandle::new(cmd){
-        Some(x)=>x,
-        None=>{
-            err.change_error("invalid input".to_string(), "market command", "check your input especially the count item".to_string());
-            return err.log_slash(cmd, false).await;
-        }
-    };
-    let user = option.user.to_user(&ctx.http).await.unwrap();
-    let mut reg =match Register::default_user(ctx, cmd, init, "market command",&user).await{
-        Some(x)=>x,
-        None=>{return;}
-    };
-    match reg.pg.market(&option.code(), reg.cid, option.price,pedia).await{
-        Ok(_)=>{
-            if let Err(why)=cmd.create_response(&ctx.http, Components::interaction_response("sended distribution data", true)).await{
-                err.discord_error(why.to_string(), "letting know market is done").await;
-            }
-        }
-        Err(why)=>{
-            err.pgcon_error(why.to_string(), "sending data", cmd).await;
-        }
-    }
+pub async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+    let option = MarketHandle::new(bnd.cmd)?;
+    let user = option.user.to_user(&bnd.ctx.http).await.unwrap();
+    let mut reg = Reg::check(bnd, &user).await?;
+    reg.pg.market(&option.code(), reg.cid, option.price,bnd.pedia).await?;
+    Components::response(bnd, "sended distribution data", true).await?;
     reg.pg.close().await;
+    Ok(())
 }

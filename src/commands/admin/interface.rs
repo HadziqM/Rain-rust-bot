@@ -1,15 +1,14 @@
-use serenity::all::{CommandInteraction, ButtonStyle};
+use serenity::all::ButtonStyle;
 use serenity::builder::{CreateInteractionResponse, CreateInteractionResponseMessage, CreateEmbed, CreateActionRow};
-use serenity::prelude::Context;
-use crate::{Init,ErrorLog,Components};
+use crate::{Components,SlashBundle,MyErr};
 use crate::reusable::utils::color;
 
-pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
+pub async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let mut button = Vec::from(
         [Components::normal_button("register", "register", ButtonStyle::Primary, "📝"),
         Components::normal_button("DM save", "dms", ButtonStyle::Success, "🔐")]
         );
-    if !init.mhfz_config.account_creation{
+    if !bnd.init.mhfz_config.account_creation{
         button.push(
             Components::normal_button("Bind", "bind", ButtonStyle::Secondary, "🎀")
             )
@@ -18,9 +17,7 @@ pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init){
         .color(color("40", "ff", "40"))
         .description("button interface for mhfz player to make use of server's utility");
     let arow = CreateActionRow::Buttons(button);
-    if let Err(why) = cmd.create_response(&ctx.http, CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
-                    .embed(emb).components(vec![arow]))).await{
-        let mut err = ErrorLog::new(ctx, init, &cmd.user).await;
-        err.discord_error(why.to_string(), "interface command").await;
-    }
+    let resp = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(emb).components(vec![arow]));
+    Components::response_adv(bnd, resp).await?;
+    Ok(())
 }

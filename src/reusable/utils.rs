@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use rand::{self, seq::SliceRandom};
 use serenity::all::Colour;
 
@@ -9,6 +11,18 @@ pub enum Color{
     Grey,
     Random
 }
+
+pub struct MyTime;
+
+impl MyTime {
+    pub fn now()-> i64{
+        i64::try_from(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs()).unwrap()
+    }
+    pub fn elapsed(el:i64)-> i64{
+        MyTime::now() + el
+    }
+}
+
 impl Color {
     pub fn throw(&self)->Colour{
         match self{

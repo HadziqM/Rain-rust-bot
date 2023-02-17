@@ -3,8 +3,6 @@ use serenity::{builder::{CreateCommand, CreateCommandOption}, all::CommandOption
 use crate::{AppReg,Init};
 
 pub mod create;
-pub mod bind;
-pub mod check;
 pub mod change_pasword;
 
 pub fn reg(init:&Init)->Vec<CreateCommand>{

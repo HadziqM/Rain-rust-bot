@@ -3,7 +3,7 @@ use crate::reusable::bitwise::ItemCode;
 use serde::{Serialize,Deserialize};
 use serde_json::Value;
 use serenity::builder::AutocompleteChoice;
-use crate::{MyErr,ItemPedia,Register,Init,ErrorLog,Components};
+use crate::{MyErr,ItemPedia,Components,SlashBundle,Reg,Init};
 use std::collections::HashMap;
 use serenity::all::*;
 #[derive(Serialize,Deserialize,Clone)]
@@ -35,7 +35,7 @@ impl Market {
     fn path()->PathBuf{
         Path::new(".").join("static").join("market.json")
     }
-    async fn new()->Result<Market,MyErr>{
+    pub async fn new()->Result<Market,MyErr>{
         Ok(serde_json::from_str(&tokio::fs::read_to_string(&Market::path()).await?)?)
     }
     fn auto(&self,item:&ItemPedia,focus:&str)->Vec<AutocompleteChoice>{
@@ -81,7 +81,7 @@ impl Market {
         }
         Err(MyErr::Custom("You Cant youse admin only Command".to_string()))
     }
-    async fn update(&self,ctx:&Context,init:&Init,pedia:&ItemPedia)->Result<(),MyErr>{
+    pub async fn update(&self,ctx:&Context,init:&Init,pedia:&ItemPedia)->Result<(),MyErr>{
         let mut msg = ChannelId(NonZeroU64::new(init.log_channel.market_channel).unwrap())
             .message(&ctx.http, init.log_channel.market_channel_msg).await?;
         msg.edit(&ctx.http, EditMessage::new().embed(self.make_embed(pedia))).await?;
@@ -121,7 +121,7 @@ impl Handle{
         }
         Ok(Handle{market,bought,item})
     }
-    async fn check(&self,reg:&Register<'_>)->Result<(),MyErr>{
+    async fn check(&self,reg:&Reg<'_>)->Result<(),MyErr>{
         let bc = reg.pg.get_coin().await?;
         let total = self.item.price as u64 * self.bought as u64;
         let item  = self.item.item.count as u32 * self.bought as u32;
@@ -139,7 +139,7 @@ impl Handle{
         }
         Ok(())
     }
-    async fn transaction(&mut self,reg:&Register<'_>,pedia:&ItemPedia)->Result<(),MyErr>{
+    async fn transaction(&mut self,reg:&Reg<'_>,pedia:&ItemPedia)->Result<(),MyErr>{
         let price = self.item.price * self.bought as u32;
         let count  = self.item.item.count * self.bought;
         self.item.treshold -= self.bought as u32;
@@ -148,43 +148,28 @@ impl Handle{
         reg.pg.market_user(&item, reg.cid, price, pedia).await?;
         Ok(())
     }
-    async fn post_transaction(&self,ctx:&Context,init:&Init,pedia:&ItemPedia)->Result<(),MyErr>{
+    async fn post_transaction(&self,bnd:&SlashBundle<'_>)->Result<(),MyErr>{
         self.market.save().await?;
-        self.market.update(ctx, init, pedia).await?;
+        self.market.update(bnd.ctx, bnd.init, bnd.pedia).await?;
         Ok(())
     }
 }
-async fn autocomplete(ctx:&Context,cmd:&CommandInteraction,pedia:&ItemPedia)->Result<(),MyErr>{
-    while let Some(pat) = &cmd.data.options.iter().next() {
+pub async fn auto(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+    while let Some(pat) = &bnd.cmd.data.options.iter().next() {
         if let CommandDataOptionValue::Autocomplete { kind:_, value } = &pat.value{
             let market = Market::new().await?;
-            cmd.create_response(&ctx.http, CreateInteractionResponse::Autocomplete(CreateAutocompleteResponse::new()
-                .set_choices(market.auto(pedia, &value)))).await?;
+            bnd.cmd.create_response(&bnd.ctx.http, CreateInteractionResponse::Autocomplete(CreateAutocompleteResponse::new()
+                .set_choices(market.auto(bnd.pedia, &value)))).await?;
         }
     }
     Ok(())
 }
-async fn slashbought(ctx:&Context,reg:&Register<'_>,cmd:&CommandInteraction,init:&Init,pedia:&ItemPedia)->Result<(),MyErr>{
-    let mut handle = Handle::new(cmd).await?;
-    handle.check(reg).await?;
-    handle.transaction(reg, pedia).await?;
-    cmd.create_response(&ctx.http, Components::interaction_response("item already delivered", true)).await?;
-    handle.post_transaction(ctx, init, pedia).await?;
-    Ok(())
-}
-pub async fn run_auto(ctx:&Context,cmd:&CommandInteraction,init:&Init,pedia:&ItemPedia){
-    if let Err(why) = autocomplete(ctx, cmd, pedia).await{
-        let mut err = ErrorLog::new(ctx, init, &cmd.user).await;
-        why.log_slash(cmd, "auto complete market", true, &mut err).await;
-    }
-}
-pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init,pedia:&ItemPedia){
-    let mut reg = match Register::default(ctx, cmd, init, "market transaction", false).await{
-        Some(x)=>x,
-        None=>{return ;}
-    };
-    if let Err(why) = slashbought(ctx, &reg, cmd, init, pedia).await{
-        why.log_slash(cmd, "market transaction", true, &mut reg.error).await;
-    }
+pub async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
+    let mut handle = Handle::new(bnd.cmd).await?;
+    handle.check(&reg).await?;
+    handle.transaction(&reg, bnd.pedia).await?;
+    bnd.cmd.create_response(&bnd.ctx.http, Components::interaction_response("item already delivered", true)).await?;
+    handle.post_transaction(bnd).await?;
     reg.pg.close().await;
+    Ok(())
 }

@@ -10,15 +10,11 @@ use crate::AppReg;
 
 pub fn reg()->Vec<CreateCommand>{
     let pull = AppReg::normal_slash("pull", "pull gacha with gacha ticket").add_option(
-        CreateCommandOption::new(CommandOptionType::SubCommand, "single", "single gacha pull cost 10 ticket")
+        CreateCommandOption::new(CommandOptionType::String, "item", "the available items").required(true).set_autocomplete(true)
         ).add_option(
-        CreateCommandOption::new(CommandOptionType::SubCommand, "multi", "12 gacha pull cost 110 ticket")
-        );
-    let ch = AppReg::admin_slash("ch_gacha", "cahnge gacha banner with json").add_option(
-        CreateCommandOption::new(CommandOptionType::Attachment, "attachment", "you gacha.json file (need to be correct name)").required(true)
+        CreateCommandOption::new(CommandOptionType::Integer, "bought", "the number you want to buy").required(true)
         );
     vec![
-        pull,ch
+        pull
     ]
 }
-

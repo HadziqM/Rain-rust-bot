@@ -1,4 +1,4 @@
-mod interaction;
+pub mod interaction;
 mod ready;
 mod paralel;
 mod message;
@@ -7,29 +7,26 @@ mod message;
 use std::time::Duration;
 
 use serenity::async_trait;
-use serenity::model::prelude::{Ready, Message, Interaction,Interaction::*};
+use serenity::model::prelude::{Ready, Message, Interaction};
 use serenity::prelude::*;
 use crate::reusable::config::*;
-use interaction::*;
 use crate::material::ItemPedia;
+use crate::Images;
+
+use self::interaction::handled;
 
 
 #[derive(Debug,Clone)]
 pub struct Handler{
     pub config:Init,
-    pub pedia:ItemPedia
+    pub pedia:ItemPedia,
+    pub image:Images,
 }
 
 #[async_trait]
 impl EventHandler for Handler{
     async fn interaction_create(&self, ctx: Context, inter:Interaction) {
-        match inter {
-            Modal(cmd)=>modal_command(&cmd.data.custom_id, &cmd, &ctx,&self.config).await,
-            Command(cmd) => slash_command(&cmd.data.name, &cmd,&ctx, &self.config,&self.pedia).await,
-            Component(cmd) => button_command(&cmd.data.custom_id, &cmd,&ctx, &self.config).await,
-            Autocomplete(cmd)=>autocomplete_command(&cmd.data.name, &cmd, &ctx, &self.config,&self.pedia).await,
-            _=>println!("unhandled interaction")
-        }
+        handled(&ctx, &inter, &self.pedia, &self.config, &self.image).await;
     }
     async fn ready(&self, ctx:Context, ready:Ready){
         ready::ready(&ctx, ready,&self.config).await;
@@ -49,6 +46,6 @@ impl EventHandler for Handler{
         });
     }
     async fn message(&self, ctx: Context, msg: Message) {
-        message::msg_handler(ctx,msg,self.config.clone(),self.pedia.clone()).await
+        message::msg_handler(&ctx,&msg,&self.config,&self.pedia).await
     }
 }

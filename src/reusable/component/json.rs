@@ -4,14 +4,15 @@ use serenity::all::*;
 
 
 impl Components {
-    pub fn get_att(cmd:&CommandInteraction)->Option<Attachment>{
-        let resolved = &cmd.data.resolved;
-        for i in &cmd.data.options{
-            if let CommandDataOptionValue::Attachment(att)= &i.value{
-                return Some(resolved.attachments.get(att)?.to_owned());
+    pub fn get_att(cmd:&CommandInteraction)->Result<Attachment,MyErr>{
+        let resolved:Vec<_>=cmd.data.resolved.attachments.iter().map(|x|x.1).collect();
+        match resolved.first(){
+            Some(x)=>{
+                let idk = *x;
+                Ok(idk.clone())
             }
+            None=>Err(MyErr::Custom("cant get the attachment attachment".to_owned()))
         }
-        None
     }
     pub async fn download_check_and_save<T>(att:Attachment,path:&PathBuf,_tip:&T)->Result<(),MyErr>
         where for<'a> T:serde::Deserialize<'a>

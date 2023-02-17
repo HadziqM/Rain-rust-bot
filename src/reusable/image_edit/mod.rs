@@ -1,5 +1,32 @@
 pub mod gacha;
 
+#[derive(Debug,Clone)]
+pub struct Images {
+    pub gacha: Gacha
+}
+#[derive(Debug,Clone)]
+pub struct Gacha {
+    pub ur: Vec<u8>,
+    pub ssr: Vec<u8>,
+    pub sr:Vec<u8>,
+    pub r:Vec<u8>
+}
+impl Gacha{
+    async fn new()->Result<Gacha,CustomImageError>{
+        use gacha::GachaR;
+        let ur = reqwest::get(&GachaR::UR.url()).await?.bytes().await?.to_vec();
+        let ssr = reqwest::get(&GachaR::SSR.url()).await?.bytes().await?.to_vec();
+        let sr = reqwest::get(&GachaR::SR.url()).await?.bytes().await?.to_vec();
+        let r = reqwest::get(&GachaR::R.url()).await?.bytes().await?.to_vec();
+        Ok(Gacha { ur, ssr, sr, r })
+    }
+}
+impl Images {
+    pub async fn new()->Result<Images,CustomImageError>{
+        let gacha = Gacha::new().await?;
+        Ok(Images { gacha })
+    }
+}
 #[derive(Debug)]
 pub enum CustomImageError{
     Custom(&'static str),

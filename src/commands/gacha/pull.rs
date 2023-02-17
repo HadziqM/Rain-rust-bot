@@ -5,7 +5,7 @@ use serenity::all::*;
 use crate::reusable::image_edit::gacha::{GachaData, GachaR, GachaImage};
 use crate::reusable::bitwise::ItemCode;
 use crate::reusable::postgress::gacha::GachaPg;
-use crate::{Init,Register,ItemPedia};
+use crate::{Reg,SlashBundle,MyErr,Components};
 use crate::reusable::utils::Color;
 use rand::prelude::*;
 
@@ -28,9 +28,9 @@ impl Default for Gacha {
 }
 
 impl Gacha{
-    async fn new()->Gacha{
+    async fn new()->Result<Gacha,MyErr>{
         let path = Path::new(".").join("static").join("gacha.json");
-        serde_json::from_str(&tokio::fs::read_to_string(&path).await.unwrap()).unwrap()
+        Ok(serde_json::from_str(&tokio::fs::read_to_string(&path).await?)?)
     }
     fn pull(&self)->GachaData{
         let  mut thread = rand::thread_rng();
@@ -127,83 +127,44 @@ fn create_embed(user:&User,pg:&GachaPg)->CreateEmbed{
     CreateEmbed::new().title("Mhfz Gacha Result").description(format!("Pity Count: {}\nTicket Remaining: {}",pg.pity,pg.ticket))
         .author(CreateEmbedAuthor::new(&user.name).icon_url(user.face())).image("attachment://gacha.jpg").color(Color::Random.throw())
 }
-pub async fn run(ctx:&Context,cmd:&CommandInteraction,init:&Init,pedia:&ItemPedia){
+pub async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
     let mut multi = false;
-    for i in &cmd.data.options{
+    for i in &bnd.cmd.data.options{
         if let CommandDataOptionValue::SubCommand(_) = &i.value{
             if i.name == "multi"{
                 multi = true;
             }
         }
     }
-    let mut reg =match Register::default(ctx, cmd, init, "single pull", false).await{
-        Some(x)=>x,
-        None=>{return;}
-    };
-    if let Err(why)=cmd.defer(&ctx.http).await{
-        reg.error.discord_error(why.to_string(), "defering pull slash").await;
-    }
-    let data = match reg.pg.get_pity().await{
-        Ok(x)=>x,
-        Err(why)=>{
-            reg.error.pgcon_error_defer(why.to_string(), "getting gacha data", cmd).await;
-            return reg.pg.close().await;
-        }
-    };
-    let gacha = Gacha::new().await;
-    let image = match GachaImage::new(&cmd.user.static_avatar_url()
-        .unwrap_or(cmd.user.default_avatar_url())).await{
-            Ok(x)=>x,
-            Err(why)=>{
-                reg.error.change_error(why.to_string(), "image init", "please report to admin".to_string());
-                reg.error.log_slash(cmd, false).await;
-                return reg.pg.close().await;
-            }
-        };
+    let data = reg.pg.get_pity().await?;
+    let gacha = Gacha::new().await?;
+    let image = GachaImage::new(&bnd.cmd.user.static_avatar_url().unwrap_or(bnd.cmd.user.default_avatar_url())).await?;
     let raw;
     let g_pg;
     let g_data;
-    let cost = ||{
-        if multi{
-            return 110;
-        }
-        10
-    };
+    let cost = ||{if multi{return 110;}10};
     if data.ticket<cost(){
-            reg.error.change_error("not enough ticket".to_string(),"multi pull",format!("you only have {} ticket and its need {} ticket to pull, so you need to collect {} more",data.ticket,cost(),cost()-data.ticket));
-            reg.error.log_slash_defer(cmd, false).await;
-            return reg.pg.close().await;
+            reg.pg.close().await;
+            return Err(MyErr::Custom(format!("insufficient ticket, you only have {} ticket and its need {} ticket to pull, so you need to collect {} more",data.ticket,cost(),cost()-data.ticket)));
     }
     if !multi{
         let result = gacha.single_pull(&data);
         g_pg = result.0;
-        raw =image.single_pull(&result.1,pedia).await;
+        raw =image.single_pull(&result.1,bnd.pedia,bnd.image).await?;
         g_data = vec![result.1];
     }else{
         let result = gacha.multi_pull(&data);
         g_pg=result.0;
-        raw = image.multi_pull(result.1.clone(),pedia).await;
+        raw = image.multi_pull(result.1.clone(),bnd.pedia,bnd.image).await?;
         g_data = result.1;
     }
-    match raw{
-        Ok(x)=>{
-            let code:Vec<_> = g_data.iter().map(|e|e.code.to_owned()).collect();
-            if let Err(why)=reg.pg.send_distrib(&g_pg,&code, reg.cid, pedia).await{
-                reg.error.pgcon_error_defer(why.to_string(), "sending distribution", cmd).await;
-                return reg.pg.close().await;
-            }
-            let att = CreateAttachment::bytes(x, "gacha.jpg");
-            let embed = create_embed(&cmd.user, &g_pg);
-            if let Err(why)=cmd.edit_response(&ctx.http,EditInteractionResponse::new()
-                .new_attachment(att).embed(embed)).await{
-                reg.error.discord_error(why.to_string(), "sending gacha result").await;
-                return reg.pg.close().await;
-            }
-        }
-        Err(why)=>{
-            reg.error.change_error(why.to_string(), "edit image", "please report".to_string());
-            reg.error.log_slash_defer(cmd, true).await;
-            return reg.pg.close().await;
-        }
-    };
+    let code:Vec<_> = g_data.iter().map(|e|e.code.to_owned()).collect();
+    reg.pg.send_distrib(&g_pg,&code, reg.cid, bnd.pedia).await?;
+    let att = CreateAttachment::bytes(raw, "gacha.jpg");
+    let embed = create_embed(&bnd.cmd.user, &g_pg);
+    let content = EditInteractionResponse::new()
+        .new_attachment(att).embed(embed);
+    Components::edit_adv(bnd, content).await?;
+    reg.pg.close().await;
+    Ok(())
 }

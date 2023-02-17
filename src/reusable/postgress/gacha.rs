@@ -13,9 +13,9 @@ impl<'a> PgConn<'a> {
         Ok(sqlx::query("SELECT bounty From discord where discord_id=$1")
         .bind(&self.did).fetch_one(&self.pool).await?.get("bounty"))
     }
-    pub async fn get_pity(&self)->Result<GachaPg,sqlx::Error>{
-        sqlx::query_as::<_,GachaPg>("SELECT gacha as ticket,pity From discord where discord_id=$1")
-        .bind(&self.did).fetch_one(&self.pool).await
+    pub async fn get_pity(&self)->Result<GachaPg,BitwiseError>{
+        Ok(sqlx::query_as::<_,GachaPg>("SELECT gacha as ticket,pity From discord where discord_id=$1")
+        .bind(&self.did).fetch_one(&self.pool).await?)
     }
     pub async fn send_distrib(&self,pg:&GachaPg,data:&[ItemCode],cid:i32,pedia:&ItemPedia)->Result<(),BitwiseError>{
         sqlx::query("UPDATE discord set gacha=$1,pity=$2 where discord_id=$3").bind(pg.ticket)

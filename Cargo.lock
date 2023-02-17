@@ -1417,6 +1417,7 @@ dependencies = [
  "chrono",
  "image",
  "imageproc",
+ "lazy_static",
  "rand 0.8.5",
  "reqwest",
  "rusttype",

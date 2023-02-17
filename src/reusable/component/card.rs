@@ -73,9 +73,9 @@ impl Card{
         .colour(color("ff", "55", "00")).thumbnail(&self.get_path())
     }
 
-    pub fn card(&self,user:&User)->CreateInteractionResponse{
+    pub fn card(&self,user:&User,ephemeral:bool)->CreateInteractionResponse{
         CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
-            .embed(self.crete_embed(user)))
+            .embed(self.crete_embed(user)).ephemeral(ephemeral))
     }
     pub fn bind(&self,user:&User)->CreateInteractionResponse{
         CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()

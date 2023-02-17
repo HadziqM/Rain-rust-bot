@@ -5,7 +5,6 @@ use crate::AppReg;
 pub mod card;
 pub mod save;
 pub mod transfer;
-pub mod change;
 
 pub fn reg()->Vec<CreateCommand>{
     let file = AppReg::normal_slash("transfer", "transfer your save data to server")
