@@ -1,6 +1,6 @@
 use sqlx::FromRow;
 
-use super::PgConn;
+use super::{PgConn,BitwiseError};
 
 
 
@@ -12,9 +12,9 @@ pub struct Servers {
     pub description:String,
 }
 impl<'a> PgConn<'a> {
-    pub async fn get_server(&self)->Result<Vec<Servers>,sqlx::Error>{
-        sqlx::query_as::<_,Servers>("Select current_players as cp,land,
+    pub async fn get_server(&self)->Result<Vec<Servers>,BitwiseError>{
+        Ok(sqlx::query_as::<_,Servers>("Select current_players as cp,land,
 world_name as name
-,world_description as description from servers").fetch_all(&self.pool).await
+,world_description as description from servers").fetch_all(&self.pool).await?)
     }
 }

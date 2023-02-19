@@ -6,8 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1.0", features = ["full"] }
 serenity = { git = "https://github.com/serenity-rs/serenity", branch = "next", default-features = false, features = ["client", "gateway", "rustls_backend", "model","collector"] }
+hertz = { path = "hertz" }
+tokio = { version = "1.0", features = ["full"] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 chrono = "0.4.23"

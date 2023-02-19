@@ -142,6 +142,10 @@ impl Init {
         let input = tokio::fs::read_to_string(&Init::path()).await?;
         Ok(serde_json::from_str(&input)?)
     }
+    pub fn block_new()->Result<Init,MyErr>{
+        let input = std::fs::read_to_string(&Init::path())?;
+        Ok(serde_json::from_str(&input)?)
+    }
 }
 
 // #[cfg(test)]

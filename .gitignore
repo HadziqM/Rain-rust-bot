@@ -5,3 +5,4 @@ config.json
 !/save/this_save.txt
 test.jpg
 log.txt
+/hertz/target

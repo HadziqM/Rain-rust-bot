@@ -1,0 +1,14 @@
+[package]
+name = "hertz"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "hertz"
+path = "src/lib.rs"
+proc-macro = true
+
+[dependencies]
+syn = { version = "*", features = ["full", "extra-traits"] }
+quote = "*"
+proc-macro2 = "*"

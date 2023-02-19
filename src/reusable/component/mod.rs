@@ -72,7 +72,7 @@ impl From<super::image_edit::CustomImageError> for MyErr {
 pub trait Mytrait{
     async fn err_response(&self,err:&ErrorLog<'_>,ephemeral:bool);
     async fn err_defer(&self,err:&ErrorLog<'_>);
-    async fn defer_res(&self,err:&mut ErrorLog<'_>,on:&'static str,ephemeral:bool);
+    async fn defer_res(&self,err:&mut ErrorLog<'_>,on:&str,ephemeral:bool);
     async fn response(&self,ctx:&Context,rply:CreateInteractionResponse)->Result<(),MyErr>;
     async fn get_msg(&self,ctx:&Context)->Result<Message,MyErr>;
     async fn edit(&self,ctx:&Context,rlpy:EditInteractionResponse)->Result<(),MyErr>;
@@ -91,7 +91,7 @@ impl Mytrait for CommandInteraction{
             MyErr::from(why).log_channel(err).await
         }
     }
-    async fn defer_res(&self,err:&mut ErrorLog<'_>,on:&'static str,ephemeral:bool){
+    async fn defer_res(&self,err:&mut ErrorLog<'_>,on:&str,ephemeral:bool){
         let res;
         if ephemeral{
             res = self.defer_ephemeral(&err.ctx.http).await;
@@ -100,7 +100,7 @@ impl Mytrait for CommandInteraction{
         }
         if let Err(why) = res{
             let er = MyErr::from(why);
-            err.change_error(er.get(),on, er.advice());
+            err.change_error(er.get(),on.to_owned(), er.advice());
             err.log_error_channel().await;
         }
     }
@@ -131,11 +131,11 @@ impl Mytrait for ModalInteraction{
             MyErr::from(why).log_channel(err).await
         }
     }
-    async fn defer_res(&self,err:&mut ErrorLog<'_>,on:&'static str,_ephemeral:bool){
+    async fn defer_res(&self,err:&mut ErrorLog<'_>,on:&str,_ephemeral:bool){
         let res = self.defer(&err.ctx.http).await;
         if let Err(why) = res{
             let er = MyErr::from(why);
-            err.change_error(er.get(),on, er.advice());
+            err.change_error(er.get(),on.to_owned(), er.advice());
             err.log_error_channel().await;
         }
     }
@@ -167,11 +167,11 @@ impl Mytrait for ComponentInteraction{
             MyErr::from(why).log_channel(err).await
         }
     }
-    async fn defer_res(&self,err:&mut ErrorLog<'_>,on:&'static str,_ephemeral:bool){
+    async fn defer_res(&self,err:&mut ErrorLog<'_>,on:&str,_ephemeral:bool){
         let res = self.defer(&err.ctx.http).await;
         if let Err(why) = res{
             let er = MyErr::from(why);
-            err.change_error(er.get(),on, er.advice());
+            err.change_error(er.get(),on.to_owned(), er.advice());
             err.log_error_channel().await;
         }
     }

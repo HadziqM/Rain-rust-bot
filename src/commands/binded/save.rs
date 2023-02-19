@@ -1,5 +1,6 @@
-use crate::{Mybundle,MyErr,Reg,Components, reusable::postgress::account::SaveData};
-use serenity::all::*;
+use serenity::builder::{CreateAttachment, CreateMessage};
+
+use crate::{MyErr,Reg,Components, reusable::postgress::account::SaveData,Mytrait,Mybundle};
 
 impl SaveData{
     fn get_attachment(&self)->Vec<CreateAttachment>{
@@ -41,10 +42,11 @@ impl SaveData{
     }
 }
 
-pub async fn all<T:Mybundle>(bnd:&T,mut reg:Reg<'_>)->Result<(),MyErr>{
+#[hertz::hertz_combine_reg(300,false)]
+async fn all<T:Mybundle>(bnd:&T,mut reg:Reg<'_>)->Result<(),MyErr> {
     let data = reg.pg.send_save(reg.cid).await?;
-    let user = bnd.user();
     Components::response(bnd, "trying to Direct Message", true).await?;
+    let user = bnd.user();
     user.direct_message(&bnd.ctx().http,CreateMessage::new()
         .content("your save").add_files(data.get_attachment())).await?;
     reg.pg.close().await;

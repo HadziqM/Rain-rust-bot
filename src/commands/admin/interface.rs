@@ -1,9 +1,10 @@
 use serenity::all::ButtonStyle;
 use serenity::builder::{CreateInteractionResponse, CreateInteractionResponseMessage, CreateEmbed, CreateActionRow};
-use crate::{Components,SlashBundle,MyErr};
+use crate::{Components,SlashBundle,MyErr,Mytrait,Mybundle};
 use crate::reusable::utils::color;
 
-pub async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+#[hertz::hertz_slash_normal(0,false)]
+async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let mut button = Vec::from(
         [Components::normal_button("register", "register", ButtonStyle::Primary, "📝"),
         Components::normal_button("DM save", "dms", ButtonStyle::Success, "🔐")]

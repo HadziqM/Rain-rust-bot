@@ -28,22 +28,26 @@ impl MyErr {
     pub async fn log_channel(&self,err:&ErrorLog<'_>){
         err.log_error_channel().await
     }
-    pub async fn log_msg(&self,msg:&Message,on:&'static str,err:&mut ErrorLog<'_>){
-        err.change_error(self.get(), on, self.advice());
+    pub async fn log_channel_ch(&self,err:&mut ErrorLog<'_>,on:&str){
+        err.change_error(self.get(), on.to_owned(), self.advice());
+        err.log_error_channel().await
+    }
+    pub async fn log_msg(&self,msg:&Message,on:&str,err:&mut ErrorLog<'_>){
+        err.change_error(self.get(), on.to_owned(), self.advice());
         if let Err(why) = msg.channel_id.send_message(&err.ctx.http, CreateMessage::new().embed(err.make_embed())).await{
             MyErr::from(why).log_channel(err).await
         }
     }
-    pub async fn log_defer<T:Mytrait>(&self,cmd:&T,on:&'static str,err:&mut ErrorLog<'_>){
-        err.change_error(self.get(), on, self.advice());
+    pub async fn log_defer<T:Mytrait>(&self,cmd:&T,on:&str,err:&mut ErrorLog<'_>){
+        err.change_error(self.get(), on.to_owned(), self.advice());
         if let MyErr::Serenity(_) = self{
             err.log_error_channel().await
         }else{
             cmd.err_defer(err).await;
         }
     }
-    pub async fn log<T:Mytrait>(&self,cmd:&T,on:&'static str,ephemeral:bool,err:&mut ErrorLog<'_>){
-        err.change_error(self.get(), on, self.advice());
+    pub async fn log<T:Mytrait>(&self,cmd:&T,on:&str,ephemeral:bool,err:&mut ErrorLog<'_>){
+        err.change_error(self.get(), on.to_owned(), self.advice());
         if let MyErr::Serenity(_) = self{
             err.log_error_channel().await
         }else{

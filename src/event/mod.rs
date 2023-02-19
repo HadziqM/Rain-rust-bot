@@ -1,7 +1,7 @@
 pub mod interaction;
 mod ready;
 mod paralel;
-mod message;
+pub mod message;
 
 
 use std::time::Duration;
@@ -39,7 +39,7 @@ impl EventHandler for Handler{
                 if log_count%5 == 0{
                     log = true
                 }
-                state = paralel::paralel_thread(&ctx, &init,state,log).await;
+                state = paralel::handle(&ctx, &init,state,log).await;
                 log_count += 1;
                 tokio::time::sleep(Duration::from_secs(60)).await;
             }

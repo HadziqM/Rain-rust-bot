@@ -1,6 +1,6 @@
 use std::num::NonZeroU64;
 use crate::reusable::utils::color;
-use crate::{MyErr,ModalBundle,Reg,Components,Mybundle};
+use crate::{MyErr,ModalBundle,Reg,Components,Mybundle,Mytrait};
 use serenity::all::*;
 
 struct RegisterAcknowledged<'a,'b> {
@@ -57,7 +57,9 @@ fn modal_response(reg:bool)->CreateInteractionResponse{
     CreateInteractionResponse::Modal(CreateModal::new(name, title)
         .components(vec![modal_register_row("username", false),modal_register_row("password", true)]))
 }
-pub async fn all<T:Mybundle>(bnd:&T)->Result<(),MyErr>{
+
+#[hertz::hertz_combine_normal(60,false)]
+async fn all<T:Mybundle>(bnd:&T)->Result<(),MyErr>{
     let regist = match bnd.name().as_str(){
         "bind"=>false,
         _=>true
@@ -68,7 +70,9 @@ pub async fn all<T:Mybundle>(bnd:&T)->Result<(),MyErr>{
     reg.pg.close().await;
     Ok(())
 }
-pub async fn modal(bnd:&ModalBundle<'_>)->Result<(),MyErr>{
+
+#[hertz::hertz_modal_normal(0,false)]
+async fn modal(bnd:&ModalBundle<'_>)->Result<(),MyErr>{
     let regist = match bnd.name().as_str(){
         "bind_m"=>false,
         _=>true

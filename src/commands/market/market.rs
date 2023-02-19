@@ -3,7 +3,7 @@ use crate::reusable::bitwise::ItemCode;
 use serde::{Serialize,Deserialize};
 use serde_json::Value;
 use serenity::builder::AutocompleteChoice;
-use crate::{MyErr,ItemPedia,Components,SlashBundle,Reg,Init};
+use crate::{MyErr,ItemPedia,Components,SlashBundle,Reg,Init,Mybundle};
 use std::collections::HashMap;
 use serenity::all::*;
 #[derive(Serialize,Deserialize,Clone)]
@@ -154,7 +154,10 @@ impl Handle{
         Ok(())
     }
 }
-pub async fn auto(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+
+
+#[hertz::hertz_auto]
+async fn idk(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     while let Some(pat) = &bnd.cmd.data.options.iter().next() {
         if let CommandDataOptionValue::Autocomplete { kind:_, value } = &pat.value{
             let market = Market::new().await?;
@@ -164,7 +167,10 @@ pub async fn auto(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     }
     Ok(())
 }
-pub async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
+
+use crate::Mytrait;
+#[hertz::hertz_slash_reg(60,false)]
+async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
     let mut handle = Handle::new(bnd.cmd).await?;
     handle.check(&reg).await?;
     handle.transaction(&reg, bnd.pedia).await?;

@@ -1,21 +1,24 @@
 use futures::Future;
 use serenity::all::*;
-use crate::{Init,MyErr,ErrorLog,ItemPedia};
+use crate::{Init,MyErr,ErrorLog,ItemPedia, commands};
 
 pub struct MsgBundle<'a>{
-    ctx:&'a Context,
-    msg:&'a Message,
-    init:&'a Init,
-    pedia:&'a ItemPedia
+    pub ctx:&'a Context,
+    pub msg:&'a Message,
+    pub init:&'a Init,
+    pub pedia:&'a ItemPedia
 }
 
 pub async fn msg_handler(ctx:&Context,msg:&Message,init:&Init,pedia:&ItemPedia){
     if msg.content.starts_with(&init.discord.prefix) && !msg.author.bot {
-        let name = msg.content.split(&init.discord.prefix).next();
+        let name = msg.content.split_whitespace().next();
         let bnd = MsgBundle{ctx,msg,init,pedia};
         if let Some(x) = name{
-            match x{
+            let y = x.replace(&init.discord.prefix, "");
+            match y.as_str(){
                 "test"=>wraper(&bnd, "test commands", test).await,
+                "execute"=>wraper(&bnd, "execute postgres", commands::admin::query::msg).await,
+                "query"=>wraper(&bnd, "query postgres", commands::admin::query::msg_qry).await,
                 _=>{return ;}
             }
         }

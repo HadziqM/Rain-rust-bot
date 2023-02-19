@@ -1,7 +1,7 @@
 use serenity::all::*;
 use crate::reusable::bitwise::ItemCode;
 use serde_json::Value;
-use crate::{Reg,Components,ItemPedia,SlashBundle,MyErr};
+use crate::{Reg,Components,ItemPedia,SlashBundle,MyErr,Mybundle,Mytrait};
 
 enum SubCommand{
     Item(String),
@@ -152,14 +152,17 @@ impl SubCommand{
         Ok(out)
     }
 }
-pub async fn auto(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+#[hertz::hertz_auto]
+async fn auto(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let option = SubCommand::new(bnd.cmd)?;
     let choice = option.predict(bnd.pedia)?;
     let content = CreateInteractionResponse::Autocomplete(CreateAutocompleteResponse::new().set_choices(choice));
     Components::response_adv(bnd, content).await?;
     Ok(())
 }
-pub async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+
+#[hertz::hertz_slash_normal(0,false)]
+async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let option = MarketHandle::new(bnd.cmd)?;
     let user = option.user.to_user(&bnd.ctx.http).await.unwrap();
     let mut reg = Reg::check(bnd, &user).await?;

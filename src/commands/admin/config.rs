@@ -1,7 +1,9 @@
-use crate::{MyErr,SlashBundle};
+use crate::{MyErr,SlashBundle,Mybundle,Mytrait};
+use hertz::hertz_slash_normal;
 use serenity::all::*;
 
-pub async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+#[hertz_slash_normal(60,false)]
+async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let mut name = "";
     for data in &bnd.cmd.data.options{
         if let CommandDataOptionValue::SubCommand(_) = &data.value{

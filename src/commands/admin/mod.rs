@@ -7,6 +7,7 @@ pub mod interface;
 pub mod market;
 pub mod purge;
 pub mod config;
+pub mod query;
 
 
 pub fn reg(init:&Init)->Vec<CreateCommand>{

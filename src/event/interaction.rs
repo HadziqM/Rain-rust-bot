@@ -3,6 +3,7 @@ use serenity::futures::Future;
 use crate::{commands, COOLDOWN};
 use crate::{Init,ItemPedia,MyErr,ErrorLog,Mytrait,Reg,Images};
 use crate::reusable::utils::MyTime;
+use serenity::async_trait;
 
 pub struct SlashBundle<'a>{
     pub cmd:&'a CommandInteraction,
@@ -26,6 +27,7 @@ pub struct ModalBundle<'a>{
     pub image:&'a Images
 }
 
+#[async_trait]
 pub trait Mybundle {
     type Cmd:Mytrait;
     fn ctx<'a>(&'a self)->&'a Context;
@@ -33,8 +35,11 @@ pub trait Mybundle {
     fn user(&self)->User;
     fn cmd<'a>(&'a self)->&'a Self::Cmd;
     fn name(&self)->String;
-    fn cooldown(&self,cd:i64)->(bool,i64);
+    async fn cooldown(&self,cd:i64)->(bool,i64);
 }
+
+
+#[async_trait]
 impl Mybundle for SlashBundle<'_>{
     type Cmd = CommandInteraction;
     fn ctx<'a>(&'a self)->&'a Context {
@@ -52,9 +57,9 @@ impl Mybundle for SlashBundle<'_>{
     fn name(&self)->String {
         self.cmd.data.name.clone()
     }
-    fn cooldown(&self,time:i64)->(bool,i64) {
+    async fn cooldown(&self,time:i64)->(bool,i64) {
         let pat = format!("{}-{}",self.name(),self.user().id.to_string());
-        let mut cd = COOLDOWN.lock().unwrap();
+        let mut cd = COOLDOWN.lock().await;
         let now = MyTime::now();
         match cd.get_mut(&pat){
             Some(x)=>{
@@ -74,6 +79,7 @@ impl Mybundle for SlashBundle<'_>{
         }
     }
 }
+#[async_trait]
 impl Mybundle for ComponentBundle<'_>{
     type Cmd = ComponentInteraction;
         fn ctx<'a>(&'a self)->&'a Context {
@@ -91,9 +97,9 @@ impl Mybundle for ComponentBundle<'_>{
     fn name(&self)->String {
         self.cmd.data.custom_id.clone()
     }
-    fn cooldown(&self,time:i64)->(bool,i64) {
+    async fn cooldown(&self,time:i64)->(bool,i64) {
         let pat = format!("{}-{}",self.name(),self.user().id.to_string());
-        let mut cd = COOLDOWN.lock().unwrap();
+        let mut cd = COOLDOWN.lock().await;
         let now = MyTime::now();
         match cd.get_mut(&pat){
             Some(x)=>{
@@ -113,6 +119,7 @@ impl Mybundle for ComponentBundle<'_>{
         }
     }
 }
+#[async_trait]
 impl Mybundle for ModalBundle<'_>{
     type Cmd = ModalInteraction;
     fn ctx<'a>(&'a self)->&'a Context {
@@ -130,9 +137,9 @@ impl Mybundle for ModalBundle<'_>{
     fn name(&self)->String {
         self.cmd.data.custom_id.clone()
     }
-    fn cooldown(&self,time:i64)->(bool,i64) {
+    async fn cooldown(&self,time:i64)->(bool,i64) {
         let pat = format!("{}-{}",self.name(),self.user().id.to_string());
-        let mut cd = COOLDOWN.lock().unwrap();
+        let mut cd = COOLDOWN.lock().await;
         let now = MyTime::now();
         match cd.get_mut(&pat){
             Some(x)=>{
@@ -157,7 +164,7 @@ async fn normal<'a,F:Fn(&'a T)->Fut,Fut:Future<Output = Result<(),MyErr>>,T:Mybu
     let cmd = bnd.cmd();
     let mut err = ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
     if cd != 0{
-        let cooldown = bnd.cooldown(cd);
+        let cooldown = bnd.cooldown(cd).await;
         if !cooldown.0{
             let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
             return er.log(cmd, on, ephemeral, &mut err).await;
@@ -178,7 +185,7 @@ async fn register<'a,F,Fut,T>(bnd:&'a T,cd:i64,on:&'static str,ephemeral:bool,de
     let cmd = bnd.cmd();
     let mut err = ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
     if cd != 0{
-        let cooldown = bnd.cooldown(cd);
+        let cooldown = bnd.cooldown(cd).await;
         if !cooldown.0{
             let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
             return er.log(cmd, on, ephemeral, &mut err).await;
@@ -211,20 +218,20 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
             let bnd = SlashBundle{cmd,init,image,pedia,ctx};
             let wth = cmd.data.name.as_str();
             match wth{
-                "interface"=>normal(&bnd, 60, "interface", false, false, commands::admin::interface::slash).await,
-                "create"=>normal(&bnd, 60, "register", false, false, commands::register::create::all).await,
-                "bind"=>normal(&bnd, 60, "bind", false, false, commands::register::create::all).await,
-                "change_password"=>register(&bnd,10*60, "change_password", true, false, false, commands::register::change_pasword::slash).await,
-                "card"=>register(&bnd, 60, "card", false, false, false, commands::binded::card::slash).await,
-                "switch"=>register(&bnd, 60, "switch", false, false, true, dummy).await,
-                "👤 Card"=>normal(&bnd, 10, "card Context", false, false, commands::binded::card::slash_user).await,
-                "dm_save"=>register(&bnd, 60, "dm user save file", true, false, false, commands::binded::save::all).await,
-                "transfer"=>register(&bnd, 5*60, "transfer command", false, true, false, commands::binded::transfer::slash).await,
-                "market"=>normal(&bnd, 10, "admin market", false, false, commands::admin::market::slash).await,
-                "purge"=>normal(&bnd, 10, "purge", true, false, commands::admin::purge::slash).await,
-                "pull"=>register(&bnd, 10, "pull gacha", false, true, false, commands::gacha::pull::slash).await,
-                "config"=>normal(&bnd, 30, "config", true, false, commands::admin::config::slash).await,
-                "stall"=>register(&bnd, 60, "stall", false, false, false, commands::market::market::slash).await,
+                "interface"=>commands::admin::interface::discord_slash(&bnd).await,
+                "create"=>commands::register::create::discord_all(&bnd).await,
+                "bind"=>commands::register::create::discord_all(&bnd).await,
+                "change_password"=>commands::register::change_pasword::discord_slash(&bnd).await,
+                "card"=>commands::binded::card::discord_slash(&bnd).await,
+                "switch"=>switch(&bnd).await,
+                "👤 Card"=>commands::binded::card::discord_slash_user(&bnd).await,
+                "dm_save"=>commands::binded::save::discord_all(&bnd).await,
+                "transfer"=>commands::binded::transfer::discord_slash(&bnd).await,
+                "market"=>commands::admin::market::discord_slash(&bnd).await,
+                "purge"=>commands::admin::purge::discord_slash(&bnd).await,
+                "pull"=>commands::gacha::pull::discord_slash(&bnd).await,
+                "config"=>commands::admin::config::discord_slash(&bnd).await,
+                "stall"=>commands::market::market::discord_slash(&bnd).await,
                 _=> {return;}
             }
         }
@@ -232,12 +239,13 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
             let bnd = ComponentBundle{cmd,init,image,pedia,ctx};
             let wth = cmd.data.custom_id.as_str();
             if wth.contains("save"){
-                return normal(&bnd, 0, "save acknowledge", true, false, commands::binded::transfer::button).await;
+                return commands::binded::transfer::discord_button(&bnd).await;
             }
             match wth{
-                "register"=>normal(&bnd, 40, "register", true, false, commands::register::create::all).await,
-                "bind"=>normal(&bnd, 40, "bind", true, false, commands::register::create::all).await,
-                "dms"=>register(&bnd, 60, "dm user save", true, false,false, commands::binded::save::all).await,
+                "register"=>commands::register::create::discord_all(&bnd).await,
+                "bind"=>commands::register::create::discord_all(&bnd).await,
+                "dms"=>commands::binded::save::discord_all(&bnd).await,
+                "switch"=>switch(&bnd).await,
                 _=>{return ;}
             }
         }
@@ -245,8 +253,8 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
             let bnd = ModalBundle{cmd,init,image,pedia,ctx};
             let wth = cmd.data.custom_id.as_str();
             match wth{
-                "register_m"=>normal(&bnd, 0, "modal register", true, false, commands::register::create::all).await,
-                "bind"=>normal(&bnd, 0, "modal register", true, false, commands::register::create::all).await,
+                "register_m"=>commands::register::create::discord_modal(&bnd).await,
+                "bind"=>commands::register::create::discord_modal(&bnd).await,
                 _=>{return;}
             }
         }
@@ -254,14 +262,33 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
             let bnd = SlashBundle{cmd,init,image,pedia,ctx};
             let wth = cmd.data.name.as_str();
             match wth{
-                "market"=>normal(&bnd, 0, "market Autocomplete", true, false, commands::admin::market::auto).await,
-                "stall"=>normal(&bnd, 0, "stall Autocomplete",false, false, commands::market::market::auto).await,
+                "market"=>commands::admin::market::discord_auto(&bnd).await,
+                "stall"=>commands::market::market::discord_auto(&bnd).await,
                 _=>{return;}
             }
         }
         _=>{return ;}
     }
 }
-async fn dummy<T:Mybundle>(_bnd:&T,_reg:Reg<'_>)->Result<(),MyErr>{
-    Ok(())
+async fn switch<T:Mybundle>(bnd:&T){
+    let on  = bnd.name();
+    let user = bnd.user();
+    let cmd = bnd.cmd();
+    let mut err = ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
+    let cooldown = bnd.cooldown(60).await;
+    if !cooldown.0{
+        let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
+        return er.log(cmd, &on, true, &mut err).await;
+    }
+    match Reg::switch(bnd.ctx(), cmd, bnd.init(), true,true).await{
+        Ok(x)=>{
+            match x{
+                Some(y)=>y,
+                None=>{return;}
+            }
+        }
+        Err(why)=>{
+            return why.log(cmd, &on,true, &mut err).await;
+        }
+    };
 }

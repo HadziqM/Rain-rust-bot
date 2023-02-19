@@ -1,8 +1,8 @@
 use serenity::all::ButtonStyle;
-use serenity::builder::{CreateButton, CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse};
+use serenity::builder::{CreateButton, CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse, CreateMessage};
 use serenity::model::prelude::ReactionType;
 use super::{Components,Mytrait,MyErr};
-use crate::Mybundle;
+use crate::{Mybundle,MsgBundle};
 
 impl Components{
     pub fn normal_button(name:&str,custom_id:&str,style:ButtonStyle,emoji:&str)->CreateButton{
@@ -34,5 +34,15 @@ impl Components{
         let cmd = bnd.cmd();
         Ok(cmd.edit(bnd.ctx(), content).await?)
     }
+    pub async fn msg(bnd:&MsgBundle<'_>,content:&str)->Result<(),MyErr>{
+        if content.len() >= 2000{
+            return Err(MyErr::Custom("the result is higher than 2000 char,a nd discord doesnt allow it".to_string()));
+        }
+        bnd.msg.channel_id.send_message(&bnd.ctx.http, CreateMessage::new().content(content)).await?;
+        Ok(())
+    }
+    pub async fn msg_adv(bnd:&MsgBundle<'_>,content:CreateMessage)->Result<(),MyErr>{
+        bnd.msg.channel_id.send_message(&bnd.ctx.http, content).await?;
+        Ok(())
+    }
 }
-

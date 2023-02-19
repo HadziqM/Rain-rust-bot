@@ -1,7 +1,7 @@
 use serenity::all::*;
 use tokio::io::AsyncWriteExt;
 use tokio::fs::File;
-use crate::{Components,Reg,SlashBundle,ComponentBundle,MyErr};
+use crate::{Components,Reg,SlashBundle,ComponentBundle,MyErr,Mytrait,Mybundle};
 use crate::reusable::utils::Color;
 use std::num::NonZeroU64;
 use std::path::Path;
@@ -115,7 +115,8 @@ impl SaveAcknowladge{
     }
 }
 
-pub async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
+#[hertz::hertz_slash_reg(300,true)]
+async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
     let data = SaveJudge::get_save(bnd.cmd).await;
     if data.files.len()==0{
         return Err(MyErr::Custom("no matched file detected, please rename your save file properly and dont send any large file".to_string()));
@@ -130,7 +131,9 @@ pub async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
     reg.pg.close().await;
     Ok(())
 }
-pub async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{
+
+#[hertz::hertz_button_normal(0,false)]
+async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{
     Components::response(bnd, "begin lengthy opration, please dont push button for some time", true).await?;
     let data:Vec<_> = bnd.cmd.data.custom_id.split("*").collect();
     let check = SaveAcknowladge::check(data)?;

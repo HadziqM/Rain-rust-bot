@@ -127,7 +127,10 @@ fn create_embed(user:&User,pg:&GachaPg)->CreateEmbed{
     CreateEmbed::new().title("Mhfz Gacha Result").description(format!("Pity Count: {}\nTicket Remaining: {}",pg.pity,pg.ticket))
         .author(CreateEmbedAuthor::new(&user.name).icon_url(user.face())).image("attachment://gacha.jpg").color(Color::Random.throw())
 }
-pub async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
+
+use crate::{Mybundle,Mytrait};
+#[hertz::hertz_slash_reg(10,true)]
+async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
     let mut multi = false;
     for i in &bnd.cmd.data.options{
         if let CommandDataOptionValue::SubCommand(_) = &i.value{

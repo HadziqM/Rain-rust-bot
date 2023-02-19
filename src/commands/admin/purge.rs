@@ -1,7 +1,8 @@
 use serenity::all::*;
-use crate::{Reg,SlashBundle,Components,MyErr};
+use crate::{Reg,SlashBundle,Components,MyErr,Mytrait,Mybundle};
 
-pub async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+#[hertz::hertz_slash_normal(0,false)]
+async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let mut user = User::default();
     for i in &bnd.cmd.data.options{
         if let CommandDataOptionValue::User(x)=&i.value{
