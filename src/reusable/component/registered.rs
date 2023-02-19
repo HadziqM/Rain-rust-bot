@@ -58,8 +58,8 @@ impl<'a> Reg<'a>{
     }
     pub async fn reverse_check<T:Mybundle>(bnd:&'a T,user:&'a User)->Result<Reg<'a>,MyErr>{
         let pg = PgConn::create(bnd.init(), user.id.to_string()).await?;
-        let data = pg.get_user_data().await?;
-        if data.cid != 0 && data.rid != 0{
+        let data = pg.get_user_data_long().await?;
+        if data.rid != 0 {
             return Err(MyErr::Custom(format!("{} already have account in this server, if you ever bind or register, try use '/switch' command instead ",user.to_string())));
         }
         Ok(Reg{pg,cid:data.cid})

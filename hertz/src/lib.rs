@@ -64,10 +64,38 @@ pub fn hertz_slash_normal(args: TokenStream, input: TokenStream) -> TokenStream 
                 cmd.defer_res(&mut err, &on,false).await;
             }
             if let Err(why) = #fname(bnd).await{
-                match defer{
+                match !defer{
                     true=>why.log(cmd, &on, false, &mut err).await,
                     false=>why.log_defer(cmd, &on, &mut err).await,
                 };
+            }
+        }
+    };
+    quete.into()
+}
+#[proc_macro_attribute]
+pub fn hertz_msg(args: TokenStream, input: TokenStream) -> TokenStream {
+    let item = parse_macro_input!(input as ItemFn);
+    let args = parse_macro_input!(args as AttributeArgs);
+    let mut iter = args.iter();
+    let admin = get_bool(iter.next().unwrap());
+    let fname = &item.sig.ident;
+    let new_name = format_ident!("discord_{}",fname.to_string());
+    let quete = quote!{
+        #item
+        pub async fn #new_name(bnd:&MsgBundle<'_>){
+            let on = "message command".to_string();
+            let admin = #admin;
+            let mut err = crate::ErrorLog::new(&bnd.ctx,&bnd.init,&bnd.msg.author).await;
+            if admin{
+                if !bnd.msg.author.has_role(&bnd.ctx.http,bnd.msg.guild_id.unwrap().to_owned(), RoleId(std::num::NonZeroU64::new(bnd.init.server_role.admin_role).unwrap())).await.unwrap(){
+                    let er = MyErr::Custom("You dont have previleges to use this command".to_string());
+                    return er.log_msg(&bnd.msg,&on,&mut err).await;
+                }
+            }
+            if let Err(why) = #fname(bnd).await{
+                println!("got err {}",why);
+                why.log_msg(&bnd.msg, &on, &mut err).await;
             }
         }
     };
@@ -102,7 +130,7 @@ pub fn hertz_modal_normal(args: TokenStream, input: TokenStream) -> TokenStream 
                 cmd.defer_res(&mut err, &on,true).await;
             }
             if let Err(why) = #fname(bnd).await{
-                match defer{
+                match !defer{
                     true=>why.log(cmd, &on, true, &mut err).await,
                     false=>why.log_defer(cmd, &on, &mut err).await,
                 };
@@ -140,7 +168,7 @@ pub fn hertz_button_normal(args: TokenStream, input: TokenStream) -> TokenStream
                 cmd.defer_res(&mut err, &on,true).await;
             }
             if let Err(why) = #fname(bnd).await{
-                match defer{
+                match !defer{
                     true=>why.log(cmd, &on, true, &mut err).await,
                     false=>why.log_defer(cmd, &on, &mut err).await,
                 };
@@ -189,7 +217,7 @@ pub fn hertz_slash_reg(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             };
             if let Err(why) = #fname(bnd,reg).await{
-                match defer{
+                match !defer{
                     true=>why.log(cmd, &on,false, &mut err).await,
                     false=>why.log_defer(cmd, &on, &mut err).await,
                 };
@@ -227,7 +255,7 @@ pub fn hertz_combine_normal(args: TokenStream, input: TokenStream) -> TokenStrea
                 cmd.defer_res(&mut err, &on,true).await;
             }
             if let Err(why) = #fname(bnd).await{
-                match defer{
+                match !defer{
                     true=>why.log(cmd, &on, true, &mut err).await,
                     false=>why.log_defer(cmd, &on, &mut err).await,
                 };
@@ -276,7 +304,7 @@ pub fn hertz_combine_reg(args: TokenStream, input: TokenStream) -> TokenStream {
                 }
             };
             if let Err(why) = #fname(bnd,reg).await{
-                match defer{
+                match !defer{
                     true=>why.log(cmd, &on,true, &mut err).await,
                     false=>why.log_defer(cmd, &on, &mut err).await,
                 };

@@ -1,4 +1,4 @@
-use serenity::all::ButtonStyle;
+use serenity::all::{ButtonStyle, Message};
 use serenity::builder::{CreateButton, CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse, CreateMessage};
 use serenity::model::prelude::ReactionType;
 use super::{Components,Mytrait,MyErr};
@@ -34,15 +34,13 @@ impl Components{
         let cmd = bnd.cmd();
         Ok(cmd.edit(bnd.ctx(), content).await?)
     }
-    pub async fn msg(bnd:&MsgBundle<'_>,content:&str)->Result<(),MyErr>{
+    pub async fn msg(bnd:&MsgBundle<'_>,content:&str)->Result<Message,MyErr>{
         if content.len() >= 2000{
             return Err(MyErr::Custom("the result is higher than 2000 char,a nd discord doesnt allow it".to_string()));
         }
-        bnd.msg.channel_id.send_message(&bnd.ctx.http, CreateMessage::new().content(content)).await?;
-        Ok(())
+        Ok(bnd.msg.channel_id.send_message(&bnd.ctx.http, CreateMessage::new().content(content)).await?)
     }
-    pub async fn msg_adv(bnd:&MsgBundle<'_>,content:CreateMessage)->Result<(),MyErr>{
-        bnd.msg.channel_id.send_message(&bnd.ctx.http, content).await?;
-        Ok(())
+    pub async fn msg_adv(bnd:&MsgBundle<'_>,content:CreateMessage)->Result<Message,MyErr>{
+        Ok(bnd.msg.channel_id.send_message(&bnd.ctx.http, content).await?)
     }
 }

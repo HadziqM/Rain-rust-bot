@@ -1,5 +1,4 @@
 use serenity::all::*;
-use serenity::futures::Future;
 use crate::{commands, COOLDOWN};
 use crate::{Init,ItemPedia,MyErr,ErrorLog,Mytrait,Reg,Images};
 use crate::reusable::utils::MyTime;
@@ -65,7 +64,6 @@ impl Mybundle for SlashBundle<'_>{
             Some(x)=>{
                 let y = x.clone();
                 if *x as i64 > now{
-                    *x = now + time;
                     return (false,y);
                 }else{
                     *x = now + time;
@@ -105,7 +103,6 @@ impl Mybundle for ComponentBundle<'_>{
             Some(x)=>{
                 let y = x.clone();
                 if *x as i64 > now{
-                    *x = now + time;
                     return (false,y);
                 }else{
                     *x = now + time;
@@ -145,7 +142,6 @@ impl Mybundle for ModalBundle<'_>{
             Some(x)=>{
                 let y = x.clone();
                 if *x as i64 > now{
-                    *x = now + time;
                     return (false,y);
                 }else{
                     *x = now + time;
@@ -159,59 +155,59 @@ impl Mybundle for ModalBundle<'_>{
         }
     }
 }
-async fn normal<'a,F:Fn(&'a T)->Fut,Fut:Future<Output = Result<(),MyErr>>,T:Mybundle>(bnd:&'a T,cd:i64,on:&'static str,ephemeral:bool,defer:bool,f:F){
-    let user = bnd.user();
-    let cmd = bnd.cmd();
-    let mut err = ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-    if cd != 0{
-        let cooldown = bnd.cooldown(cd).await;
-        if !cooldown.0{
-            let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
-            return er.log(cmd, on, ephemeral, &mut err).await;
-        }
-    }
-    if defer{
-        cmd.defer_res(&mut err, on,ephemeral).await;
-    }
-    if let Err(why)=f(bnd).await{
-        match defer{
-            true=>why.log(cmd, on, ephemeral, &mut err).await,
-            false=>why.log_defer(cmd, on, &mut err).await,
-        };
-    }
-}
-async fn register<'a,F,Fut,T>(bnd:&'a T,cd:i64,on:&'static str,ephemeral:bool,defer:bool,bypass:bool,f:F) where F:Fn(&'a T,Reg<'a>)->Fut,Fut:Future<Output = Result<(),MyErr>>,T:Mybundle{
-    let user = bnd.user();
-    let cmd = bnd.cmd();
-    let mut err = ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-    if cd != 0{
-        let cooldown = bnd.cooldown(cd).await;
-        if !cooldown.0{
-            let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
-            return er.log(cmd, on, ephemeral, &mut err).await;
-        }
-    }
-    let reg = match Reg::switch(bnd.ctx(), cmd, bnd.init(), bypass, ephemeral).await{
-        Ok(x)=>{
-            match x{
-                Some(y)=>y,
-                None=>{return;}
-            }
-        }
-        Err(why)=>{
-            return why.log(cmd, on, ephemeral, &mut err).await;
-        }
-    };
-    if defer{
-        cmd.defer_res(&mut err, on, ephemeral).await;
-    }
-    if let Err(why)=f(bnd,reg).await{
-        match defer{
-            true=>why.log(cmd, on, ephemeral, &mut err).await,
-            false=>why.log_defer(cmd, on, &mut err).await,
-        };
-    }
-}
+// async fn normal<'a,F:Fn(&'a T)->Fut,Fut:Future<Output = Result<(),MyErr>>,T:Mybundle>(bnd:&'a T,cd:i64,on:&'static str,ephemeral:bool,defer:bool,f:F){
+//     let user = bnd.user();
+//     let cmd = bnd.cmd();
+//     let mut err = ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
+//     if cd != 0{
+//         let cooldown = bnd.cooldown(cd).await;
+//         if !cooldown.0{
+//             let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
+//             return er.log(cmd, on, ephemeral, &mut err).await;
+//         }
+//     }
+//     if defer{
+//         cmd.defer_res(&mut err, on,ephemeral).await;
+//     }
+//     if let Err(why)=f(bnd).await{
+//         match defer{
+//             true=>why.log(cmd, on, ephemeral, &mut err).await,
+//             false=>why.log_defer(cmd, on, &mut err).await,
+//         };
+//     }
+// }
+// async fn register<'a,F,Fut,T>(bnd:&'a T,cd:i64,on:&'static str,ephemeral:bool,defer:bool,bypass:bool,f:F) where F:Fn(&'a T,Reg<'a>)->Fut,Fut:Future<Output = Result<(),MyErr>>,T:Mybundle{
+//     let user = bnd.user();
+//     let cmd = bnd.cmd();
+//     let mut err = ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
+//     if cd != 0{
+//         let cooldown = bnd.cooldown(cd).await;
+//         if !cooldown.0{
+//             let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
+//             return er.log(cmd, on, ephemeral, &mut err).await;
+//         }
+//     }
+//     let reg = match Reg::switch(bnd.ctx(), cmd, bnd.init(), bypass, ephemeral).await{
+//         Ok(x)=>{
+//             match x{
+//                 Some(y)=>y,
+//                 None=>{return;}
+//             }
+//         }
+//         Err(why)=>{
+//             return why.log(cmd, on, ephemeral, &mut err).await;
+//         }
+//     };
+//     if defer{
+//         cmd.defer_res(&mut err, on, ephemeral).await;
+//     }
+//     if let Err(why)=f(bnd,reg).await{
+//         match defer{
+//             true=>why.log(cmd, on, ephemeral, &mut err).await,
+//             false=>why.log_defer(cmd, on, &mut err).await,
+//         };
+//     }
+// }
 pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,image:&Images){
     match int{
         Interaction::Command(cmd)=>{
@@ -224,7 +220,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "change_password"=>commands::register::change_pasword::discord_slash(&bnd).await,
                 "card"=>commands::binded::card::discord_slash(&bnd).await,
                 "switch"=>switch(&bnd).await,
-                "👤 Card"=>commands::binded::card::discord_slash_user(&bnd).await,
+                "👤 Card"=>commands::binded::card::discord_userr(&bnd).await,
                 "dm_save"=>commands::binded::save::discord_all(&bnd).await,
                 "transfer"=>commands::binded::transfer::discord_slash(&bnd).await,
                 "market"=>commands::admin::market::discord_slash(&bnd).await,

@@ -3,7 +3,7 @@ use crate::reusable::bitwise::ItemCode;
 use serde::{Serialize,Deserialize};
 use serde_json::Value;
 use serenity::builder::AutocompleteChoice;
-use crate::{MyErr,ItemPedia,Components,SlashBundle,Reg,Init,Mybundle};
+use crate::{MyErr,ItemPedia,Components,SlashBundle,Reg,Init,Mybundle,Mytrait};
 use std::collections::HashMap;
 use serenity::all::*;
 #[derive(Serialize,Deserialize,Clone)]
@@ -67,9 +67,9 @@ impl Market {
     }
     fn make_embed(&self,pedia:&ItemPedia)->CreateEmbed{
         use crate::reusable::utils::Color;
-        let tit = format!("**ITEMS**\t\t**STOCK**\n");
+        let tit = format!("**ITEMS**\t\t\t\t**STOCK**\n");
         let desc:String = self.market.iter().map(|x|format!("\n{}\t\t{}\tavailable",x.item.text(pedia).unwrap(),x.treshold)).collect();
-        CreateEmbed::new().color(Color::Random.throw()).title("Server Market Stall").description([tit,desc].concat())
+        CreateEmbed::new().color(Color::Random.throw()).title("Server Market Stall").description(["```\n",&tit,&desc,"\n```"].concat())
     }
     pub async fn send(&self,ctx:&Context,init:&mut Init,msg:&Message,pedia:&ItemPedia)->Result<(),MyErr>{
         if init.server_role.admin_role == msg.author.id.get(){
@@ -93,7 +93,7 @@ impl Handle{
         let market = Market::new().await?;
         let mut bought = 1;
         let mut item = Item::default();
-        while let Some(pat) = cmd.data.options.iter().next() {
+        for pat in &cmd.data.options {
             match &pat.value{
                 CommandDataOptionValue::Integer(x)=>{
                     bought = match u16::try_from(x.to_owned()) {
@@ -121,7 +121,7 @@ impl Handle{
         }
         Ok(Handle{market,bought,item})
     }
-    async fn check(&self,reg:&Reg<'_>)->Result<(),MyErr>{
+    async fn check(&self,reg:&Reg<'_>,pedia:&ItemPedia)->Result<Bought,MyErr>{
         let bc = reg.pg.get_coin().await?;
         let total = self.item.price as u64 * self.bought as u64;
         let item  = self.item.item.count as u32 * self.bought as u32;
@@ -137,7 +137,8 @@ impl Handle{
         if item > 65_535{
             return Err(MyErr::Custom(format!("you try to bought {item} total items (bought times item bundle value), while our courier can only carry 65.535 items at their prime, try reduce your bought item")));
         }
-        Ok(())
+        let change = bc - total as i32;
+        Ok(Bought { item: self.item.item.text(pedia).unwrap(), qty: self.bought, total, change, former:bc, price:self.item.price })
     }
     async fn transaction(&mut self,reg:&Reg<'_>,pedia:&ItemPedia)->Result<(),MyErr>{
         let price = self.item.price * self.bought as u32;
@@ -154,11 +155,40 @@ impl Handle{
         Ok(())
     }
 }
-
-
+struct Bought{
+    item:String,
+    qty:u16,
+    total:u64,
+    change:i32,
+    former:i32,
+    price:u32
+}
+impl Bought {
+    fn create_embed(&self,bnd:&SlashBundle<'_>)->CreateEmbed{
+        CreateEmbed::new().title("Receipt").author(CreateEmbedAuthor::new(&bnd.cmd.user.name).icon_url(bnd.cmd.user.face()))
+            .description(format!("{} Receipt at <t:{}:F>",&bnd.cmd.user,crate::reusable::utils::MyTime::now()))
+            .field("Item", format!("{}\nBought x{} times ",&self.item,self.qty), false)
+            .field("Price", format!("Per Item: {} x {} = {}",currency(self.price as u64),self.qty,currency(self.total)), false)
+            .field("Currency", format!("Your Coin = {} - {} = {}",currency(self.former as u64),currency(self.total),currency(self.change as u64)), false)
+            .color(crate::reusable::utils::Color::Random.throw())
+    }
+}
+fn currency(cur:u64)->String{
+    let inp = cur.to_string(); 
+    let x = inp.chars().rev();
+    let mut y =Vec::new();
+    for (i,c) in x.enumerate(){
+        if i%3 == 0{
+            y.push('.')
+        }
+        y.push(c)
+    }
+    let z:String = y[1..].iter().rev().collect();
+    ["Bc ",&z,",00"].concat()
+}
 #[hertz::hertz_auto]
 async fn idk(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
-    while let Some(pat) = &bnd.cmd.data.options.iter().next() {
+    for pat in &bnd.cmd.data.options {
         if let CommandDataOptionValue::Autocomplete { kind:_, value } = &pat.value{
             let market = Market::new().await?;
             bnd.cmd.create_response(&bnd.ctx.http, CreateInteractionResponse::Autocomplete(CreateAutocompleteResponse::new()
@@ -168,13 +198,12 @@ async fn idk(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     Ok(())
 }
 
-use crate::Mytrait;
 #[hertz::hertz_slash_reg(60,false)]
 async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
     let mut handle = Handle::new(bnd.cmd).await?;
-    handle.check(&reg).await?;
+    let receipt = handle.check(&reg,bnd.pedia).await?;
     handle.transaction(&reg, bnd.pedia).await?;
-    bnd.cmd.create_response(&bnd.ctx.http, Components::interaction_response("item already delivered", true)).await?;
+    Components::response_adv(bnd,CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(receipt.create_embed(bnd)))).await?;
     handle.post_transaction(bnd).await?;
     reg.pg.close().await;
     Ok(())

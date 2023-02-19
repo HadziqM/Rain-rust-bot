@@ -22,6 +22,9 @@ pub async fn ready(ctx:&Context, ready:Ready, init:&Init){
     if init.bot_config.gacha{
         command.append(&mut commands::gacha::reg());
     }
+    if init.bot_config.server_market{
+        command.append(&mut commands::market::reg());
+    }
     for guild in &ready.guilds{
         let x = guild.id.to_partial_guild(&ctx.http).await.unwrap();
         println!("🏛 {} is on guild **{}**",&ready.user.tag(),&x.name);

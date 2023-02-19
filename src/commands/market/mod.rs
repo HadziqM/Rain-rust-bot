@@ -9,9 +9,9 @@ use crate::AppReg;
 
 pub fn reg()->Vec<CreateCommand>{
     let stall = AppReg::normal_slash("stall", "buy from market stall").add_option(
-        CreateCommandOption::new(CommandOptionType::SubCommand, "single", "single gacha pull cost 10 ticket")
+        CreateCommandOption::new(CommandOptionType::String, "item", "item name").set_autocomplete(true).required(true)
         ).add_option(
-        CreateCommandOption::new(CommandOptionType::SubCommand, "multi", "12 gacha pull cost 110 ticket")
+        CreateCommandOption::new(CommandOptionType::Integer, "quantity", "number of item you bought").required(true)
         );
     vec![
         stall

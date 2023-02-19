@@ -9,7 +9,7 @@ async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
 }
 
 #[hertz::hertz_slash_normal(0,false)]
-async fn slash_user(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+async fn userr(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let user =match bnd.cmd.data.resolved.users.iter().next(){
         Some((_id,u))=>u,
         None=>{return Err(MyErr::Custom("no user detected".to_string()));}

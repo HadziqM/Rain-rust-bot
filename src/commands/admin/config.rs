@@ -2,7 +2,7 @@ use crate::{MyErr,SlashBundle,Mybundle,Mytrait};
 use hertz::hertz_slash_normal;
 use serenity::all::*;
 
-#[hertz_slash_normal(60,false)]
+#[hertz_slash_normal(0,true)]
 async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let mut name = "";
     for data in &bnd.cmd.data.options{

@@ -1,0 +1,31 @@
+{
+  "market": [
+    {
+      "item": {
+        "key": "0000",
+        "count": 10,
+        "types": 7
+      },
+      "treshold": 100,
+      "price": 1000
+    },
+    {
+      "item": {
+        "key": "0100",
+        "count": 10,
+        "types": 7
+      },
+      "treshold": 95,
+      "price": 1000
+    },
+    {
+      "item": {
+        "key": "0200",
+        "count": 10,
+        "types": 7
+      },
+      "treshold": 100,
+      "price": 1000
+    }
+  ]
+}
