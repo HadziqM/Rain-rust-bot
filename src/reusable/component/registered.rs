@@ -24,7 +24,7 @@ impl<'a> Reg<'a>{
             return Err(MyErr::Custom("you doesnt have any charachter on your account, please make one on the launcher and use it to enter town".to_string()));
         }
         let mut index = 0;
-        cmd.response(ctx, card[index].card(&user,ephemeral)).await?;
+        cmd.response(ctx, card[index].bind(&user)).await?;
         let msg = cmd.get_msg(ctx).await?;
         let mut reply = msg.await_component_interactions(ctx).timeout(Duration::from_secs(60*3)).stream();
         while let Some(pat) = reply.next().await {

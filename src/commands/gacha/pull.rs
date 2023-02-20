@@ -129,7 +129,7 @@ fn create_embed(user:&User,pg:&GachaPg)->CreateEmbed{
 }
 
 use crate::{Mybundle,Mytrait};
-#[hertz::hertz_slash_reg(10,true)]
+#[hertz::hertz_slash_reg(60,true)]
 async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
     let mut multi = false;
     for i in &bnd.cmd.data.options{

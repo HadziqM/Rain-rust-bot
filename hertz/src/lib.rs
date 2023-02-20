@@ -202,9 +202,6 @@ pub fn hertz_slash_reg(args: TokenStream, input: TokenStream) -> TokenStream {
                     return er.log(cmd,&on,false,&mut err).await;
                 }
             }
-            if defer{
-                cmd.defer_res(&mut err, &on,false).await;
-            }
             let reg = match Reg::switch(bnd.ctx(), cmd, bnd.init(), false, false).await{
                 Ok(x)=>{
                     match x{
@@ -216,6 +213,9 @@ pub fn hertz_slash_reg(args: TokenStream, input: TokenStream) -> TokenStream {
                     return why.log(cmd, &on,false, &mut err).await;
                 }
             };
+            if defer{
+                cmd.defer_res(&mut err, &on,false).await;
+            }
             if let Err(why) = #fname(bnd,reg).await{
                 match !defer{
                     true=>why.log(cmd, &on,false, &mut err).await,
@@ -289,9 +289,6 @@ pub fn hertz_combine_reg(args: TokenStream, input: TokenStream) -> TokenStream {
                     return er.log(cmd,&on,true,&mut err).await;
                 }
             }
-            if defer{
-                cmd.defer_res(&mut err, &on,true).await;
-            }
             let reg = match Reg::switch(bnd.ctx(), cmd, bnd.init(), false, true).await{
                 Ok(x)=>{
                     match x{
@@ -303,6 +300,9 @@ pub fn hertz_combine_reg(args: TokenStream, input: TokenStream) -> TokenStream {
                     return why.log(cmd, &on,true, &mut err).await;
                 }
             };
+            if defer{
+                cmd.defer_res(&mut err, &on,true).await;
+            }
             if let Err(why) = #fname(bnd,reg).await{
                 match !defer{
                     true=>why.log(cmd, &on,true, &mut err).await,

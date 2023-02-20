@@ -21,7 +21,7 @@
     {
       "item": {
         "key": "0200",
-        "count": 10,
+        "count": 1000,
         "types": 7
       },
       "treshold": 100,
