@@ -14,9 +14,20 @@ impl MyErr {
             MyErr::Image(x)=>x.to_string()
         }
     }
+    pub(super) fn severity(&self)->bool{
+        match self {
+            MyErr::Custom(_)=>false,
+            MyErr::ByteWise(_)=>true,
+            MyErr::Utf8(_)=>false,
+            MyErr::Tokio(_)=>true,
+            MyErr::Serde(_)=>false,
+            MyErr::Serenity(_)=>false,
+            MyErr::Image(_)=>true
+        }
+    }
     pub(super) fn advice(&self)->String{
         match self {
-            MyErr::Custom(_)=>"Error message is writen by author themself, please read the message carafully or consult".to_string(),
+            MyErr::Custom(_)=>"Error message is writen by author themself, please read the message carefully or consult".to_string(),
             MyErr::ByteWise(_)=>"postgres connection (server database) error or data format error, you can report this or try again".to_string(),
             MyErr::Utf8(_)=>"parsing error while analizing file, are you sure you send a safe file?".to_string(),
             MyErr::Tokio(_)=>"file system error or paralel thread broken, report this!".to_string(),
@@ -26,22 +37,22 @@ impl MyErr {
         }
     }
     pub async fn log_channel(&self,err:&ErrorLog<'_>){
-        err.log_error_channel().await
+        err.log_error_channel(self.severity()).await
     }
     pub async fn log_channel_ch(&self,err:&mut ErrorLog<'_>,on:&str){
         err.change_error(self.get(), on.to_owned(), self.advice());
-        err.log_error_channel().await
+        err.log_error_channel(self.severity()).await
     }
     pub async fn log_msg(&self,msg:&Message,on:&str,err:&mut ErrorLog<'_>){
         err.change_error(self.get(), on.to_owned(), self.advice());
-        if let Err(why) = msg.channel_id.send_message(&err.ctx.http, CreateMessage::new().embed(err.make_embed())).await{
+        if let Err(why) = msg.channel_id.send_message(&err.ctx.http, CreateMessage::new().embed(err.make_embed(self.severity()))).await{
             MyErr::from(why).log_channel(err).await
         }
     }
     pub async fn log_defer<T:Mytrait>(&self,cmd:&T,on:&str,err:&mut ErrorLog<'_>){
         err.change_error(self.get(), on.to_owned(), self.advice());
         if let MyErr::Serenity(_) = self{
-            err.log_error_channel().await
+            err.log_error_channel(self.severity()).await
         }else{
             cmd.err_defer(err).await;
         }
@@ -49,7 +60,7 @@ impl MyErr {
     pub async fn log<T:Mytrait>(&self,cmd:&T,on:&str,ephemeral:bool,err:&mut ErrorLog<'_>){
         err.change_error(self.get(), on.to_owned(), self.advice());
         if let MyErr::Serenity(_) = self{
-            err.log_error_channel().await
+            err.log_error_channel(self.severity()).await
         }else{
             cmd.err_response(err, ephemeral).await;
         }

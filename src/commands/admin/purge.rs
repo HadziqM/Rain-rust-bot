@@ -9,7 +9,7 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
             user = bnd.cmd.data.resolved.users.get(x).unwrap().to_owned();
         }
     }
-    let mut reg = Reg::check(bnd, &user).await?;
+    let mut reg = Reg::check_user(bnd, &user).await?;
     reg.pg.purge().await?;
     Components::response(bnd, "user already purged", true).await?;
     reg.pg.close().await;

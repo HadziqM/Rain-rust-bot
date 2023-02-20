@@ -17,11 +17,11 @@ impl<'a> Reg<'a>{
         if data.cid != 0 && !bypass{
             return Ok(Some(Reg { pg, cid:data.cid }));
         }else if data.rid == 0 && data.cid == 0{
-            return Err(MyErr::Custom("you doesnt have any account in this server, please create account or bind".to_string()));
+            return Err(MyErr::Custom("you doesnt have any account in this server, please create account with `/create` or bind existing one with `/bind`".to_string()));
         }
         let card = pg.many_card(data.rid).await?;
         if card.len() == 0{
-            return Err(MyErr::Custom("you doesnt have any charachter on your account, please make one on the launcher and use it to enter town".to_string()));
+            return Err(MyErr::Custom("you doesnt have any charachter on your account, please make one on the game launcher and use it to enter town first before using this command again".to_string()));
         }
         let mut index = 0;
         cmd.response(ctx, card[index].bind(&user)).await?;
@@ -52,7 +52,19 @@ impl<'a> Reg<'a>{
         let pg = PgConn::create(bnd.init(), user.id.to_string()).await?;
         let data = pg.get_user_data().await?;
         if data.cid == 0{
-            return Err(MyErr::Custom(format!("{} doesnt have account in this server or they doesnt select their character yet with `/switch` ",user.to_string())));
+            if data.rid ==0{
+                return Err(MyErr::Custom(format!("{} doesnt have account in this server yet, use `/create` to create new account or bind existing account with `/bind`",user.to_string())));
+            }else{
+                return Err(MyErr::Custom(format!("{} already have account but doesnt have main character selected, try tell them to use any command or `/switch` to select their main character if they have any characters in their account, otherwise tell them to create characters in game first ",user.to_string())));
+            }
+        }
+        Ok(Reg{pg,cid:data.cid})
+    }
+    pub async fn check_user<T:Mybundle>(bnd:&'a T,user:&'a User)->Result<Reg<'a>,MyErr>{
+        let pg = PgConn::create(bnd.init(), user.id.to_string()).await?;
+        let data = pg.get_user_data_long().await?;
+        if data.rid == 0{
+            return Err(MyErr::Custom(format!("{} doesnt have account in this server yet, use `/create` to create new account or bind existing account with `/bind`",user.to_string())));
         }
         Ok(Reg{pg,cid:data.cid})
     }
@@ -60,7 +72,7 @@ impl<'a> Reg<'a>{
         let pg = PgConn::create(bnd.init(), user.id.to_string()).await?;
         let data = pg.get_user_data_long().await?;
         if data.rid != 0 {
-            return Err(MyErr::Custom(format!("{} already have account in this server, if you ever bind or register, try use '/switch' command instead ",user.to_string())));
+            return Err(MyErr::Custom(format!("{} already have account in this server,use `/check` or `/change_password` if you forgot your account name or password, or try use `/switch` command instead if you already have characters in game on that account and want to switch characters",user.to_string())));
         }
         Ok(Reg{pg,cid:data.cid})
     }

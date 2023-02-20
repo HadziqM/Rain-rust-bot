@@ -3,7 +3,7 @@ use std::path::Path;
 
 use serenity::all::*;
 use super::super::config::Init;
-use super::super::utils::color;
+use super::super::utils::Color;
 
 #[derive(Clone)]
 pub struct ErrorLog<'a> {
@@ -39,7 +39,8 @@ impl<'a> ErrorLog<'a>{
     pub fn change_why(&mut self,error:String){
         self.err = error;
     }
-    pub fn make_embed(&self)->CreateEmbed{
+    pub fn make_embed(&self,severity:bool)->CreateEmbed{
+        let color = ||{if severity{return Color::Red.throw();}Color::Yellow.throw()};
         CreateEmbed::new()
         .title("🛑 Error Occured 🛑")
         .description("some cant be handled error occured")
@@ -51,21 +52,21 @@ impl<'a> ErrorLog<'a>{
         .author(CreateEmbedAuthor::new(&self.usr.name).icon_url(self.usr.face()))
         .footer(CreateEmbedFooter::new(format!("you can consult this to {}",self.user.tag()))
             .icon_url(self.user.face()))
-        .color(color("ff", "00", "00"))
+        .color(color())
         .thumbnail("attachment://panics.png")
     }
-    pub async fn log_error_channel(&self){
+    pub async fn log_error_channel(&self,severity:bool){
         let ch_id = ChannelId(NonZeroU64::new(self.init.log_channel.err_channel).unwrap());
         if let Err(why) = ch_id.send_message(&self.ctx.http,CreateMessage::new()
-            .embed(self.make_embed()).add_file(self.att.to_owned()).content(format!("for {}",self.usr.to_string()))).await{
+            .embed(self.make_embed(severity)).add_file(self.att.to_owned()).content(format!("for {}",self.usr.to_string()))).await{
             println!("cant send error message to discord channel :{}",why)
         }
     }
-    pub fn interaction_response(&self,ephemeral:bool)->CreateInteractionResponse{
-        CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(self.make_embed())
+    pub fn interaction_response(&self,ephemeral:bool,severity:bool)->CreateInteractionResponse{
+        CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(self.make_embed(severity))
             .add_file(self.att.to_owned()).ephemeral(ephemeral))
     }
-    pub fn defer_response(&self)->EditInteractionResponse{
-        EditInteractionResponse::new().embed(self.make_embed()).new_attachment(self.att.to_owned())
+    pub fn defer_response(&self,severity:bool)->EditInteractionResponse{
+        EditInteractionResponse::new().embed(self.make_embed(severity)).new_attachment(self.att.to_owned())
     }
 }

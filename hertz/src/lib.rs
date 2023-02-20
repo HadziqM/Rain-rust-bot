@@ -53,12 +53,8 @@ pub fn hertz_slash_normal(args: TokenStream, input: TokenStream) -> TokenStream 
             let cd = #cooldown;
             let defer = #defer;
             let mut err = crate::ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-            if cd != 0{
-                let cooldown = bnd.cooldown(cd).await;
-                if !cooldown.0{
-                    let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
-                    return er.log(cmd,&on,false,&mut err).await;
-                }
+            if let Err(why)=bnd.cooldown(cd).await{
+                return why.log(cmd, &on, false, &mut err).await;
             }
             if defer{
                 cmd.defer_res(&mut err, &on,false).await;
@@ -119,12 +115,8 @@ pub fn hertz_modal_normal(args: TokenStream, input: TokenStream) -> TokenStream 
             let cd = #cooldown;
             let defer = #defer;
             let mut err = crate::ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-            if cd != 0{
-                let cooldown = bnd.cooldown(cd).await;
-                if !cooldown.0{
-                    let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
-                    return er.log(cmd,&on,true,&mut err).await;
-                }
+            if let Err(why)=bnd.cooldown(cd).await{
+                return why.log(cmd, &on, true, &mut err).await;
             }
             if defer{
                 cmd.defer_res(&mut err, &on,true).await;
@@ -157,12 +149,8 @@ pub fn hertz_button_normal(args: TokenStream, input: TokenStream) -> TokenStream
             let cd = #cooldown;
             let defer = #defer;
             let mut err = crate::ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-            if cd != 0{
-                let cooldown = bnd.cooldown(cd).await;
-                if !cooldown.0{
-                    let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
-                    return er.log(cmd,&on,true,&mut err).await;
-                }
+            if let Err(why)=bnd.cooldown(cd).await{
+                return why.log(cmd, &on, true, &mut err).await;
             }
             if defer{
                 cmd.defer_res(&mut err, &on,true).await;
@@ -195,12 +183,8 @@ pub fn hertz_slash_reg(args: TokenStream, input: TokenStream) -> TokenStream {
             let cd = #cooldown;
             let defer = #defer;
             let mut err = crate::ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-            if cd != 0{
-                let cooldown = bnd.cooldown(cd).await;
-                if !cooldown.0{
-                    let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
-                    return er.log(cmd,&on,false,&mut err).await;
-                }
+            if let Err(why)=bnd.cooldown(cd).await{
+                return why.log(cmd, &on, false, &mut err).await;
             }
             let reg = match Reg::switch(bnd.ctx(), cmd, bnd.init(), false, false).await{
                 Ok(x)=>{
@@ -244,12 +228,8 @@ pub fn hertz_combine_normal(args: TokenStream, input: TokenStream) -> TokenStrea
             let cd = #cooldown;
             let defer = #defer;
             let mut err = crate::ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-            if cd != 0{
-                let cooldown = bnd.cooldown(cd).await;
-                if !cooldown.0{
-                    let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
-                    return er.log(cmd,&on,true,&mut err).await;
-                }
+            if let Err(why)=bnd.cooldown(cd).await{
+                return why.log(cmd, &on, true, &mut err).await;
             }
             if defer{
                 cmd.defer_res(&mut err, &on,true).await;
@@ -282,12 +262,8 @@ pub fn hertz_combine_reg(args: TokenStream, input: TokenStream) -> TokenStream {
             let cd = #cooldown;
             let defer = #defer;
             let mut err = crate::ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-            if cd != 0{
-                let cooldown = bnd.cooldown(cd).await;
-                if !cooldown.0{
-                    let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
-                    return er.log(cmd,&on,true,&mut err).await;
-                }
+            if let Err(why)=bnd.cooldown(cd).await{
+                return why.log(cmd, &on, true, &mut err).await;
             }
             let reg = match Reg::switch(bnd.ctx(), cmd, bnd.init(), false, true).await{
                 Ok(x)=>{

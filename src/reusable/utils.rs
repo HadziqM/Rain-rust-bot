@@ -9,6 +9,7 @@ pub enum Color{
     Blue,
     Green,
     Grey,
+    Yellow,
     Random
 }
 
@@ -30,6 +31,7 @@ impl Color {
             Self::Blue=>color("00", "00", "ff"),
             Self::Green=>color("00", "ff", "00"),
             Self::Orange=>color("ff", "55", "00"),
+            Self::Yellow=>color("55", "55", "00"),
             Self::Grey=>color("88", "88", "88"),
             Self::Random=>{
                 let mut channel = (0..65025).collect::<Vec<_>>();

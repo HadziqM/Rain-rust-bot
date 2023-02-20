@@ -34,7 +34,7 @@ pub trait Mybundle {
     fn user(&self)->User;
     fn cmd<'a>(&'a self)->&'a Self::Cmd;
     fn name(&self)->String;
-    async fn cooldown(&self,cd:i64)->(bool,i64);
+    async fn cooldown(&self,cd:i64)->Result<(),MyErr>;
 }
 
 
@@ -56,23 +56,25 @@ impl Mybundle for SlashBundle<'_>{
     fn name(&self)->String {
         self.cmd.data.name.clone()
     }
-    async fn cooldown(&self,time:i64)->(bool,i64) {
+    async fn cooldown(&self,time:i64)->Result<(),MyErr> {
+        if time==0{
+            return Ok(());
+        }
         let pat = format!("{}-{}",self.name(),self.user().id.to_string());
         let mut cd = COOLDOWN.lock().await;
         let now = MyTime::now();
         match cd.get_mut(&pat){
             Some(x)=>{
-                let y = x.clone();
                 if *x as i64 > now{
-                    return (false,y);
+                    return Err(MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",x)));
                 }else{
                     *x = now + time;
-                    return (true,y);
+                    return Ok(());
                 }
             }
             None=>{
                 cd.insert(pat.to_owned(), now+time);
-                return (true,0);
+                return Ok(());
             }
         }
     }
@@ -95,23 +97,25 @@ impl Mybundle for ComponentBundle<'_>{
     fn name(&self)->String {
         self.cmd.data.custom_id.clone()
     }
-    async fn cooldown(&self,time:i64)->(bool,i64) {
+    async fn cooldown(&self,time:i64)->Result<(),MyErr> {
+        if time==0{
+            return Ok(());
+        }
         let pat = format!("{}-{}",self.name(),self.user().id.to_string());
         let mut cd = COOLDOWN.lock().await;
         let now = MyTime::now();
         match cd.get_mut(&pat){
             Some(x)=>{
-                let y = x.clone();
                 if *x as i64 > now{
-                    return (false,y);
+                    return Err(MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",x)));
                 }else{
                     *x = now + time;
-                    return (true,y);
+                    return Ok(());
                 }
             }
             None=>{
                 cd.insert(pat.to_owned(), now+time);
-                return (true,0);
+                return Ok(());
             }
         }
     }
@@ -134,23 +138,25 @@ impl Mybundle for ModalBundle<'_>{
     fn name(&self)->String {
         self.cmd.data.custom_id.clone()
     }
-    async fn cooldown(&self,time:i64)->(bool,i64) {
+    async fn cooldown(&self,time:i64)->Result<(),MyErr> {
+        if time==0{
+            return Ok(());
+        }
         let pat = format!("{}-{}",self.name(),self.user().id.to_string());
         let mut cd = COOLDOWN.lock().await;
         let now = MyTime::now();
         match cd.get_mut(&pat){
             Some(x)=>{
-                let y = x.clone();
                 if *x as i64 > now{
-                    return (false,y);
+                    return Err(MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",x)));
                 }else{
                     *x = now + time;
-                    return (true,y);
+                    return Ok(());
                 }
             }
             None=>{
                 cd.insert(pat.to_owned(), now+time);
-                return (true,0);
+                return Ok(());
             }
         }
     }
@@ -228,6 +234,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "pull"=>commands::gacha::pull::discord_slash(&bnd).await,
                 "config"=>commands::admin::config::discord_slash(&bnd).await,
                 "stall"=>commands::market::market::discord_slash(&bnd).await,
+                "check"=>commands::register::change_pasword::discord_check(&bnd).await,
                 _=> {return;}
             }
         }
@@ -271,10 +278,8 @@ async fn switch<T:Mybundle>(bnd:&T){
     let user = bnd.user();
     let cmd = bnd.cmd();
     let mut err = ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-    let cooldown = bnd.cooldown(60).await;
-    if !cooldown.0{
-        let er = MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",cooldown.1));
-        return er.log(cmd, &on, true, &mut err).await;
+    if let Err(why)=bnd.cooldown(60).await{
+        return why.log(cmd, &on, true, &mut err).await;
     }
     match Reg::switch(bnd.ctx(), cmd, bnd.init(), true,true).await{
         Ok(x)=>{

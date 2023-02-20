@@ -82,12 +82,12 @@ pub trait Mytrait{
 #[async_trait]
 impl Mytrait for CommandInteraction{
     async fn err_response(&self,err:&ErrorLog<'_>,ephemeral:bool){
-        if let Err(why) = self.create_response(&err.ctx.http, err.interaction_response(ephemeral)).await{
+        if let Err(why) = self.create_response(&err.ctx.http, err.interaction_response(ephemeral,false)).await{
             MyErr::from(why).log_channel(err).await
         }
     }
     async fn err_defer(&self,err:&ErrorLog<'_>){
-        if let Err(why) = self.edit_response(&err.ctx.http, err.defer_response()).await{
+        if let Err(why) = self.edit_response(&err.ctx.http, err.defer_response(false)).await{
             MyErr::from(why).log_channel(err).await
         }
     }
@@ -101,7 +101,7 @@ impl Mytrait for CommandInteraction{
         if let Err(why) = res{
             let er = MyErr::from(why);
             err.change_error(er.get(),on.to_owned(), er.advice());
-            err.log_error_channel().await;
+            err.log_error_channel(er.severity()).await;
         }
     }
     async fn response(&self,ctx:&Context,rply:CreateInteractionResponse)->Result<(),MyErr>{
@@ -122,12 +122,12 @@ impl Mytrait for CommandInteraction{
 #[async_trait]
 impl Mytrait for ModalInteraction{
     async fn err_response(&self,err:&ErrorLog<'_>,ephemeral:bool){
-        if let Err(why) = self.create_response(&err.ctx.http, err.interaction_response(ephemeral)).await{
+        if let Err(why) = self.create_response(&err.ctx.http, err.interaction_response(ephemeral,false)).await{
             MyErr::from(why).log_channel(err).await
         }
     }
     async fn err_defer(&self,err:&ErrorLog<'_>){
-        if let Err(why) = self.edit_response(&err.ctx.http, err.defer_response()).await{
+        if let Err(why) = self.edit_response(&err.ctx.http, err.defer_response(false)).await{
             MyErr::from(why).log_channel(err).await
         }
     }
@@ -136,7 +136,7 @@ impl Mytrait for ModalInteraction{
         if let Err(why) = res{
             let er = MyErr::from(why);
             err.change_error(er.get(),on.to_owned(), er.advice());
-            err.log_error_channel().await;
+            err.log_error_channel(er.severity()).await;
         }
     }
     async fn response(&self,ctx:&Context,rply:CreateInteractionResponse)->Result<(),MyErr>{
@@ -158,12 +158,12 @@ impl Mytrait for ModalInteraction{
 #[async_trait]
 impl Mytrait for ComponentInteraction{
     async fn err_response(&self,err:&ErrorLog<'_>,ephemeral:bool){
-        if let Err(why) = self.create_response(&err.ctx.http, err.interaction_response(ephemeral)).await{
+        if let Err(why) = self.create_response(&err.ctx.http, err.interaction_response(ephemeral,false)).await{
             MyErr::from(why).log_channel(err).await
         }
     }
     async fn err_defer(&self,err:&ErrorLog<'_>){
-        if let Err(why) = self.edit_response(&err.ctx.http, err.defer_response()).await{
+        if let Err(why) = self.edit_response(&err.ctx.http, err.defer_response(false)).await{
             MyErr::from(why).log_channel(err).await
         }
     }
@@ -172,7 +172,7 @@ impl Mytrait for ComponentInteraction{
         if let Err(why) = res{
             let er = MyErr::from(why);
             err.change_error(er.get(),on.to_owned(), er.advice());
-            err.log_error_channel().await;
+            err.log_error_channel(er.severity()).await;
         }
     }
     async fn response(&self,ctx:&Context,rply:CreateInteractionResponse)->Result<(),MyErr>{
