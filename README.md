@@ -28,7 +28,7 @@ well, i m just newbie programer and my last bot is just work, although sometime 
 * [x] initialize project
 * [x] basic `serenity` handling
 * [x] sqlx interface binding
-* [ ] image processing binding
+* [x] image processing binding
 
 ### Initialize Project
 * [x] setup dependency tree
@@ -46,13 +46,13 @@ well, i m just newbie programer and my last bot is just work, although sometime 
 * [x] implement basic embed rich builder
 * [x] modal builder for register command
 * [x] handle modal interaction
-* [ ] implement auto complete for guild command
+* [x] implement auto complete for guild command
 * [x] create guide embed command
 * [x] add emojis
-* [ ] create custom build command
+* [x] create custom build command
 * [x] role specific command
 * [x] get attachment and send attachment
-* [ ] make bind command easier
+* [x] make bind command easier
 * [ ] change guild interface command
 * [ ] add cheater scan command
 * [ ] make more beautiful bounty board
@@ -62,19 +62,18 @@ well, i m just newbie programer and my last bot is just work, although sometime 
 * [x] install `Sqlx` crate
 * [x] make .sql file for first initialize and update
 * [x] make command to execute .sql init
-* [ ] handle all database related (register,bounty,gacha)
+* [x] handle all database related (register,bounty,gacha)
 * [x] error handling
-* [ ] make testing database (may or may not)
-* [ ] make update command to extend the bot
-* [ ] make new table for image storing and processing
-* [ ] extend for next project `rain server admin tools` for image editing, and basic game moderation
+* [x] make testing database (may or may not)
+* [x] make update command to extend the bot
 
 ### Image procesing crate
-* [ ] install `Image` crate
-* [ ] learn basic ROI and IO
-* [ ] setup image processing for member join event handler
-* [ ] setup image processing for gacha pull
+* [x] install `Image` crate
+* [x] learn basic ROI and IO
+* [x] setup image processing for member join event handler
+* [x] setup image processing for gacha pull
 * [ ] setup image processing for bounty
+* [x] cached sahred process
 
 
 ## How to install
@@ -144,90 +143,40 @@ just dont fill the actual file with my comment
 ```json
 {
   "discord": {
-    "token":"your token",              <- Change it with your discord token
+    "token":"your token",
     "prefix":"%",
-    "author_id":455622761168109569     <- Change it with your discord id or leave it
+    "author_id":455622761168109569
    },
-  "postgress": {                       <- all of this section need to change
-    "user":"postgres",                 
+  "postgress": {
+    "user":"postgres",
     "host":"localhost",
     "password":"",
     "port":5432,
     "database":"erupe"
    },
   "mhfz_config": {   
-    "account_creation":true
+    "account_creation":true,                    <- set this according to your erupe client config
+    "sending_log":false                         <- you need to run bash script to create log and move it to bot folder named ./log.txt
    },
-  "bot_config": {
-    "member_join":true,
-    "member_leave":true,
-    "role_moderation":true,
-    "member_moderation":true,
+  "bot_config": {                               <- bot config to be added on server
     "gacha":true,
-    "bounty":true,
-    "transmog_contest":true,
-    "mezfes_contest":true,
-    "server_market":true,
-    "pvp_contest":true,
-    "speedrun_contest":true
+    "server_market":true
    },
   "log_channel": {
-    "err_channel":1031774270512169070,         <- fill with channel ID for bot to send
-    "account_channel":1031774270512169070,     <- fill with channel ID for bot to send
-    "transfer_channel":1031774270512169070,    <- fill with channel ID for bot to send
-    "info_channel":1031774270512169070,        <- info server channel ID
-    "info_channel_msg":1068895305472417792,    <- info server channel message id
-    "moderation_channel":0
-   },
-  "server_channel": {
-    "member_join":0,
-    "member_leave":0,
-    "rule_channel":0,
-    "rule_msg_id":0
-  },
-  "server_channel_url": {
-    "guide_channel":0,
-    "game_channel":0,
-    "bot_channel":0
+    "err_channel":1031774270512169070,           <- channel to log bot error (dont make it private)
+    "account_channel":1031774270512169070,       <- channel to log user account created
+    "transfer_channel":1031774270512169070,      <- channel to judge player save file (make it private)
+    "info_channel":1031774270512169070,          <- channel for server monitor
+    "info_channel_msg":1070671548408664124,      <- message in info channel id to be edited continiusly
+    "erupe_channel":1031774270512169070,         <- channel to dump log file
+    "market_channel":1031774270512169070,        <- you can ignore this if server_market is false
+    "market_channel_msg":1076848380971589634,    <- same as above
    },
   "server_role":{
-    "admin_role":0,
-    "member_role":0,
-    "mute_role":0,
-    "register_role":1031595216538452038     <- fill with role id, bot need to be higher
-  },
-  "bounty_channel": {
-    "board":0,
-    "conquered":0,
-    "promotion":0,
-    "cooldown_ch":0,
-    "leaderboard_ch":0,
-    "judge_ch":0
-   },
-  "bounty_message_id": {
-    "cooldown_msg":0,
-    "leaderboard_msg":0
-   },
-  "gacha_channel": {
-    "pull":0
-  },
-  "transmog_contest":{
-    "submitted_channel":0
-  },
-  "mezfes_contest" :{
-    "leaderboard_channel":0,
-    "leaderboard_msg_id":0
-  },
-  "pvp_contest" :{
-    "leaderboard_channel":0,
-    "leaderboard_msg_id":0
-  },
-  "speedrun_contest" :{
-    "leaderboard_channel":0,
-    "leaderboard_msg_id":0
-  },
-  "server_market" :{
-    "market_channel":0
+    "admin_role":1031595216538452038,
+    "register_role":1031595216538452038,
+    "judge_role":1017643913667936318,            <- role pinged on transfer savefile
+    "maintainer_role":1017643913667936318        <- role pinged on server crash
   }
 }
 ```
@@ -239,7 +188,9 @@ there will be upcoming `Rain Moderation App` for further customzation (mainly fo
 the implemented command right now
 1. Admin Command
    - `/interface` to send register and send save button
-   - `/reset_save_cd` to reset user save cooldown
+   - `/config` to change bot config
+   - `/market` to send item to player, can be with or without bounty coin
+   - `/purge` to delete all player binded data with discord
 2. Binded Command
    - `/card` to show user hunter status
    - `App>Card` to check other user hunter status
@@ -250,8 +201,25 @@ the implemented command right now
    - `/change_password` to change password
    - `/check` to check own username and id
    - `/create` to create blank account on MHFZ
-
+   - `/bind` to bind existing account on MHFZ if autocreation is enabled
+4. Gacha Command
+   - `/pull` to perform gacha command if gacha enabled
+5. Market Command
+   - `/stall` for player to buy item in stall set in config if server market enabled
+6. Admin Only Message Command
+   - `<Prefix>query` add codeblock affterward to query your sql code on server database and get the decoded result
+   - `<Prefix>excute` add codeblock affterward to execute your code on server database
+7. Some Usefull Message Command
+   - `<prefix>ping` to see discord connection ping,postgres conn ping, and json parsing file system speed
+   - `<prefix>test` to show test embed (you can use this to set up bot config,copy its message id and channel id)
 ## For developer
 `senpai` branch is used for release candidate and you can clone from there</br>
 `kohai` branch is used for development, you can pull request there</br>
-`sensei` branch is used for release, solely for building exutable and github action
+`sensei` branch is used for release, solely for building exutable and github action</br>
+
+### About Hertz Library
+the library is only for procedural macro attributes, most of macro will need 2 attribute, one is integer for cooldown,</br>
+and second is boolean for defer (if you think command takes more than 3 sec), the macro only accept function with arguments, </br>
+`Mybundle` trait, so you can use `SlashBundle`,`ComponentBundle`, `ModalBundle` or the trait itself if you want compount command </br>
+the macro also only accept return type `Result<(),MyErr>`, the macro will produce the public async function with name </br>
+`discord_<function name>` with no return type, and you can use it on event handler.
