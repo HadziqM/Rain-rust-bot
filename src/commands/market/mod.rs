@@ -1,5 +1,4 @@
 pub mod market;
-pub mod ch_market;
 
 use serenity::builder::{CreateCommand, CreateCommandOption};
 use serenity::all::CommandOptionType;

@@ -1,6 +1,4 @@
 pub mod pull;
-pub mod ch_gacha;
-
 
 use serenity::builder::{CreateCommand, CreateCommandOption};
 use serenity::all::CommandOptionType;

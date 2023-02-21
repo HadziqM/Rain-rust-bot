@@ -51,6 +51,9 @@ pub fn reg(init:&Init)->Vec<CreateCommand>{
     if init.bot_config.server_market{
         config = config.add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "market", "send your market.json file").add_sub_option(att_op.to_owned()));
     }
+    if init.bot_config.bounty{
+        config = config.add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "bounty", "send your gacha.json file").add_sub_option(att_op.to_owned())).add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "bounty_refresh", "send your gacha_refresh.json file").add_sub_option(att_op.to_owned()));
+    }
     vec![
         AppReg::admin_slash("interface", "mhfz user interface"),
         AppReg::admin_slash("purge", "purge user binded and register data on database").add_option(

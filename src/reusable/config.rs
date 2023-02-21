@@ -48,7 +48,7 @@ pub struct BotConfig {
     // pub(crate) role_moderation: bool,
     // pub(crate) member_moderation: bool,
     pub(crate) gacha: bool,
-    // pub(crate) bounty: bool,
+    pub(crate) bounty: bool,
     // pub(crate) transmog_contest: bool,
     // pub(crate) mezfes_contest: bool,
     pub(crate) server_market: bool,

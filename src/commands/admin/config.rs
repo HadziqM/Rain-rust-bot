@@ -1,6 +1,7 @@
-use crate::{MyErr,SlashBundle,Mybundle,Mytrait};
+use crate::{MyErr,SlashBundle,Mybundle,Mytrait,Components};
 use hertz::hertz_slash_normal;
 use serenity::all::*;
+use crate::reusable::component::{market::Market,gacha::Gacha,bounty::{BountyRefresh,Bounty}};
 
 #[hertz_slash_normal(0,true)]
 async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
@@ -11,8 +12,10 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
         }
     }
     match name{
-        "gacha"=>crate::commands::gacha::ch_gacha::slash(bnd).await?,
-        "market"=>crate::commands::market::ch_market::slash(bnd).await?,
+        "gacha"=>Components::json_config(bnd, Gacha::default()).await?,
+        "market"=>Components::json_config(bnd, Market::default()).await?,
+        "bounty"=>Components::json_config(bnd, Bounty::default()).await?,
+        "bounty_refresh"=>Components::json_config(bnd, BountyRefresh::default()).await?,
         _=>{return Err(MyErr::Custom("you dont have any configuration needed to change".to_owned()))}
     };
     Ok(())

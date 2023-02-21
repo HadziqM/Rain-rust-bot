@@ -1,6 +1,10 @@
+use crate::SlashBundle;
 use super::{Components,MyErr};
-use std::path::PathBuf;
 use serenity::all::*;
+use super::bounty::{Bounty,BountyRefresh};
+use serenity::async_trait;
+use super::gacha::Gacha;
+use super::market::Market;
 
 
 impl Components {
@@ -14,13 +18,57 @@ impl Components {
             None=>Err(MyErr::Custom("cant get the attachment attachment".to_owned()))
         }
     }
-    pub async fn download_check_and_save<T>(att:Attachment,path:&PathBuf,_tip:&T)->Result<(),MyErr>
-        where for<'a> T:serde::Deserialize<'a>
-    {
+    pub async fn json_config<T:MyConfig>(bnd:&SlashBundle<'_>,_tip:T)->Result<(),MyErr>{
+        let att = Components::get_att(bnd.cmd)?;
         let byte = att.download().await?;
         let utf8 = std::str::from_utf8(&byte)?.to_owned();
-        serde_json::from_str::<T>(&utf8)?;
-        tokio::fs::write(path, byte.clone()).await?;
+        T::check(&utf8).await?;
+        T::update(bnd).await?;
         Ok(())
     }
 }
+#[async_trait]
+pub trait MyConfig {
+    async fn check(data:&str)->Result<(),MyErr>;
+    async fn update(bnd:&SlashBundle<'_>)->Result<(),MyErr>;
+}
+
+
+#[async_trait]
+impl MyConfig for Bounty{
+    async fn check(data:&str)->Result<(),MyErr>{
+        Ok(Bounty::check(data).await?)
+    }
+    async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+        Ok(())
+    }
+}
+#[async_trait]
+impl MyConfig for BountyRefresh {
+    async fn check(data:&str)->Result<(),MyErr>{
+        Ok(BountyRefresh::check(data).await?)
+    }
+    async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+        Ok(())
+    }
+}
+#[async_trait]
+impl MyConfig for Gacha {
+    async fn check(data:&str)->Result<(),MyErr>{
+        Ok(Gacha::check(data).await?)
+    }
+    async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+        Ok(())
+    }
+}
+#[async_trait]
+impl MyConfig for Market {
+    async fn check(data:&str)->Result<(),MyErr>{
+        Ok(Market::check(data).await?)
+    }
+    async fn update(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+        Market::update_new(bnd.ctx, bnd.init, bnd.pedia).await?;
+        Ok(())
+    }
+}
+

@@ -289,14 +289,6 @@ pub struct BountyDesc {
 
 #[derive(Serialize,Deserialize)]
 pub struct BountyRefresh{
-    pub gold:BountyRefBBQ,
-    pub silver:BountyRefBBQ,
-    pub bronze:BountyRefBBQ,
-    pub free:BountyRefBBQ,
-    pub event:BountyRefBBQ
-}
-#[derive(Serialize,Deserialize)]
-pub struct BountyRefBBQ{
     pub bbq1:u32,
     pub bbq3:u32,
     pub bbq4:u32,
@@ -335,10 +327,19 @@ impl BountyRefresh{
         tokio::fs::write(BountyRefresh::path(), string.as_bytes()).await?;
         Ok(())
     }
+    pub async fn check(data:&str)->Result<(),Error>{
+        let x = serde_json::from_str::<Self>(&data)?;
+        Ok(x.save().await?)
+    }
 }
 impl Bounty{
     pub fn path()->PathBuf{
         Path::new(".").join("static").join("bounty.json")
+    }
+    pub async fn check(data:&str)->Result<(),MyErr>{
+        let x = serde_json::from_str::<Self>(&data)?;
+        x.save().await?;
+        Ok(())
     }
     pub async fn new()->Result<Self,MyErr>{
         let file = tokio::fs::read_to_string(BountyRefresh::path()).await?;
@@ -346,7 +347,7 @@ impl Bounty{
     }
     pub async fn save(&self)->Result<(),Error>{
         let string = serde_json::to_string_pretty(&self)?;
-        tokio::fs::write(BountyRefresh::path(), string.as_bytes()).await?;
+        tokio::fs::write(Bounty::path(), string.as_bytes()).await?;
         Ok(())
     }
 }
@@ -384,9 +385,9 @@ impl Default for Bounty {
         }
     }
 }
-impl Default for BountyRefBBQ {
+impl Default for BountyRefresh {
     fn default() -> Self {
-        BountyRefBBQ { bbq1: 0, bbq3: 0,
+        BountyRefresh { bbq1: 0, bbq3: 0,
         bbq4: 0, bbq5: 0,
         bbq6: 0, bbq7: 0, 
         bbq8: 0, bbq9: 0, 
@@ -400,13 +401,14 @@ impl Default for BountyRefBBQ {
         bbq24: 0, bbq25: 0 }
     }
 }
-impl Default for BountyRefresh {
-    fn default() -> Self {
-        BountyRefresh { gold: BountyRefBBQ::default(), 
-        silver: BountyRefBBQ::default(), 
-        bronze: BountyRefBBQ::default(),
-        free: BountyRefBBQ::default(),
-        event: BountyRefBBQ::default() 
-        }
+#[cfg(test)]
+mod testing{
+    use super::*;
+    #[tokio::test]
+    async fn get_json() {
+        let x = Bounty::default();
+        let y = BountyRefresh::default();
+        x.save().await.unwrap();
+        y.save().await.unwrap();
     }
 }
