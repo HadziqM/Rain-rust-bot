@@ -98,7 +98,7 @@ impl Gacha{
     pub fn single_pull(&self,data:&GachaPg)->(GachaPg,GachaData){
         let pity = data.pity+1;
         let ticket = data.ticket-10;
-        if pity==30{
+        if pity>=30{
             return (GachaPg{pity:0,ticket},self.guaranteed());
         }
         (GachaPg{pity,ticket},self.pull())
@@ -109,7 +109,7 @@ impl Gacha{
         let mut res = Vec::new();
         for _ in 0..12{
             pity += 1;
-            if pity==50{
+            if pity>=30{
                 res.push(self.guaranteed());
                 pity = 0
             }else{

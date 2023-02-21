@@ -10,7 +10,10 @@ pub enum Color{
     Green,
     Grey,
     Yellow,
-    Random
+    Random,
+    Gold,
+    Silver,
+    Bronze,
 }
 
 pub struct MyTime;
@@ -33,6 +36,9 @@ impl Color {
             Self::Orange=>color("ff", "55", "00"),
             Self::Yellow=>color("55", "55", "00"),
             Self::Grey=>color("88", "88", "88"),
+            Self::Bronze=>color("cd", "7f", "32"),
+            Self::Silver=>color("c0", "c0", "c0"),
+            Self::Gold=>color("ff", "dd", "00"),
             Self::Random=>{
                 let mut channel = (0..65025).collect::<Vec<_>>();
                 channel.shuffle(&mut rand::thread_rng());

@@ -6,6 +6,7 @@ pub mod registered;
 pub mod discord;
 pub mod json;
 pub mod new_error;
+pub mod bounty;
 
 pub struct Components;
 
