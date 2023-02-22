@@ -111,3 +111,50 @@ impl Market {
     }
 
 }
+#[derive(Serialize,Deserialize)]
+pub struct MealMenu{
+    pub id:i32,
+    pub level:i32,
+    pub name:String
+}
+#[derive(Serialize,Deserialize)]
+pub struct Meal{
+    pub meals:Vec<MealMenu>
+}
+impl Meal{
+    fn path()->PathBuf{
+        Path::new(".").join("static").join("meals.json")
+    }
+    pub async fn new()->Result<Self,MyErr>{
+        let file = tokio::fs::read_to_string(Meal::path()).await?;
+        Ok(serde_json::from_str(&file)?)
+    }
+    pub async fn save(&self)->Result<(),MyErr>{
+        let file = serde_json::to_string_pretty(&self)?;
+        Ok(tokio::fs::write(Meal::path(), file.as_bytes()).await?)
+    }
+    pub async fn check(data:&str)->Result<(),MyErr>{
+        let x = serde_json::from_str::<Self>(data)?;
+        x.save().await?;
+        Ok(())
+    }
+}
+impl Default for MealMenu {
+    fn default() -> Self {
+        MealMenu { id: 369, level: 3, name: "idk really".to_string() }
+    }
+}
+impl Default for Meal {
+    fn default() -> Self {
+        Meal { meals: vec![MealMenu::default(),MealMenu::default(),MealMenu::default()] }
+    }
+}
+#[cfg(test)]
+mod testing{
+    use super::*;
+    #[tokio::test]
+    async fn default() {
+        let x = Meal::default();
+        x.save().await.unwrap();
+    }
+}

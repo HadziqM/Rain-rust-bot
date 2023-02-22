@@ -3,7 +3,7 @@ use crate::material::ItemPedia;
 
 
 impl ItemCode{
-    fn reverse_key(&self)->Result<String, BitwiseError>{
+    pub fn reverse_key(&self)->Result<String, BitwiseError>{
         if self.key.len()!=4{
             Err(BitwiseError::InvalidKey)
         }else {

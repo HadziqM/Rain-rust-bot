@@ -1,7 +1,7 @@
 use std::{time::SystemTime, num::NonZeroU64, path::Path};
 
 use serenity::all::*;
-use crate::{Init,PgConn,MyErr,ErrorLog};
+use crate::{Init,PgConn,MyErr, MONITOR};
 use crate::reusable::postgress::server::Servers;
 use crate::reusable::utils::Color;
 
@@ -46,14 +46,13 @@ impl<'a> Server<'a> {
 //event handler will spawn a thread calling this function every 1 minutes and log every crash or 10
 //minutes
 pub async fn handle(ctx:&Context,init:&Init,state:i32,log:bool)->i32{
-    let user = UserId(NonZeroU64::new(init.discord.author_id).unwrap()).to_user(&ctx.http).await.unwrap();
-    let mut loger = ErrorLog::new(ctx, init, &user).await;
+    let mon = MONITOR.lock().await;
+    if !*mon{
+        return 0;
+    }
     match paralel_thread(ctx, init, state, log).await{
         Ok(x)=>x,
-        Err(why)=>{
-            why.log_channel_ch(&mut loger, "paralel thread").await;
-            0
-        }
+        Err(_)=>0
     }
 }
 async fn paralel_thread(ctx:&Context,init:&Init,state:i32,log:bool)->Result<i32,MyErr>{

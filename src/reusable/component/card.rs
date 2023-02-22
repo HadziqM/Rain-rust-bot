@@ -94,7 +94,7 @@ impl Event {
         let time = MyTime::elapsed(20*60*60);
         let bounty = self.bounty + 20*60*60;
         let cd = ||{if bounty as i64>=time{return format!("<t:{bounty}:R>");}"You can do it now".to_string()};
-        let desc = format!("Bounty Coin : {}\nGacha Ticket : {} Ticket\nLatest Bounty : {}\nBounty Cooldown : {}\nBronze Stage : {}\nSilver Stage : {}\nGold Stage: {}"
+        let desc = format!("💰 Bounty Coin : {}\n🎫 Gacha Ticket : {} Ticket\n🕜 Latest Bounty : {}\n🕜 Bounty Cooldown : {}\n🥉 Bronze Stage : {}\n🥈 Silver Stage : {}\n🥇 Gold Stage: {}"
             ,Market::currency(self.bounty as i64),self.gacha,self.latest_bounty,cd(),BBQ::new(self.bronze as u8)?.name(),BBQ::new(self.silver as u8)?.name(),BBQ::new(self.gold as u8)?.name());
         Ok(CreateEmbed::new().author(CreateEmbedAuthor::new(&user.name).icon_url(user.face())).title("Event Card").description(desc).color(Color::Green.throw()))
     }

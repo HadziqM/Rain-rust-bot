@@ -3,7 +3,7 @@ use crate::reusable::bitwise::ItemCode;
 use serde_json::Value;
 use crate::{Reg,Components,ItemPedia,SlashBundle,MyErr,Mybundle,Mytrait};
 
-enum SubCommand{
+pub enum SubCommand{
     Item(String),
     Head(String),
     Arms(String),
@@ -122,7 +122,7 @@ impl SubCommand{
             SubCommand::Item(val)=>val
         }
     }
-    fn predict(&self,pedia:&ItemPedia)->Result<Vec<AutocompleteChoice>,MyErr>{
+    pub fn predict(&self,pedia:&ItemPedia)->Result<Vec<AutocompleteChoice>,MyErr>{
         let val = self.value();
         let item = pedia.types.get(&self.code()).unwrap();
         let out = item.iter().filter(|(k,f)|{

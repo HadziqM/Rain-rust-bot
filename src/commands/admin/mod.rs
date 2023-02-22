@@ -8,7 +8,7 @@ pub mod market;
 pub mod purge;
 pub mod config;
 pub mod query;
-
+pub mod monitor;
 
 pub fn reg(init:&Init)->Vec<CreateCommand>{
     let save = AppReg::admin_slash("reset_save_cd", "reset someone save cooldown").add_option(
@@ -44,6 +44,7 @@ pub fn reg(init:&Init)->Vec<CreateCommand>{
         CreateCommandOption::new(CommandOptionType::SubCommand, "leg","send with leg armor category")
         .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(price_op.to_owned())
         );
+    let monitor = AppReg::admin_slash("monitor", "toggle monitor server in info channel");
     let mut config = AppReg::admin_slash("config", "change configuration of some bot feature");
     if init.bot_config.gacha{
         config = config.add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "gacha", "send your gacha.json file").add_sub_option(att_op.to_owned()));
@@ -61,6 +62,7 @@ pub fn reg(init:&Init)->Vec<CreateCommand>{
         ),
         save,
         item,
-        config
+        config,
+        monitor
     ]
 }

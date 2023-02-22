@@ -21,9 +21,9 @@ pub fn reg()->Vec<CreateCommand>{
         .add_option(CreateCommandOption::new(CommandOptionType::Attachment,"file9", "attach your savefile .bin"));
     vec![
         AppReg::normal_slash("card", "show your hunter card status"),
-        AppReg::normal_slash("event", "show your server event card status"),
         AppReg::user_context("👤 Card"),
-        AppReg::user_context("event"),
+        AppReg::user_context("🎀 Event"),
+        AppReg::normal_slash("event","show my event data"),
         AppReg::normal_slash("dm_save", "make bot send you your save file"),
         file
     ]

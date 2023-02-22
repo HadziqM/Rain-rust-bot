@@ -20,6 +20,7 @@ use lazy_static::lazy_static;
 
 lazy_static!{
     static ref COOLDOWN:Mutex<HashMap<String,i64>> = Mutex::new(HashMap::new());
+    static ref MONITOR:Mutex<bool> = Mutex::new(false);
     // static ref INIT:Mutex<Init> = Mutex::new(Init::block_new().unwrap());
 }
 

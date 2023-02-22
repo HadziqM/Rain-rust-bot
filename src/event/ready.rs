@@ -18,6 +18,7 @@ pub async fn ready(ctx:&Context, ready:Ready, init:&Init){
     let mut command = Vec::new();
     command.append(&mut commands::register::reg(init));
     command.append(&mut commands::binded::reg());
+    command.append(&mut commands::misc::reg());
     command.append(&mut commands::admin::reg(init));
     if init.bot_config.gacha{
         command.append(&mut commands::gacha::reg());

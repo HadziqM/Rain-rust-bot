@@ -252,6 +252,7 @@ pub struct Bounty{
 #[derive(Serialize,Deserialize)]
 pub struct BountyBBQ{
     pub bbq1:BountyDesc,
+    pub bbq2:BountyDesc,
     pub bbq3:BountyDesc,
     pub bbq4:BountyDesc,
     pub bbq5:BountyDesc,
@@ -281,15 +282,23 @@ use super::super::bitwise::ItemCode;
 pub struct BountyDesc {
     pub description:String,
     pub cooldown:u32,
-    pub coin: u32,
-    pub ticket: u32,
     pub icon:String,
-    pub items:Vec<ItemCode>
+    pub thumbnail:String,
+    pub rules:Vec<String>,
+    pub solo:BountyReward,
+    pub multi:BountyReward
+}
+#[derive(Serialize,Deserialize)]
+pub struct BountyReward{
+    coin:u32,
+    ticket:u32,
+    items:Vec<ItemCode>
 }
 
 #[derive(Serialize,Deserialize)]
 pub struct BountyRefresh{
     pub bbq1:u32,
+    pub bbq2:u32,
     pub bbq3:u32,
     pub bbq4:u32,
     pub bbq5:u32,
@@ -353,16 +362,23 @@ impl Bounty{
 }
 impl Default for BountyDesc{
     fn default() -> Self {
-        BountyDesc { description: "this is bbq description".to_owned(), cooldown: 0, coin: 1, ticket: 1, 
-            items: vec![ItemCode::default(),ItemCode::default()] ,
-            icon:"https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png".to_owned()
+        BountyDesc { description: "this is bbq description".to_owned(), cooldown: 0, solo:BountyReward::default(),multi:BountyReward::default(),
+            icon:"https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png".to_owned(),
+            thumbnail:"https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png".to_owned(),
+            rules:vec!["HR equipment only".to_owned(),"no MS".to_owned(),"naked".to_owned()]
         }
+    }
+}
+impl Default for BountyReward {
+    fn default() -> Self {
+        BountyReward { coin: 1, ticket: 1, items:vec![ItemCode::default(),ItemCode::default()]}
     }
 }
 impl Default for BountyBBQ {
     fn default() -> Self {
         BountyBBQ { bbq1: BountyDesc::default(), bbq3: BountyDesc::default(),
         bbq4: BountyDesc::default(), bbq5: BountyDesc::default(),
+        bbq2: BountyDesc::default(),
         bbq6: BountyDesc::default(), bbq7: BountyDesc::default(), 
         bbq8: BountyDesc::default(), bbq9: BountyDesc::default(), 
         bbq10: BountyDesc::default(), bbq11: BountyDesc::default(), 
@@ -387,7 +403,7 @@ impl Default for Bounty {
 }
 impl Default for BountyRefresh {
     fn default() -> Self {
-        BountyRefresh { bbq1: 0, bbq3: 0,
+        BountyRefresh { bbq1: 0,bbq2:0, bbq3: 0,
         bbq4: 0, bbq5: 0,
         bbq6: 0, bbq7: 0, 
         bbq8: 0, bbq9: 0, 

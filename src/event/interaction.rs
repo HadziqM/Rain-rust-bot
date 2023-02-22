@@ -225,8 +225,10 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "bind"=>commands::register::create::discord_all(&bnd).await,
                 "change_password"=>commands::register::change_pasword::discord_slash(&bnd).await,
                 "card"=>commands::binded::card::discord_slash(&bnd).await,
+                "event"=>commands::binded::event::discord_slash(&bnd).await,
                 "switch"=>switch(&bnd).await,
                 "👤 Card"=>commands::binded::card::discord_userr(&bnd).await,
+                "🎀 Event"=>commands::binded::event::discord_userr(&bnd).await,
                 "dm_save"=>commands::binded::save::discord_all(&bnd).await,
                 "transfer"=>commands::binded::transfer::discord_slash(&bnd).await,
                 "market"=>commands::admin::market::discord_slash(&bnd).await,
@@ -235,6 +237,8 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "config"=>commands::admin::config::discord_slash(&bnd).await,
                 "stall"=>commands::market::market::discord_slash(&bnd).await,
                 "check"=>commands::register::change_pasword::discord_check(&bnd).await,
+                "ferias"=>commands::misc::ferias::discord_slash(&bnd).await,
+                "monitor"=>commands::admin::monitor::discord_auto(&bnd).await,
                 _=> {return;}
             }
         }
@@ -267,6 +271,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
             match wth{
                 "market"=>commands::admin::market::discord_auto(&bnd).await,
                 "stall"=>commands::market::market::discord_auto(&bnd).await,
+                "ferias"=>commands::misc::ferias::discord_auto(&bnd).await,
                 _=>{return;}
             }
         }
