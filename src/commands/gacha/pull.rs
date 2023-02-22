@@ -14,7 +14,7 @@ fn create_embed(user:&User,pg:&GachaPg)->CreateEmbed{
 }
 
 #[hertz::hertz_slash_reg(60,true)]
-async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
+async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
     let mut multi = false;
     for i in &bnd.cmd.data.options{
         if let CommandDataOptionValue::SubCommand(_) = &i.value{
@@ -31,7 +31,6 @@ async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
     let g_data;
     let cost = ||{if multi{return 110;}10};
     if data.ticket<cost(){
-            reg.pg.close().await;
             return Err(MyErr::Custom(format!("insufficient ticket, you only have {} ticket and its need {} ticket to pull, so you need to collect {} more",data.ticket,cost(),cost()-data.ticket)));
     }
     if !multi{
@@ -52,6 +51,5 @@ async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
     let content = EditInteractionResponse::new()
         .new_attachment(att).embed(embed);
     Components::edit_adv(bnd, content).await?;
-    reg.pg.close().await;
     Ok(())
 }

@@ -86,23 +86,10 @@ impl Bought {
         CreateEmbed::new().title("Receipt").author(CreateEmbedAuthor::new(&bnd.cmd.user.name).icon_url(bnd.cmd.user.face()))
             .description(format!("{} Receipt at <t:{}:F>",&bnd.cmd.user,crate::reusable::utils::MyTime::now()))
             .field("Item", format!("{}\nBought x{} times ",&self.item,self.qty), false)
-            .field("Price", format!("Per Item: {} x {} = {}",currency(self.price as u64),self.qty,currency(self.total)), false)
-            .field("Currency", format!("Your Coin = {} - {} = {}",currency(self.former as u64),currency(self.total),currency(self.change as u64)), false)
+            .field("Price", format!("Per Item: {} x {} = {}",Market::currency(self.price as i64),self.qty,Market::currency(self.total as i64)), false)
+            .field("Currency", format!("Your Coin = {} - {} = {}",Market::currency(self.former as i64),Market::currency(self.total as i64),Market::currency(self.change as i64)), false)
             .color(crate::reusable::utils::Color::Random.throw())
     }
-}
-fn currency(cur:u64)->String{
-    let inp = cur.to_string(); 
-    let x = inp.chars().rev();
-    let mut y =Vec::new();
-    for (i,c) in x.enumerate(){
-        if i%3 == 0{
-            y.push('.')
-        }
-        y.push(c)
-    }
-    let z:String = y[1..].iter().rev().collect();
-    ["Bc ",&z,",00"].concat()
 }
 #[hertz::hertz_auto]
 async fn idk(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
@@ -117,12 +104,11 @@ async fn idk(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
 }
 
 #[hertz::hertz_slash_reg(60,false)]
-async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
+async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
     let mut handle = Handle::new(bnd.cmd).await?;
     let receipt = handle.check(&reg,bnd.pedia).await?;
     handle.transaction(&reg, bnd.pedia).await?;
     Components::response_adv(bnd,CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(receipt.create_embed(bnd)))).await?;
     handle.post_transaction(bnd).await?;
-    reg.pg.close().await;
     Ok(())
 }

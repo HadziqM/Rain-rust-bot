@@ -5,6 +5,7 @@ use crate::AppReg;
 pub mod card;
 pub mod save;
 pub mod transfer;
+pub mod event;
 
 pub fn reg()->Vec<CreateCommand>{
     let file = AppReg::normal_slash("transfer", "transfer your save data to server")
@@ -20,7 +21,9 @@ pub fn reg()->Vec<CreateCommand>{
         .add_option(CreateCommandOption::new(CommandOptionType::Attachment,"file9", "attach your savefile .bin"));
     vec![
         AppReg::normal_slash("card", "show your hunter card status"),
+        AppReg::normal_slash("event", "show your server event card status"),
         AppReg::user_context("👤 Card"),
+        AppReg::user_context("event"),
         AppReg::normal_slash("dm_save", "make bot send you your save file"),
         file
     ]

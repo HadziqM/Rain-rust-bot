@@ -43,12 +43,11 @@ impl SaveData{
 }
 
 #[hertz::hertz_combine_reg(300,false)]
-async fn all<T:Mybundle>(bnd:&T,mut reg:Reg<'_>)->Result<(),MyErr> {
+async fn all<T:Mybundle>(bnd:&T,reg:&Reg<'_>)->Result<(),MyErr> {
     let data = reg.pg.send_save(reg.cid).await?;
     Components::response(bnd, "trying to Direct Message", true).await?;
     let user = bnd.user();
     user.direct_message(&bnd.ctx().http,CreateMessage::new()
         .content("your save").add_files(data.get_attachment())).await?;
-    reg.pg.close().await;
     Ok(())
 }

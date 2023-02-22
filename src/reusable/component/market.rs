@@ -96,4 +96,18 @@ impl Market {
         msg.edit(&ctx.http, EditMessage::new().embed(x.make_embed(pedia))).await?;
         Ok(())
     }
+    pub fn currency(cur:i64)->String{
+        let inp = cur.to_string(); 
+        let x = inp.chars().rev();
+        let mut y =Vec::new();
+        for (i,c) in x.enumerate(){
+            if i%3 == 0{
+                y.push('.')
+            }
+            y.push(c)
+        }
+        let z:String = y[1..].iter().rev().collect();
+        ["Bc ",&z,",00"].concat()
+    }
+
 }

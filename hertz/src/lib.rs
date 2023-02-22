@@ -186,7 +186,7 @@ pub fn hertz_slash_reg(args: TokenStream, input: TokenStream) -> TokenStream {
             if let Err(why)=bnd.cooldown(cd).await{
                 return why.log(cmd, &on, false, &mut err).await;
             }
-            let reg = match Reg::switch(bnd.ctx(), cmd, bnd.init(), false, false).await{
+            let mut reg = match Reg::switch(bnd.ctx(), cmd, bnd.init(), false, false).await{
                 Ok(x)=>{
                     match x{
                         Some(y)=>y,
@@ -200,12 +200,13 @@ pub fn hertz_slash_reg(args: TokenStream, input: TokenStream) -> TokenStream {
             if defer{
                 cmd.defer_res(&mut err, &on,false).await;
             }
-            if let Err(why) = #fname(bnd,reg).await{
+            if let Err(why) = #fname(bnd,&reg).await{
                 match !defer{
                     true=>why.log(cmd, &on,false, &mut err).await,
                     false=>why.log_defer(cmd, &on, &mut err).await,
                 };
             }
+            reg.pg.close().await;
         }
     };
     quete.into()
@@ -265,7 +266,7 @@ pub fn hertz_combine_reg(args: TokenStream, input: TokenStream) -> TokenStream {
             if let Err(why)=bnd.cooldown(cd).await{
                 return why.log(cmd, &on, true, &mut err).await;
             }
-            let reg = match Reg::switch(bnd.ctx(), cmd, bnd.init(), false, true).await{
+            let mut reg = match Reg::switch(bnd.ctx(), cmd, bnd.init(), false, true).await{
                 Ok(x)=>{
                     match x{
                         Some(y)=>y,
@@ -279,12 +280,13 @@ pub fn hertz_combine_reg(args: TokenStream, input: TokenStream) -> TokenStream {
             if defer{
                 cmd.defer_res(&mut err, &on,true).await;
             }
-            if let Err(why) = #fname(bnd,reg).await{
+            if let Err(why) = #fname(bnd,&reg).await{
                 match !defer{
                     true=>why.log(cmd, &on,true, &mut err).await,
                     false=>why.log_defer(cmd, &on, &mut err).await,
                 };
             }
+            reg.pg.close().await;
         }
     };
     quete.into()

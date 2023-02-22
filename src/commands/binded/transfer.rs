@@ -116,7 +116,7 @@ impl SaveAcknowladge{
 }
 
 #[hertz::hertz_slash_reg(300,true)]
-async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
+async fn slash(bnd:&SlashBundle<'_>,_reg:&Reg<'_>)->Result<(),MyErr>{
     let data = SaveJudge::get_save(bnd.cmd).await;
     if data.files.len()==0{
         return Err(MyErr::Custom("no matched file detected, please rename your save file properly and dont send any large file".to_string()));
@@ -128,7 +128,6 @@ async fn slash(bnd:&SlashBundle<'_>,mut reg:Reg<'_>)->Result<(),MyErr>{
     ch.send_message(&bnd.ctx.http,CreateMessage::new()
         .content(format!("<@&{}>",bnd.init.server_role.judge_role))
         .embed(data.make_embed()).components(vec![data.make_button()])).await?;
-    reg.pg.close().await;
     Ok(())
 }
 
