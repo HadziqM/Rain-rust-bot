@@ -1,4 +1,4 @@
-use crate::{MyErr,ItemPedia,Components,SlashBundle,Reg,Mybundle,Mytrait, reusable::bitwise::ItemCode};
+use crate::{MyErr,ItemPedia,Components,SlashBundle,Reg, reusable::bitwise::ItemCode};
 use serenity::all::*;
 use crate::reusable::component::market::{Market,Item};
 struct Handle{
@@ -13,24 +13,31 @@ impl Handle{
         let mut item = Item::default();
         for pat in &cmd.data.options {
             match &pat.value{
-                CommandDataOptionValue::Integer(x)=>{
-                    bought = match u16::try_from(x.to_owned()) {
-                        Ok(y) => {
-                            if y==0{
-                                return Err(MyErr::Custom(format!("you got number wrong, only allowed between 1- 2^16 && <item stock>, then you input 0")));
+                CommandDataOptionValue::SubCommand(x)=>{
+                    for sub in x{
+                        match &sub.value{
+                        CommandDataOptionValue::Integer(x)=>{
+                            bought = match u16::try_from(x.to_owned()) {
+                                Ok(y) => {
+                                    if y==0{
+                                        return Err(MyErr::Custom(format!("you got number wrong, only allowed between 1- 2^16 && <item stock>, then you input 0")));
+                                    }
+                                    y
+                                },
+                                Err(why) =>{
+                                    return Err(MyErr::Custom(format!("you got number wrong, only allowed between 1- 2^16 && <item stock>, then you input {x}\nthe error code :\n{why:?}")));
+                                }
                             }
-                            y
-                        },
-                        Err(why) =>{
-                            return Err(MyErr::Custom(format!("you got number wrong, only allowed between 1- 2^16 && <item stock>, then you input {x}\nthe error code :\n{why:?}")));
                         }
-                    }
-                }
-                CommandDataOptionValue::String(x)=>{
-                    item = match market.item_hash().get(x){
-                        Some(y)=>y.to_owned(),
-                        None=>{
-                            return Err(MyErr::Custom(format!("you have input command with \"{x}\" and our given choice didnt use or have that, use this command again to try again but make sure you properly select the option available")));
+                        CommandDataOptionValue::String(x)=>{
+                            item = match market.item_hash().get(x){
+                                Some(y)=>y.to_owned(),
+                                None=>{
+                                    return Err(MyErr::Custom(format!("you have input command with \"{x}\" and our given choice didnt use or have that, use this command again to try again but make sure you properly select the option available")));
+                                }
+                            }
+                        }
+                        _=>{continue;}
                         }
                     }
                 }
@@ -91,20 +98,14 @@ impl Bought {
             .color(crate::reusable::utils::Color::Random.throw())
     }
 }
-#[hertz::hertz_auto]
-async fn idk(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
-    for pat in &bnd.cmd.data.options {
-        if let CommandDataOptionValue::Autocomplete { kind:_, value } = &pat.value{
-            let market = Market::new().await?;
-            bnd.cmd.create_response(&bnd.ctx.http, CreateInteractionResponse::Autocomplete(CreateAutocompleteResponse::new()
-                .set_choices(market.auto(bnd.pedia, &value)))).await?;
-        }
-    }
+pub async fn auto(bnd:&SlashBundle<'_>,focus:&str)->Result<(),MyErr>{
+    let market = Market::new().await?;
+    bnd.cmd.create_response(&bnd.ctx.http, CreateInteractionResponse::Autocomplete(CreateAutocompleteResponse::new()
+        .set_choices(market.auto(bnd.pedia, focus)))).await?;
     Ok(())
 }
 
-#[hertz::hertz_slash_reg(60,false)]
-async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
+pub async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
     let mut handle = Handle::new(bnd.cmd).await?;
     let receipt = handle.check(&reg,bnd.pedia).await?;
     handle.transaction(&reg, bnd.pedia).await?;

@@ -19,7 +19,7 @@ pub fn reg(init:&Init)->Vec<CreateCommand>{
     let price_op = CreateCommandOption::new(CommandOptionType::Integer, "price","item price (all) not single");
     let count_op = CreateCommandOption::new(CommandOptionType::Integer, "unit","quantity of the item send max 65025").required(true);
     let item_op = CreateCommandOption::new(CommandOptionType::String, "item ", "search one of ~17770 item on the list").required(true).set_autocomplete(true);
-    let item = AppReg::admin_slash("market", "send item trough distribution then deduct their bounty coin").add_option(
+    let item = AppReg::admin_slash("send", "send item trough distribution then deduct their bounty coin").add_option(
         CreateCommandOption::new(CommandOptionType::SubCommand, "item","send with item category")
         .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(count_op.to_owned()).add_sub_option(price_op.to_owned())
         ).add_option(
