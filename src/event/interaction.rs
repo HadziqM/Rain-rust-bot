@@ -239,6 +239,8 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "check"=>commands::register::change_pasword::discord_check(&bnd).await,
                 "ferias"=>commands::misc::ferias::discord_slash(&bnd).await,
                 "monitor"=>commands::admin::monitor::discord_auto(&bnd).await,
+                "mod_pass"=>commands::admin::password::discord_slash(&bnd).await,
+                "add"=>commands::admin::add::discord_slash(&bnd).await,
                 _=> {return;}
             }
         }

@@ -34,12 +34,12 @@ pub(super) async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
             Market::currency(coin as i64),Market::currency(total))));
     }
     let exp = crate::reusable::utils::MyTime::elapsed(bought * 360);
-    reg.pg.guild_food(reg.cid, ids as i32, meals.level , exp as i32).await?;
-    reg.pg.bounty_transaction(total as i32).await?;
     let receipt = Bought::new(meals.name.to_string(), bought, total, change, coin,
         trade.restourant.price, "Hour(s)".to_owned());
-    Components::response_adv(bnd, CreateInteractionResponse::Message(
-            CreateInteractionResponseMessage::new().embed(receipt.create_embed(bnd)))).await?;
+    if receipt.confirmation(bnd).await?{
+        reg.pg.guild_food(reg.cid, ids as i32, meals.level , exp as i32).await?;
+        reg.pg.bounty_transaction(total as i32).await?;
+    }
     Ok(())
 }
 

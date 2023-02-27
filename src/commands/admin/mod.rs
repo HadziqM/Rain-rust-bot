@@ -9,10 +9,14 @@ pub mod purge;
 pub mod config;
 pub mod query;
 pub mod monitor;
+pub mod add;
+pub mod password;
 
 pub fn reg(init:&Init)->Vec<CreateCommand>{
-    let save = AppReg::admin_slash("reset_save_cd", "reset someone save cooldown").add_option(
-        CreateCommandOption::new(CommandOptionType::User,"user","mention user you want to reset").required(true)
+    let save = AppReg::admin_slash("mod_pass", "reset someone password given username").add_option(
+        CreateCommandOption::new(CommandOptionType::String,"username","username you want to reset").required(true)
+        ).add_option(
+        CreateCommandOption::new(CommandOptionType::String, "password", "reset password given input").required(true)
         );
     let user_op = CreateCommandOption::new(CommandOptionType::User, "user","mention the customer").required(true);
     let att_op = CreateCommandOption::new(CommandOptionType::Attachment, "json","send your matching .json file").required(true);
@@ -45,6 +49,31 @@ pub fn reg(init:&Init)->Vec<CreateCommand>{
         .add_sub_option(user_op.to_owned()).add_sub_option(item_op.to_owned()).add_sub_option(price_op.to_owned())
         );
     let monitor = AppReg::admin_slash("monitor", "toggle monitor server in info channel");
+    let add = AppReg::admin_slash("add", "add bounty coint or gacha").add_option(
+        CreateCommandOption::new(CommandOptionType::SubCommand, "bounty", "add bounty point to player").add_sub_option(
+            CreateCommandOption::new(CommandOptionType::SubCommand, "mentions", "add bounty coin to mentioned player").add_sub_option(
+                CreateCommandOption::new(CommandOptionType::User,"mention", "mention the user").required(true).add_sub_option(
+                CreateCommandOption::new(CommandOptionType::Integer, "amount", "the amount gifted, can be negative").required(true)
+                    )
+                )
+            ).add_sub_option(
+            CreateCommandOption::new(CommandOptionType::SubCommand, "all", "send bounty to all player").add_sub_option(
+                CreateCommandOption::new(CommandOptionType::Integer, "amount", "the amount gifted, can be negative").required(true)
+                )
+            )
+        ).add_option(
+        CreateCommandOption::new(CommandOptionType::SubCommand, "gacha", "add gacha point to player").add_sub_option(
+            CreateCommandOption::new(CommandOptionType::SubCommand, "mentions", "add gacha ticket to mentioned player").add_sub_option(
+                CreateCommandOption::new(CommandOptionType::User,"mention", "mention the user").required(true).add_sub_option(
+                CreateCommandOption::new(CommandOptionType::Integer, "amount", "the amount gifted, can be negative").required(true)
+                    )
+                )
+            ).add_sub_option(
+            CreateCommandOption::new(CommandOptionType::SubCommand, "all", "send gacha ticket to all player").add_sub_option(
+                CreateCommandOption::new(CommandOptionType::Integer, "amount", "the amount gifted, can be negative").required(true)
+                )
+            )
+        );
     let mut config = AppReg::admin_slash("config", "change configuration of some bot feature");
     if init.bot_config.gacha{
         config = config.add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "gacha", "send your gacha.json file").add_sub_option(att_op.to_owned()));
@@ -65,6 +94,7 @@ pub fn reg(init:&Init)->Vec<CreateCommand>{
         save,
         item,
         config,
-        monitor
+        monitor,
+        add
     ]
 }

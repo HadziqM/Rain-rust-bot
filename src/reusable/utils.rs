@@ -48,9 +48,20 @@ impl Color {
     }
 }
 
-
-
 pub fn color(red:&str,green:&str,blue:&str)-> Colour{
     let some_u32 = u32::from_str_radix(&[red,green,blue].concat(), 16);
     Colour::new(some_u32.unwrap())
+}
+
+pub fn dumb_matching(source:&str,word:&str)-> f32{
+    let mut out = 0.0;
+    let len = source.len() as f32;
+    let mut src = source.chars().collect::<Vec<_>>();
+    for i in word.chars(){
+        if src.contains(&i){
+            out += len / 100.0;
+            src.remove(src.iter().position(|x|x==&i).unwrap());
+        }
+    }
+    out
 }

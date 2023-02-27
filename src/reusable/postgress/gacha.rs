@@ -21,6 +21,10 @@ impl<'a> PgConn<'a> {
         sqlx::query("update discord set ticket=ticket+$1 where discord_id=$2").bind(ticket).bind(&self.did).execute(&self.pool).await?;
         Ok(())
     }
+    pub async fn ticket_all(&self,ticket:i32)->Result<(),BitwiseError>{
+        sqlx::query("update discord set ticket=ticket+$1 where ticket is not null").bind(ticket).bind(&self.did).execute(&self.pool).await?;
+        Ok(())
+    }
     pub async fn send_distrib(&self,pg:&GachaPg,data:&[ItemCode],cid:i32,pedia:&ItemPedia)->Result<(),BitwiseError>{
         sqlx::query("UPDATE discord set gacha=$1,pity=$2 where discord_id=$3").bind(pg.ticket)
         .bind(pg.pity).bind(&self.did).execute(&self.pool).await?;
@@ -38,6 +42,11 @@ impl<'a> PgConn<'a> {
     }
     pub async fn bounty_transaction(&self,price:i32)->Result<(),BitwiseError>{
         sqlx::query("UPDATE discord set bounty=bounty-$1 where discord_id=$2").bind(price)
+        .bind(&self.did).execute(&self.pool).await?;
+        Ok(())
+    }
+    pub async fn bounty_all(&self,gift:i32)->Result<(),BitwiseError>{
+        sqlx::query("UPDATE discord set bounty=bounty+$1 where bounty is not null").bind(gift)
         .bind(&self.did).execute(&self.pool).await?;
         Ok(())
     }

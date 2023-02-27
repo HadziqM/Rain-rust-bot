@@ -41,6 +41,11 @@ impl<'a> PgConn<'a>{
         sqlx::query(&format!("UPDATE users SET password='{hased}' where id={uid}")).execute(&self.pool).await?;
         Ok(())
     }
+    pub async fn change_password_with_username(&self,pass:&str,username:&str)->Result<(),BitwiseError>{
+        let hased = bcrypt::hash(pass, 10).unwrap_or_default();
+        sqlx::query("UPDATE users SET password=$1 where username=$2").bind(hased).bind(username).execute(&self.pool).await?;
+        Ok(())
+    }
     pub async fn create_account(&self,user:&str,pass:&str,reg:bool)->Result<AccountData,BitwiseError>{
         let uid;
         if reg{

@@ -1,6 +1,10 @@
-use crate::{MyErr,ItemPedia,Components,SlashBundle,Reg, reusable::bitwise::ItemCode};
-use serenity::all::*;
+use std::time::Duration;
+
+use crate::{MyErr,ItemPedia,Components,SlashBundle,Reg, reusable::{bitwise::ItemCode, component::Mytrait}};
+use serenity::{all::*, futures::StreamExt};
 use crate::reusable::component::market::{Market,Item,Trading};
+
+
 struct Handle{
     market:Market,
     item:Item,
@@ -67,15 +71,14 @@ impl Handle{
            { item: self.item.item.text(pedia).unwrap(), qty: self.bought as i64,
            total, change, former:bc, price:self.item.price as i32, unit:"item(s)".to_string()})
     }
-    async fn transaction(&mut self,reg:&Reg<'_>,pedia:&ItemPedia)->Result<Bought,MyErr>{
-        let bought = self.check(reg, pedia).await?;
+    async fn transaction(&mut self,reg:&Reg<'_>,pedia:&ItemPedia)->Result<(),MyErr>{
         let price = self.item.price * self.bought as u32;
         let count  = self.item.item.count * self.bought;
         self.item.treshold -= self.bought as u32;
         self.market.bought(&self.item);
         let item = ItemCode{key:self.item.item.key.to_owned(),types:self.item.item.types,count};
         reg.pg.market_user(&item, reg.cid, price, pedia).await?;
-        Ok(bought)
+        Ok(())
     }
     async fn post_transaction(&self,bnd:&SlashBundle<'_>)->Result<(),MyErr>{
         self.market.save().await?;
@@ -105,6 +108,43 @@ impl Bought{
             .field("Currency", format!("Your Coin = {} - {} = {}",Market::currency(self.former as i64),Market::currency(self.total as i64),Market::currency(self.change as i64)), false)
             .color(crate::reusable::utils::Color::Random.throw())
     }
+    async fn wtf(bnd:&SlashBundle<'_>,x:&ComponentInteraction)->Result<bool,MyErr>{
+        if x.user != bnd.cmd.user{
+            x.response(bnd.ctx, Components::interaction_response("the button is not for you", true)).await?;
+            return Ok(false);
+        }
+        Ok(true)
+    }
+    pub async fn confirmation(&self,bnd:&SlashBundle<'_>)->Result<bool,MyErr>{
+        let arow = CreateActionRow::Buttons(vec![
+            Components::normal_button("Confirm", "yes", ButtonStyle::Primary, "👌"),
+            Components::normal_button("Reject", "nope", ButtonStyle::Danger, "👎")
+        ]);
+        Components::response_adv(bnd, CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
+            .embed(self.create_embed(bnd)).components(vec![arow]))).await?;
+        let mut msg = bnd.cmd.get_msg(bnd.ctx).await?;
+        let mut reply = msg.await_component_interactions(bnd.ctx).timeout(Duration::new(60, 0)).stream();
+        while let Some(x) = reply.next().await{
+            match x.data.custom_id.as_str(){
+                "yes" => {
+                    if Bought::wtf(bnd, &x).await?{
+                        msg.edit(&bnd.ctx.http, EditMessage::new().components(Vec::new())).await?;
+                        return Ok(true);
+                    }
+                    continue;
+                }
+                "nope" => {
+                    if Bought::wtf(bnd, &x).await?{
+                        msg.delete(&bnd.ctx.http).await?;
+                        return Ok(false);
+                    }
+                    continue;
+                }
+                _ => {continue;}
+            }
+        }
+        Ok(false)
+    }
 }
 pub async fn auto(bnd:&SlashBundle<'_>,focus:&str)->Result<(),MyErr>{
     let market = Market::new().await?;
@@ -119,8 +159,9 @@ pub async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
         return Err(MyErr::Custom("tradimng market is currently disabled".to_string()));
     }
     let mut handle = Handle::new(bnd.cmd).await?;
-    let receipt = handle.transaction(&reg, bnd.pedia).await?;
-    Components::response_adv(bnd,CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(receipt.create_embed(bnd)))).await?;
-    handle.post_transaction(bnd).await?;
+    let receipt = handle.check(reg, bnd.pedia).await?;
+    if receipt.confirmation(bnd).await?{
+        handle.transaction(reg, bnd.pedia).await?;
+    }
     Ok(())
 }

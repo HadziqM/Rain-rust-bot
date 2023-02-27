@@ -85,17 +85,17 @@ async fn trading(bnd:&SlashBundle<'_>,reg:&Reg<'_>,unit:String)->Result<(),MyErr
         return Err(MyErr::Custom(format!("you only have {} bounty coin, and you need {} for this transaction",
             Market::currency(coin as i64),Market::currency(total))));
     }
-    match unit.as_str() {
-        "Ticket" => reg.pg.buy_ticket(bought as i32).await?,
-        "RP" => reg.pg.guild_rp(reg.cid, bought as i32).await?,
-        _ => {
-            return Err(MyErr::Custom("jewelry rp is currently disabled".to_string()));
-        }
-    };
-    reg.pg.bounty_transaction(total as i32).await?;
     let receipt = Bought::new(name, bought, total, change, coin,
         item.price, unit.to_owned());
-    Components::response_adv(bnd, CreateInteractionResponse::Message(
-            CreateInteractionResponseMessage::new().embed(receipt.create_embed(bnd)))).await?;
+    if receipt.confirmation(bnd).await?{
+        match unit.as_str() {
+            "Ticket" => reg.pg.buy_ticket(bought as i32).await?,
+            "RP" => reg.pg.guild_rp(reg.cid, bought as i32).await?,
+            _ => {
+                return Err(MyErr::Custom("jewelry rp is currently disabled".to_string()));
+            }
+        };
+        reg.pg.bounty_transaction(total as i32).await?;
+    }
     Ok(())
 }

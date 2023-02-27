@@ -16,8 +16,8 @@
     "price": 100
   },
   "restourant": {
-    "enabled": false,
-    "price": 100
+    "enabled": true,
+    "price": 750
   },
   "guild": {
     "enabled": false,
