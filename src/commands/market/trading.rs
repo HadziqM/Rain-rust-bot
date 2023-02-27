@@ -3,6 +3,7 @@ use crate::reusable::component::market::{Market,Trading};
 use serenity::all::*;
 use super::market::{self, Bought};
 use super::meal;
+use super::bar;
 
 #[hertz::hertz_slash_reg(60,false)]
 async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
@@ -14,7 +15,7 @@ async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
     }
     match name{
         "market"=>market::slash(bnd, reg).await?,
-        "bar"=>{return Err(MyErr::Custom("bar is under construction".to_owned()));},
+        "bar"=>bar::slash(bnd).await?,
         "restourant"=>meal::slash(bnd, reg).await?,
         "jewelry"=>trading(bnd, reg, "Gacha Premium".to_owned()).await?,
         "guild"=>trading(bnd, reg, "RP".to_owned()).await?,

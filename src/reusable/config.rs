@@ -65,6 +65,7 @@ pub struct LogChannels {
     pub(crate) info_channel_msg: u64,
     pub(crate) market_channel: u64,
     pub(crate) market_channel_msg: u64,
+    pub(crate) request_channel: u64,
     // pub(crate) moderation_channel: u64,
 }
 
@@ -84,6 +85,7 @@ pub struct LogChannels {
 #[derive(Debug,Deserialize,Clone,Serialize)]
 pub struct ServerRole {
     pub(crate) admin_role: u64,
+    pub(crate) bartender_role: u64,
     // pub(crate) member_role: u64,
     // pub(crate) mute_role: u64,
     pub(crate) register_role: u64,

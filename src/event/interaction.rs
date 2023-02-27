@@ -264,6 +264,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
             match wth{
                 "register_m"=>commands::register::create::discord_modal(&bnd).await,
                 "bind"=>commands::register::create::discord_modal(&bnd).await,
+                "bar"=>commands::market::bar::discord_modal(&bnd).await,
                 _=>{return;}
             }
         }

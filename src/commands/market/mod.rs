@@ -1,6 +1,7 @@
 pub mod market;
 pub mod trading;
 pub mod meal;
+pub mod bar;
 
 use serenity::builder::{CreateCommand, CreateCommandOption};
 use serenity::all::CommandOptionType;
