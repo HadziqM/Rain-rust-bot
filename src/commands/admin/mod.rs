@@ -50,7 +50,9 @@ pub fn reg(init:&Init)->Vec<CreateCommand>{
         config = config.add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "gacha", "send your gacha.json file").add_sub_option(att_op.to_owned()));
     }
     if init.bot_config.server_market{
-        config = config.add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "market", "send your market.json file").add_sub_option(att_op.to_owned()));
+        config = config.add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "market", "send your market.json file for trading market").add_sub_option(att_op.to_owned()));
+        config = config.add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "meal", "send your meal.json file for trading market").add_sub_option(att_op.to_owned()));
+        config = config.add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "trading", "send your trading.json file for trading market").add_sub_option(att_op.to_owned()));
     }
     if init.bot_config.bounty{
         config = config.add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "bounty", "send your gacha.json file").add_sub_option(att_op.to_owned())).add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "bounty_refresh", "send your gacha_refresh.json file").add_sub_option(att_op.to_owned()));

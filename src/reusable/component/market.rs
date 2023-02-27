@@ -149,12 +149,60 @@ impl Default for Meal {
         Meal { meals: vec![MealMenu::default(),MealMenu::default(),MealMenu::default()] }
     }
 }
+
+#[derive(Serialize,Deserialize)]
+pub struct Trading{
+    market:TradingMenu,
+    bar:TradingMenu,
+    casino:TradingMenu,
+    jewelry:TradingMenu,
+    restourant:TradingMenu
+}
+
+#[derive(Serialize,Deserialize)]
+pub struct TradingMenu{
+    enabled:bool,
+    price:i32
+}
+impl Trading{
+    fn path()->PathBuf{
+        Path::new(".").join("static").join("trading.json")
+    }
+    pub async fn new()->Result<Self,MyErr>{
+        let file = tokio::fs::read_to_string(Trading::path()).await?;
+        Ok(serde_json::from_str(&file)?)
+    }
+    pub async fn save(&self)->Result<(),MyErr>{
+        let file = serde_json::to_string_pretty(&self)?;
+        Ok(tokio::fs::write(Trading::path(), file.as_bytes()).await?)
+    }
+    pub async fn check(data:&str)->Result<(),MyErr>{
+        let x = serde_json::from_str::<Self>(data)?;
+        x.save().await?;
+        Ok(())
+    }
+}
+impl Default for TradingMenu{
+    fn default() -> Self {
+        TradingMenu { enabled: false, price: 100 }
+    }
+}
+impl Default for Trading {
+    fn default() -> Self {
+        Trading { market: TradingMenu::default(),
+        bar: TradingMenu::default(),
+        casino: TradingMenu::default(),
+        jewelry: TradingMenu::default(),
+        restourant: TradingMenu::default()
+        }
+    }
+}
 #[cfg(test)]
 mod testing{
     use super::*;
     #[tokio::test]
     async fn default() {
-        let x = Meal::default();
+        let x = Trading::default();
         x.save().await.unwrap();
     }
 }

@@ -270,7 +270,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
             let wth = cmd.data.name.as_str();
             match wth{
                 "market"=>commands::admin::market::discord_auto(&bnd).await,
-                "stall"=>commands::market::market::discord_auto(&bnd).await,
+                "trading"=>commands::market::trading::discord_auto(&bnd).await,
                 "ferias"=>commands::misc::ferias::discord_auto(&bnd).await,
                 _=>{return;}
             }
