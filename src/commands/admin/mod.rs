@@ -50,31 +50,31 @@ pub fn reg(init:&Init)->Vec<CreateCommand>{
         );
     let monitor = AppReg::admin_slash("monitor", "toggle monitor server in info channel");
     let add = AppReg::admin_slash("add", "add bounty coint or gacha").add_option(
-        CreateCommandOption::new(CommandOptionType::SubCommand, "bounty", "add bounty point to player").add_sub_option(
+        CreateCommandOption::new(CommandOptionType::SubCommandGroup, "bounty", "add bounty point to player").add_sub_option(
             CreateCommandOption::new(CommandOptionType::SubCommand, "mentions", "add bounty coin to mentioned player").add_sub_option(
-                CreateCommandOption::new(CommandOptionType::User,"mention", "mention the user").required(true).add_sub_option(
+                CreateCommandOption::new(CommandOptionType::User,"mention", "mention the user").required(true)).add_sub_option(
                 CreateCommandOption::new(CommandOptionType::Integer, "amount", "the amount gifted, can be negative").required(true)
                     )
-                )
-            ).add_sub_option(
+                ).add_sub_option(
             CreateCommandOption::new(CommandOptionType::SubCommand, "all", "send bounty to all player").add_sub_option(
                 CreateCommandOption::new(CommandOptionType::Integer, "amount", "the amount gifted, can be negative").required(true)
                 )
             )
         ).add_option(
-        CreateCommandOption::new(CommandOptionType::SubCommand, "gacha", "add gacha point to player").add_sub_option(
+        CreateCommandOption::new(CommandOptionType::SubCommandGroup, "gacha", "add gacha point to player").add_sub_option(
             CreateCommandOption::new(CommandOptionType::SubCommand, "mentions", "add gacha ticket to mentioned player").add_sub_option(
-                CreateCommandOption::new(CommandOptionType::User,"mention", "mention the user").required(true).add_sub_option(
+                CreateCommandOption::new(CommandOptionType::User,"mention", "mention the user").required(true)).add_sub_option(
                 CreateCommandOption::new(CommandOptionType::Integer, "amount", "the amount gifted, can be negative").required(true)
                     )
-                )
             ).add_sub_option(
             CreateCommandOption::new(CommandOptionType::SubCommand, "all", "send gacha ticket to all player").add_sub_option(
                 CreateCommandOption::new(CommandOptionType::Integer, "amount", "the amount gifted, can be negative").required(true)
                 )
             )
         );
-    let mut config = AppReg::admin_slash("config", "change configuration of some bot feature");
+    let mut config = AppReg::admin_slash("config", "change configuration of some bot feature").add_option(
+        CreateCommandOption::new(CommandOptionType::SubCommand, "tag", "config for tag commands").add_sub_option(att_op.to_owned())
+        );
     if init.bot_config.gacha{
         config = config.add_option(CreateCommandOption::new(CommandOptionType::SubCommand, "gacha", "send your gacha.json file").add_sub_option(att_op.to_owned()));
     }

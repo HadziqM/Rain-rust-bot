@@ -199,12 +199,51 @@ impl Default for Trading {
         }
     }
 }
+#[derive(Serialize,Deserialize,PartialEq, Eq)]
+pub struct TagItem{
+    pub desc:String,
+    pub command:String,
+    pub url:String
+}
+#[derive(Serialize,Deserialize,PartialEq, Eq)]
+pub struct Tag{
+    pub tag:Vec<TagItem>
+}
+impl Tag{
+    fn path()->PathBuf{
+        Path::new(".").join("static").join("tag.json")
+    }
+    pub async fn new()->Result<Self,MyErr>{
+        let file = tokio::fs::read_to_string(Tag::path()).await?;
+        Ok(serde_json::from_str(&file)?)
+    }
+    pub async fn save(&self)->Result<(),MyErr>{
+        let file = serde_json::to_string_pretty(&self)?;
+        Ok(tokio::fs::write(Tag::path(), file.as_bytes()).await?)
+    }
+    pub async fn check(data:&str)->Result<(),MyErr>{
+        let x = serde_json::from_str::<Self>(data)?;
+        x.save().await?;
+        Ok(())
+    }
+}
+impl Default for TagItem {
+    fn default() -> Self {
+        TagItem { desc: "".to_owned(), command: "".to_owned(), url: "".to_owned() }
+    }
+}
+impl Default for Tag {
+    fn default() -> Self {
+        Tag { tag: vec![TagItem::default(),TagItem::default()] }
+    }
+}
+
 #[cfg(test)]
 mod testing{
     use super::*;
     #[tokio::test]
     async fn default() {
-        let x = Trading::default();
+        let x = Tag::default();
         x.save().await.unwrap();
     }
 }

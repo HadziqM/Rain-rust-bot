@@ -8,7 +8,7 @@
     "price": 100
   },
   "casino": {
-    "enabled": false,
+    "enabled": true,
     "price": 100
   },
   "jewelry": {

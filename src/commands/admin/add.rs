@@ -9,7 +9,7 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let mut amount = 0;
     let mut user = bnd.cmd.user.id.to_string();
     for data in &bnd.cmd.data.options{
-        if let CommandDataOptionValue::SubCommand(x) = &data.value{
+        if let CommandDataOptionValue::SubCommandGroup(x) = &data.value{
             if data.name.as_str() == "bounty"{
                 bounty = true;
             }

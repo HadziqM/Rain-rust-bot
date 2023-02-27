@@ -19,6 +19,7 @@ pub async fn msg_handler(ctx:&Context,msg:&Message,init:&Init,pedia:&ItemPedia){
                 "ping"=>discord_ping(&bnd).await,
                 "execute"=>commands::admin::query::discord_msg(&bnd).await,
                 "query"=>commands::admin::query::discord_qry(&bnd).await,
+                "tag"=>commands::misc::tag::discord_message(&bnd).await,
                 _=>{return ;}
             }
         }

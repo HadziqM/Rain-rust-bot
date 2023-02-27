@@ -59,7 +59,7 @@ pub fn dumb_matching(source:&str,word:&str)-> f32{
     let mut src = source.chars().collect::<Vec<_>>();
     for i in word.chars(){
         if src.contains(&i){
-            out += len / 100.0;
+            out += 1.0 / len;
             src.remove(src.iter().position(|x|x==&i).unwrap());
         }
     }

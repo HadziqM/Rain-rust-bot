@@ -1,4 +1,5 @@
 pub mod ferias;
+pub mod tag;
 
 use crate::AppReg;
 use serenity::all::*;

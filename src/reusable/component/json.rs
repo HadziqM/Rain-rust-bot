@@ -4,7 +4,7 @@ use serenity::all::*;
 use super::bounty::{Bounty,BountyRefresh};
 use serenity::async_trait;
 use super::gacha::Gacha;
-use super::market::{Market,Meal,Trading};
+use super::market::{Market,Meal,Trading,Tag};
 
 
 impl Components {
@@ -24,6 +24,7 @@ impl Components {
         let utf8 = std::str::from_utf8(&byte)?.to_owned();
         T::check(&utf8).await?;
         T::update(bnd).await?;
+        Components::response(bnd, "succeded", true).await?;
         Ok(())
     }
 }
@@ -84,6 +85,15 @@ impl MyConfig for Meal {
 impl MyConfig for Trading {
     async fn check(data:&str)->Result<(),MyErr>{
         Ok(Trading::check(data).await?)
+    }
+    async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+        Ok(())
+    }
+}
+#[async_trait]
+impl MyConfig for Tag {
+    async fn check(data:&str)->Result<(),MyErr>{
+        Ok(Tag::check(data).await?)
     }
     async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
         Ok(())
