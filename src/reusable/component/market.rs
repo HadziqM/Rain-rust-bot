@@ -111,13 +111,13 @@ impl Market {
     }
 
 }
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize,Deserialize,PartialEq, Eq)]
 pub struct MealMenu{
     pub id:i32,
     pub level:i32,
     pub name:String
 }
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize,Deserialize,PartialEq, Eq)]
 pub struct Meal{
     pub meals:Vec<MealMenu>
 }
@@ -150,19 +150,20 @@ impl Default for Meal {
     }
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize,Deserialize,Clone)]
 pub struct Trading{
-    market:TradingMenu,
-    bar:TradingMenu,
-    casino:TradingMenu,
-    jewelry:TradingMenu,
-    restourant:TradingMenu
+    pub market:TradingMenu,
+    pub bar:TradingMenu,
+    pub casino:TradingMenu,
+    pub jewelry:TradingMenu,
+    pub restourant:TradingMenu,
+    pub guild:TradingMenu
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize,Deserialize,Clone)]
 pub struct TradingMenu{
-    enabled:bool,
-    price:i32
+    pub enabled:bool,
+    pub price:i32
 }
 impl Trading{
     fn path()->PathBuf{
@@ -193,7 +194,8 @@ impl Default for Trading {
         bar: TradingMenu::default(),
         casino: TradingMenu::default(),
         jewelry: TradingMenu::default(),
-        restourant: TradingMenu::default()
+        restourant: TradingMenu::default(),
+        guild:TradingMenu::default()
         }
     }
 }

@@ -1,0 +1,26 @@
+{
+  "market": {
+    "enabled": false,
+    "price": 100
+  },
+  "bar": {
+    "enabled": false,
+    "price": 100
+  },
+  "casino": {
+    "enabled": false,
+    "price": 100
+  },
+  "jewelry": {
+    "enabled": false,
+    "price": 100
+  },
+  "restourant": {
+    "enabled": false,
+    "price": 100
+  },
+  "guild": {
+    "enabled": false,
+    "price": 100
+  }
+}

@@ -7,6 +7,7 @@ pub mod account;
 pub mod server;
 pub mod gacha;
 pub mod custom;
+pub mod guild;
 
 #[derive(Debug)]
 pub struct PgConn<'a> {

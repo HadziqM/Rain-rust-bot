@@ -1,6 +1,8 @@
-use crate::{MyErr,SlashBundle,Mybundle,Mytrait,Reg};
+use crate::{MyErr,SlashBundle,Mybundle,Mytrait,Reg,Components};
+use crate::reusable::component::market::{Market,Trading};
 use serenity::all::*;
-use super::market;
+use super::market::{self, Bought};
+use super::meal;
 
 #[hertz::hertz_slash_reg(60,false)]
 async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
@@ -12,10 +14,11 @@ async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
     }
     match name{
         "market"=>market::slash(bnd, reg).await?,
-        "bar"=>todo!(),
-        "restourant"=>todo!(),
-        "jewelry"=>todo!(),
-        "casino"=>todo!(),
+        "bar"=>{return Err(MyErr::Custom("bar is under construction".to_owned()));},
+        "restourant"=>meal::slash(bnd, reg).await?,
+        "jewelry"=>trading(bnd, reg, "Gacha Premium".to_owned()).await?,
+        "guild"=>trading(bnd, reg, "RP".to_owned()).await?,
+        "casino"=>trading(bnd, reg, "Ticket".to_owned()).await?,
         _=>{return Err(MyErr::Custom("you dont have market enabled".to_owned()))}
     };
     Ok(())
@@ -37,11 +40,62 @@ async fn auto(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     }
     match name{
         "market"=>market::auto(bnd, focus).await?,
-        "bar"=>todo!(),
-        "restourant"=>todo!(),
-        "jewelry"=>todo!(),
-        "casino"=>todo!(),
+        "restourant"=>meal::auto(bnd, focus).await?,
         _=>{return Err(MyErr::Custom("you dont have market enabled".to_owned()))}
     };
+    Ok(())
+}
+
+async fn trading(bnd:&SlashBundle<'_>,reg:&Reg<'_>,unit:String)->Result<(),MyErr>{
+    let trade = Trading::new().await?;
+    let item;
+    let name;
+    match unit.as_str(){
+        "Ticket" => {
+            if !trade.casino.enabled{
+                return Err(MyErr::Custom("casino is currently closed".to_string()));
+            }
+            item = trade.casino.clone();
+            name = "Gacha Ticket".to_string();
+        }
+        "RP" => {
+            if !trade.guild.enabled{
+                return Err(MyErr::Custom("guild trade rp is currently closed".to_string()));
+            }
+            item = trade.guild.clone();
+            name = "Guild RP".to_string();
+        }
+        _ => {
+            return Err(MyErr::Custom("jewelry is currently closed".to_string()));
+        }
+    }
+    let mut bought = 0;
+    for data in Components::sub_options(bnd)?{
+        if let CommandDataOptionValue::Integer(x) = &data.value{
+            if x < &0 {
+                return Err(MyErr::Custom("you cant bought 0 or negative quantity".to_owned()));
+            }
+            bought = x.to_owned();
+        }
+    }
+    let coin = reg.pg.get_coin().await?;
+    let total = bought * item.price as i64;
+    let change  = coin as i64 - total;
+    if change < 0 {
+        return Err(MyErr::Custom(format!("you only have {} bounty coin, and you need {} for this transaction",
+            Market::currency(coin as i64),Market::currency(total))));
+    }
+    match unit.as_str() {
+        "Ticket" => reg.pg.buy_ticket(bought as i32).await?,
+        "RP" => reg.pg.guild_rp(reg.cid, bought as i32).await?,
+        _ => {
+            return Err(MyErr::Custom("jewelry rp is currently disabled".to_string()));
+        }
+    };
+    reg.pg.bounty_transaction(total as i32).await?;
+    let receipt = Bought::new(name, bought, total, change, coin,
+        item.price, unit.to_owned());
+    Components::response_adv(bnd, CreateInteractionResponse::Message(
+            CreateInteractionResponseMessage::new().embed(receipt.create_embed(bnd)))).await?;
     Ok(())
 }

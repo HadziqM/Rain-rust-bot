@@ -1,8 +1,8 @@
-use serenity::all::{ButtonStyle, Message};
+use serenity::all::{ButtonStyle, Message, CommandDataOptionValue, CommandDataOption};
 use serenity::builder::{CreateButton, CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse, CreateMessage};
 use serenity::model::prelude::ReactionType;
 use super::{Components,Mytrait,MyErr};
-use crate::{Mybundle,MsgBundle};
+use crate::{Mybundle,MsgBundle,SlashBundle};
 
 impl Components{
     pub fn normal_button(name:&str,custom_id:&str,style:ButtonStyle,emoji:&str)->CreateButton{
@@ -42,5 +42,13 @@ impl Components{
     }
     pub async fn msg_adv(bnd:&MsgBundle<'_>,content:CreateMessage)->Result<Message,MyErr>{
         Ok(bnd.msg.channel_id.send_message(&bnd.ctx.http, content).await?)
+    }
+    pub fn sub_options<'a>(bnd:&'a SlashBundle<'_>)->Result<&'a Vec<CommandDataOption>,MyErr>{
+        for data in &bnd.cmd.data.options{
+            if let CommandDataOptionValue::SubCommand(x) = &data.value{
+                return Ok(x);
+            }
+        }
+        Err(MyErr::Custom("cant find subcommand".to_string()))
     }
 }

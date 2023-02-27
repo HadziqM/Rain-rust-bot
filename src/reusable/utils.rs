@@ -34,7 +34,7 @@ impl Color {
             Self::Blue=>color("00", "00", "ff"),
             Self::Green=>color("00", "ff", "00"),
             Self::Orange=>color("ff", "55", "00"),
-            Self::Yellow=>color("55", "55", "00"),
+            Self::Yellow=>color("ff", "ff", "00"),
             Self::Grey=>color("88", "88", "88"),
             Self::Bronze=>color("cd", "7f", "32"),
             Self::Silver=>color("c0", "c0", "c0"),

@@ -10,8 +10,8 @@ pub fn hertz_auto(_args: TokenStream, input: TokenStream) -> TokenStream {
     let quete = quote!{
         #item
         pub async fn #new_name(bnd:&SlashBundle<'_>){
-            if let Err(why) = #fname(bnd).await{
-                println!(" error on autocomplete {}",why);
+            if let Err(_) = #fname(bnd).await{
+                return ;
             }
         }
     };

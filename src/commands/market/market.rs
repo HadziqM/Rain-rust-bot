@@ -1,6 +1,6 @@
 use crate::{MyErr,ItemPedia,Components,SlashBundle,Reg, reusable::bitwise::ItemCode};
 use serenity::all::*;
-use crate::reusable::component::market::{Market,Item};
+use crate::reusable::component::market::{Market,Item,Trading};
 struct Handle{
     market:Market,
     item:Item,
@@ -48,8 +48,8 @@ impl Handle{
     }
     async fn check(&self,reg:&Reg<'_>,pedia:&ItemPedia)->Result<Bought,MyErr>{
         let bc = reg.pg.get_coin().await?;
-        let total = self.item.price as u64 * self.bought as u64;
-        let item  = self.item.item.count as u32 * self.bought as u32;
+        let total = self.item.price as i64 * self.bought as i64;
+        let item  = self.item.item.count as i64 * self.bought as i64;
         if self.bought as u32 > self.item.treshold{
             return Err(MyErr::Custom(format!("you bought {} item, but market now only had {} item",self.bought,self.item.treshold)));
         }
@@ -62,17 +62,20 @@ impl Handle{
         if item > 65_535{
             return Err(MyErr::Custom(format!("you try to bought {item} total items (bought times item bundle value), while our courier can only carry 65.535 items at their prime, try reduce your bought item")));
         }
-        let change = bc - total as i32;
-        Ok(Bought { item: self.item.item.text(pedia).unwrap(), qty: self.bought, total, change, former:bc, price:self.item.price })
+        let change = bc as i64 - total;
+        Ok(Bought 
+           { item: self.item.item.text(pedia).unwrap(), qty: self.bought as i64,
+           total, change, former:bc, price:self.item.price as i32, unit:"item(s)".to_string()})
     }
-    async fn transaction(&mut self,reg:&Reg<'_>,pedia:&ItemPedia)->Result<(),MyErr>{
+    async fn transaction(&mut self,reg:&Reg<'_>,pedia:&ItemPedia)->Result<Bought,MyErr>{
+        let bought = self.check(reg, pedia).await?;
         let price = self.item.price * self.bought as u32;
         let count  = self.item.item.count * self.bought;
         self.item.treshold -= self.bought as u32;
         self.market.bought(&self.item);
         let item = ItemCode{key:self.item.item.key.to_owned(),types:self.item.item.types,count};
         reg.pg.market_user(&item, reg.cid, price, pedia).await?;
-        Ok(())
+        Ok(bought)
     }
     async fn post_transaction(&self,bnd:&SlashBundle<'_>)->Result<(),MyErr>{
         self.market.save().await?;
@@ -80,20 +83,25 @@ impl Handle{
         Ok(())
     }
 }
-struct Bought{
+pub struct Bought{
     item:String,
-    qty:u16,
-    total:u64,
-    change:i32,
+    qty:i64,
+    total:i64,
+    change:i64,
     former:i32,
-    price:u32
+    price:i32,
+    unit:String
 }
-impl Bought {
-    fn create_embed(&self,bnd:&SlashBundle<'_>)->CreateEmbed{
+impl Bought{
+    pub fn new(item:String,qty:i64,total:i64,change:i64,former:i32,price:i32,unit:String)->Self{
+        Bought { item, qty, total, change, former, price, unit }
+    }
+    pub fn create_embed(&self,bnd:&SlashBundle<'_>)->CreateEmbed{
         CreateEmbed::new().title("Receipt").author(CreateEmbedAuthor::new(&bnd.cmd.user.name).icon_url(bnd.cmd.user.face()))
             .description(format!("{} Receipt at <t:{}:F>",&bnd.cmd.user,crate::reusable::utils::MyTime::now()))
-            .field("Item", format!("{}\nBought x{} times ",&self.item,self.qty), false)
-            .field("Price", format!("Per Item: {} x {} = {}",Market::currency(self.price as i64),self.qty,Market::currency(self.total as i64)), false)
+            .field("Item", format!("{}\nBought x{} {} ",&self.item,self.qty,&self.unit), false)
+            .field("Price", format!("Per {}: {} x {} = {}",&self.unit
+                ,Market::currency(self.price as i64),self.qty,Market::currency(self.total as i64)), false)
             .field("Currency", format!("Your Coin = {} - {} = {}",Market::currency(self.former as i64),Market::currency(self.total as i64),Market::currency(self.change as i64)), false)
             .color(crate::reusable::utils::Color::Random.throw())
     }
@@ -106,9 +114,12 @@ pub async fn auto(bnd:&SlashBundle<'_>,focus:&str)->Result<(),MyErr>{
 }
 
 pub async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
+    let trade = Trading::new().await?;
+    if !trade.market.enabled{
+        return Err(MyErr::Custom("tradimng market is currently disabled".to_string()));
+    }
     let mut handle = Handle::new(bnd.cmd).await?;
-    let receipt = handle.check(&reg,bnd.pedia).await?;
-    handle.transaction(&reg, bnd.pedia).await?;
+    let receipt = handle.transaction(&reg, bnd.pedia).await?;
     Components::response_adv(bnd,CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(receipt.create_embed(bnd)))).await?;
     handle.post_transaction(bnd).await?;
     Ok(())
