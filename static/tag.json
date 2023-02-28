@@ -1,18 +1,13 @@
 {
   "tag": [
     {
-      "desc": "this showed inside embed description",
-      "command": "the_command_name_arguments_never_use_space",
-      "url": "the image url, this one is invalid and will not show image"
+      "desc": "",
+      "command": "",
+      "url": ""
     },
     {
-      "desc": "the guide channel for most you need\nhttps://discord.com/channels/937230168223789066/952792925325127690",
-      "command": "guide",
-      "url": "https://media.discordapp.net/attachments/1004207525408817323/1006334932655808653/Road_Champion.jpg?width=1150&height=658"
-    },
-    {
-      "desc": "https://discord.com/channels/937230168223789066/952792925325127690\nsame link as above but no image",
-      "command": "image",
+      "desc": "",
+      "command": "",
       "url": ""
     }
   ]

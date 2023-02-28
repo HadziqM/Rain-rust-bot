@@ -1,4 +1,5 @@
 pub mod gacha;
+pub mod title;
 
 #[derive(Debug,Clone)]
 pub struct Images {

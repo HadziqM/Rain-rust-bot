@@ -241,6 +241,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "monitor"=>commands::admin::monitor::discord_auto(&bnd).await,
                 "mod_pass"=>commands::admin::password::discord_slash(&bnd).await,
                 "add"=>commands::admin::add::discord_slash(&bnd).await,
+                "test"=>commands::admin::test::discord_slash(&bnd).await,
                 _=> {return;}
             }
         }
@@ -275,6 +276,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "market"=>commands::admin::market::discord_auto(&bnd).await,
                 "trading"=>commands::market::trading::discord_auto(&bnd).await,
                 "ferias"=>commands::misc::ferias::discord_auto(&bnd).await,
+                "test"=>commands::admin::test::discord_auto(&bnd).await,
                 _=>{return;}
             }
         }

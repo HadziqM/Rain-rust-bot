@@ -1,0 +1,84 @@
+{
+  "bronze_bounty": {
+    "image": {
+      "url": "https://media.discordapp.net/attachments/1004207525408817323/1006334931607232542/01._Bounty_Expert.jpg?width=1150&height=658",
+      "diameter": 180,
+      "x_start": 693,
+      "y_start": 168
+    },
+    "trigger": "0_9",
+    "role_id": 1031595216538452038
+  },
+  "silver_bounty": {
+    "image": {
+      "url": "https://media.discordapp.net/attachments/1004207525408817323/1006334931997306930/02._Bounty_Master.jpg?width=1150&height=658",
+      "diameter": 180,
+      "x_start": 693,
+      "y_start": 168
+    },
+    "trigger": "1_9",
+    "role_id": 1031595216538452038
+  },
+  "gold_bounty": {
+    "image": {
+      "url": "https://media.discordapp.net/attachments/1004207525408817323/1006334931259113472/03._Bounty_Champion.jpg?width=1150&height=658",
+      "diameter": 180,
+      "x_start": 693,
+      "y_start": 168
+    },
+    "trigger": "2_9",
+    "role_id": 1031595216538452038
+  },
+  "bronze_trading": {
+    "image": {
+      "url": "https://media.discordapp.net/attachments/1004207525408817323/1006334931607232542/01._Bounty_Expert.jpg?width=1150&height=658",
+      "diameter": 180,
+      "x_start": 695,
+      "y_start": 170
+    },
+    "trigger": "0_19",
+    "role_id": 1031595216538452038
+  },
+  "silver_trading": {
+    "image": {
+      "url": "https://media.discordapp.net/attachments/1004207525408817323/1006334931607232542/01._Bounty_Expert.jpg?width=1150&height=658",
+      "diameter": 180,
+      "x_start": 695,
+      "y_start": 170
+    },
+    "trigger": "1_19",
+    "role_id": 1031595216538452038
+  },
+  "gold_trading": {
+    "image": {
+      "url": "https://media.discordapp.net/attachments/1004207525408817323/1006334931607232542/01._Bounty_Expert.jpg?width=1150&height=658",
+      "diameter": 180,
+      "x_start": 695,
+      "y_start": 170
+    },
+    "trigger": "2_19",
+    "role_id": 1031595216538452038
+  },
+  "custom": [
+    {
+      "image": {
+        "url": "https://media.discordapp.net/attachments/992433617831739442/1072176979509510234/RAIN_DEMOLIZER.png?width=1150&height=658",
+        "diameter": 180,
+        "x_start": 693,
+        "y_start": 168
+      },
+      "trigger": "4_0",
+      "role_id": 1031595216538452038
+    },
+    {
+      "image": {
+        "url": "https://media.discordapp.net/attachments/992433617831739442/1072176979022987314/ROAD_CHAMPION.png?width=1150&height=658",
+        "diameter": 180,
+        "x_start": 693,
+        "y_start": 168
+      },
+      "trigger": "4_1",
+      "role_id": 1031595216538452038
+    }
+  ]
+}

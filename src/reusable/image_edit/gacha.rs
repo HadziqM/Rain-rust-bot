@@ -24,11 +24,11 @@ pub enum GachaR{
     SSR,
     UR
 }
-struct Rectangle{
-    radius:u32,
-    off_x:u32,
-    off_y:u32,
-    img:ImageBuffer<Rgb<u8>,Vec<u8>>
+pub(crate) struct Rectangle{
+    pub radius:u32,
+    pub off_x:u32,
+    pub off_y:u32,
+    pub img:ImageBuffer<Rgb<u8>,Vec<u8>>
 }
 impl GachaR{
     fn path(&self)->PathBuf{
@@ -59,7 +59,7 @@ impl GachaR{
     }
 }
 impl Rectangle{
-    fn is_in_area(&self,x:u32,y:u32)->bool{
+    pub(super) fn is_in_area(&self,x:u32,y:u32)->bool{
         //pretend center is (0,0)
         let im_x:i32= x as i32 - self.off_x as i32 - self.radius as i32;
         let im_y:i32= y as i32 - self.off_y as i32 - self.radius as i32;
@@ -68,14 +68,14 @@ impl Rectangle{
         }
         false
     }
-    async fn get_rect(url:&str,radius:u32,off_x:u32,off_y:u32)->Result<Rectangle,CustomImageError>{
+    pub(super) async fn get_rect(url:&str,radius:u32,off_x:u32,off_y:u32)->Result<Rectangle,CustomImageError>{
         let client = reqwest::Client::new();
         let bytes =client.get(url).send().await?.bytes().await?;
         let read = image::io::Reader::new(Cursor::new(bytes)).with_guessed_format()?.decode()?;
         let img = read.resize_exact(radius*2+1, radius*2+1,FilterType::Nearest).to_rgb8();
         Ok(Rectangle { radius, off_x, off_y, img })
     }
-    fn get_rbg_pixel(&self,x:u32,y:u32)->Rgb<u8>{
+    pub(super) fn get_rbg_pixel(&self,x:u32,y:u32)->Rgb<u8>{
         //normalize the pixel position
         //make center is (radius,radius)
         let norm_x = x - self.off_x;

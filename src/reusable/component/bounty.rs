@@ -417,6 +417,68 @@ impl Default for BountyRefresh {
         bbq24: 0, bbq25: 0 }
     }
 }
+#[derive(Serialize,Deserialize,PartialEq, Eq,Clone)]
+pub struct TitleImage{
+    pub url:String,
+    pub diameter:u32,
+    pub x_start:u32,
+    pub y_start:u32,
+}
+#[derive(Serialize,Deserialize,PartialEq, Eq,Clone)]
+pub struct CustomTitle{
+    pub image:TitleImage,
+    pub trigger:String,
+    pub role_id:u64,
+}
+#[derive(Serialize,Deserialize,PartialEq, Eq,Clone)]
+pub struct BountyTitle{
+    pub bronze_bounty:CustomTitle,
+    pub silver_bounty:CustomTitle,
+    pub gold_bounty:CustomTitle,
+    pub bronze_trading:CustomTitle,
+    pub silver_trading:CustomTitle,
+    pub gold_trading:CustomTitle,
+    pub custom:Vec<CustomTitle>
+}
+impl BountyTitle{
+    fn path()->PathBuf{
+        Path::new(".").join("static").join("bounty_title.json")
+    }
+    pub async fn new()->Result<Self,MyErr>{
+        let file = tokio::fs::read_to_string(BountyTitle::path()).await?;
+        Ok(serde_json::from_str(&file)?)
+    }
+    pub async fn save(&self)->Result<(),MyErr>{
+        let file = serde_json::to_string_pretty(&self)?;
+        Ok(tokio::fs::write(BountyTitle::path(), file.as_bytes()).await?)
+    }
+    pub async fn check(data:&str)->Result<(),MyErr>{
+        let x = serde_json::from_str::<Self>(data)?;
+        x.save().await?;
+        Ok(())
+    }
+}
+impl Default for TitleImage {
+    fn default() -> Self {
+        TitleImage { url: "https://media.discordapp.net/attachments/1004207525408817323/1006334931607232542/01._Bounty_Expert.jpg?width=1150&height=658".to_owned(),
+        diameter: 180, x_start: 695, y_start: 170 }
+    }
+}
+impl Default for CustomTitle {
+    fn default() -> Self {
+        CustomTitle { image: TitleImage::default(),
+        trigger: "4_0".to_owned(), role_id: 1031595216538452038 }
+    }
+}
+impl Default for BountyTitle {
+    fn default() -> Self {
+        BountyTitle {custom: vec![CustomTitle::default(),CustomTitle::default()],
+        bronze_bounty:CustomTitle::default(),silver_bounty:CustomTitle::default(),gold_bounty:CustomTitle::default(),
+        bronze_trading:CustomTitle::default(),silver_trading:CustomTitle::default(),gold_trading:CustomTitle::default(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod testing{
     use super::*;
@@ -424,7 +486,9 @@ mod testing{
     async fn get_json() {
         let x = Bounty::default();
         let y = BountyRefresh::default();
+        let z = BountyTitle::default();
         x.save().await.unwrap();
         y.save().await.unwrap();
+        z.save().await.unwrap();
     }
 }
