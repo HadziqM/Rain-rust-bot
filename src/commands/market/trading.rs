@@ -91,7 +91,11 @@ async fn trading(bnd:&SlashBundle<'_>,reg:&Reg<'_>,unit:String)->Result<(),MyErr
     if receipt.confirmation(bnd).await?{
         match unit.as_str() {
             "Ticket" => reg.pg.buy_ticket(bought as i32).await?,
-            "RP" => reg.pg.guild_rp(reg.cid, bought as i32).await?,
+            "RP" => {
+                if !reg.pg.guild_rp(reg.cid, bought as i32).await?{
+                    return Err(MyErr::Custom("You dont have any guild to use this command (dont worry your bounty is refounded)".to_owned()))
+                }
+            }
             _ => {
                 return Err(MyErr::Custom("jewelry rp is currently disabled".to_string()));
             }

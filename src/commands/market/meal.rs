@@ -37,7 +37,9 @@ pub(super) async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
     let receipt = Bought::new(meals.name.to_string(), bought, total, change, coin,
         trade.restourant.price, "Hour(s)".to_owned());
     if receipt.confirmation(bnd).await?{
-        reg.pg.guild_food(reg.cid, ids as i32, meals.level , exp as i32).await?;
+        if !reg.pg.guild_food(reg.cid, ids as i32, meals.level , exp as i32).await?{
+            return Err(MyErr::Custom("You dont have any guild to use this command (dont worry your bounty is refounded)".to_owned()));
+        }
         reg.pg.bounty_transaction(total as i32).await?;
     }
     Ok(())
