@@ -24,7 +24,6 @@ impl Components {
         let utf8 = std::str::from_utf8(&byte)?.to_owned();
         T::check(&utf8).await?;
         T::update(bnd).await?;
-        Components::response(bnd, "succeded", true).await?;
         Ok(())
     }
 }

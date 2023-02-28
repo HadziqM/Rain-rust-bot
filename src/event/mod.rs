@@ -1,11 +1,13 @@
 pub mod interaction;
+pub mod message;
 mod ready;
 mod paralel;
-pub mod message;
+mod join;
 
 
 use std::time::Duration;
 
+use serenity::all::{Member, User, GuildId};
 use serenity::async_trait;
 use serenity::model::prelude::{Ready, Message, Interaction};
 use serenity::prelude::*;
@@ -47,5 +49,20 @@ impl EventHandler for Handler{
     }
     async fn message(&self, ctx: Context, msg: Message) {
         message::msg_handler(&ctx,&msg,&self.config,&self.pedia).await
+    }
+    async fn guild_member_addition(&self,ctx:Context,member:Member) {
+        if self.config.bot_config.member_join{
+            if let Err(why) = join::join(&ctx, &member, &self.config).await{
+                eprintln!("member join fail : {why:?}")
+            }
+        }
+    }
+    async fn guild_member_removal(&self,ctx:Context,guild:GuildId,_:User,member:Option<Member>) {
+        let mem = member.unwrap();
+        if self.config.bot_config.member_leave{
+            if let Err(why) = join::leave(&ctx,&mem,&guild,&self.config).await{
+                eprintln!("member leave fail : {why:?}")
+            }
+        }
     }
 }

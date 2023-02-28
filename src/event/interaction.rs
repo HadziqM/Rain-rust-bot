@@ -256,6 +256,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "bind"=>commands::register::create::discord_all(&bnd).await,
                 "dms"=>commands::binded::save::discord_all(&bnd).await,
                 "switch"=>switch(&bnd).await,
+                "join"=>super::join::discord_button(&bnd).await,
                 _=>{return ;}
             }
         }

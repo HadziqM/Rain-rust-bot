@@ -22,5 +22,6 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
         "tag"=>Components::json_config(bnd,Tag::default()).await?,
         _=>{return Err(MyErr::Custom("you dont have any configuration needed to change".to_owned()))}
     };
+    Components::edit(bnd, "success").await?;
     Ok(())
 }
