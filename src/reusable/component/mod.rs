@@ -26,8 +26,8 @@ pub enum MyErr{
     Image(super::image_edit::CustomImageError),
     Custom(String)
 }
-impl std::error::Error for MyErr {}
-impl std::fmt::Display for MyErr{
+impl std::error::Error for MyErr{}
+impl std::fmt::Display for MyErr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self{
             MyErr::Tokio(x)=>x.fmt(f),

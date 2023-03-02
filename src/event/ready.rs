@@ -19,12 +19,16 @@ pub async fn ready(ctx:&Context, ready:Ready, init:&Init){
     command.append(&mut commands::register::reg(init));
     command.append(&mut commands::binded::reg());
     command.append(&mut commands::misc::reg());
+    command.append(&mut commands::guild::reg());
     command.append(&mut commands::admin::reg(init));
     if init.bot_config.gacha{
         command.append(&mut commands::gacha::reg());
     }
     if init.bot_config.server_market{
         command.append(&mut commands::market::reg());
+    }
+    if init.bot_config.bounty{
+        command.append(&mut commands::bounty::reg());
     }
     for guild in &ready.guilds{
         let x = guild.id.to_partial_guild(&ctx.http).await.unwrap();

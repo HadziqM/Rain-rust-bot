@@ -59,17 +59,23 @@ pub enum Methode{
     Multi
 }
 impl Methode{
-    pub fn new(code:bool)->Self{
-        if code{
-            return Methode::Solo;
+    pub fn new(code:u8)->Self{
+        match code {
+            0 => Methode::Solo,
+            _ => Methode::Multi,
         }
-        Methode::Multi
     }
     pub fn name(&self)->String{
         match self{
             Methode::Solo=>"Solo".to_owned(),
             Methode::Multi=>"Multiplayer".to_owned(),
         }
+    }
+    pub fn option_str()->Vec<(String,String)>{
+        vec![
+            ("0".to_owned(),"Solo".to_owned()),
+            ("1".to_owned(),"Multi".to_owned()),
+        ]
     }
 }
 
@@ -111,6 +117,25 @@ impl Category{
             Self::Event=>Color::Blue
         }
     }
+    pub fn option_str()->Vec<(String,String)>{
+        vec![
+            ("0".to_owned(),"Bronze".to_owned()),
+            ("1".to_owned(),"Silver".to_owned()),
+            ("2".to_owned(),"Gold".to_owned()),
+            ("3".to_owned(),"Free".to_owned()),
+            ("4".to_owned(),"Event".to_owned()),
+        ]
+    }
+    fn get_bounty<'a>(&self,bounty:&'a Bounty)->&'a BountyBBQ{
+        match self{
+            Self::Gold=>&bounty.gold,
+            Self::Silver=>&bounty.silver,
+            Self::Bronze=>&bounty.bronze,
+            Self::Free=>&bounty.free,
+            Self::Event=>&bounty.event
+        }
+    }
+
 }
 
 
@@ -202,10 +227,68 @@ impl BBQ{
             BBQ::BBQ25=>"BBQ25".to_owned(),
         }
     }
+    pub fn option_str()->Vec<(String,String)>{
+        vec![
+            ("0".to_owned(),"BBQ01".to_owned()),
+            ("1".to_owned(),"BBQ02".to_owned()),
+            ("2".to_owned(),"BBQ03".to_owned()),
+            ("3".to_owned(),"BBQ04".to_owned()),
+            ("4".to_owned(),"BBQ05".to_owned()),
+            ("5".to_owned(),"BBQ06".to_owned()),
+            ("6".to_owned(),"BBQ07".to_owned()),
+            ("7".to_owned(),"BBQ08".to_owned()),
+            ("8".to_owned(),"BBQ09".to_owned()),
+            ("9".to_owned(),"BBQ10".to_owned()),
+            ("10".to_owned(),"BBQ11".to_owned()),
+            ("11".to_owned(),"BBQ12".to_owned()),
+            ("12".to_owned(),"BBQ13".to_owned()),
+            ("13".to_owned(),"BBQ14".to_owned()),
+            ("14".to_owned(),"BBQ15".to_owned()),
+            ("15".to_owned(),"BBQ16".to_owned()),
+            ("16".to_owned(),"BBQ17".to_owned()),
+            ("17".to_owned(),"BBQ18".to_owned()),
+            ("18".to_owned(),"BBQ19".to_owned()),
+            ("19".to_owned(),"BBQ20".to_owned()),
+            ("20".to_owned(),"BBQ21".to_owned()),
+            ("21".to_owned(),"BBQ22".to_owned()),
+            ("22".to_owned(),"BBQ23".to_owned()),
+            ("23".to_owned(),"BBQ24".to_owned()),
+            ("24".to_owned(),"BBQ25".to_owned()),
+        ]
+    }
+    fn get_bounty<'a>(&self,bbq:&'a BountyBBQ)->&'a BountyDesc{
+        match self{
+            BBQ::BBQ01=>&bbq.bbq1,
+            BBQ::BBQ02=>&bbq.bbq2,
+            BBQ::BBQ03=>&bbq.bbq3,
+            BBQ::BBQ04=>&bbq.bbq4,
+            BBQ::BBQ05=>&bbq.bbq5,
+            BBQ::BBQ06=>&bbq.bbq6,
+            BBQ::BBQ07=>&bbq.bbq7,
+            BBQ::BBQ08=>&bbq.bbq8,
+            BBQ::BBQ09=>&bbq.bbq9,
+            BBQ::BBQ10=>&bbq.bbq10,
+            BBQ::BBQ11=>&bbq.bbq11,
+            BBQ::BBQ12=>&bbq.bbq12,
+            BBQ::BBQ13=>&bbq.bbq13,
+            BBQ::BBQ14=>&bbq.bbq14,
+            BBQ::BBQ15=>&bbq.bbq15,
+            BBQ::BBQ16=>&bbq.bbq16,
+            BBQ::BBQ17=>&bbq.bbq17,
+            BBQ::BBQ18=>&bbq.bbq18,
+            BBQ::BBQ19=>&bbq.bbq19,
+            BBQ::BBQ20=>&bbq.bbq20,
+            BBQ::BBQ21=>&bbq.bbq21,
+            BBQ::BBQ22=>&bbq.bbq22,
+            BBQ::BBQ23=>&bbq.bbq23,
+            BBQ::BBQ24=>&bbq.bbq24,
+            BBQ::BBQ25=>&bbq.bbq25,
+        }
+    }
 }
 
 pub struct Hunter{
-    pub member:Member,
+    pub member:User,
     pub title:Title,
     pub name:String
 }
@@ -218,18 +301,44 @@ pub struct BountySubmit{
     pub thumb:String
 }
 use super::Components;
+use crate::PgConn;
+impl Hunter {
+    async fn new(user:User,msg:&Message,pg:&mut PgConn<'_>)->Result<Vec<Hunter>,MyErr>{
+        let mut vec = vec![user];
+        let mut hunter = Vec::new();
+        for i in &msg.mentions{
+            vec.push(i.to_owned())
+        }
+        for us in vec{
+            pg.did = us.id.to_string();
+            let event = pg.get_event().await
+                .ok().ok_or(MyErr::Custom(format!("{} most likely isnt binded yet please check",us.to_string())))?;
+            let title = Title::new(u8::try_from(event.title).unwrap());
+            hunter.push(Hunter{member:us.to_owned(),title,name:event.name.to_owned()});
+        }
+        Ok(hunter)
+    }
+}
+
 impl BountySubmit{
+    async fn new(user:User,msg:&Message,pg:&mut PgConn<'_>,bounty:&Bounty,url:&str,method:Methode,bbq:BBQ,category:Category)
+        ->Result<BountySubmit,MyErr>{
+        let hunter = Hunter::new(user, msg, pg).await?;
+        let idk = category.get_bounty(bounty);
+        let desc = bbq.get_bounty(idk);
+        Ok(BountySubmit{hunter,method,bbq,category,url:url.to_owned(),thumb:desc.icon.to_owned()})
+    }
     pub fn embed(&self)->CreateEmbed{
         let title = format!("{} {} {}",self.category.name(),self.bbq.name(),self.method.name());
         let mut desc = Vec::new();
         for i in &self.hunter{
             desc.push("\n".to_owned());
-            desc.push(format!("```\nname\t:\t{}\ndiscord\t:\t{}\n```",&i.name,&i.member.user.name));
+            desc.push(format!("```\nname\t:\t{}\ndiscord\t:\t{}\n```",&i.name,&i.member.name));
         }
         let res = desc[1..].concat();
         let author = &self.hunter[0].member;
         CreateEmbed::new().title(title).description(res).thumbnail(&self.thumb).image(&self.url)
-            .author(CreateEmbedAuthor::new(&author.user.name).url(author.face())).color(self.category.color().throw())
+            .author(CreateEmbedAuthor::new(&author.name).url(author.face())).color(self.category.color().throw())
     }
     pub fn button(&self)->Vec<CreateActionRow>{
         let accept = Components::normal_button("Approve", "bounty_a", ButtonStyle::Primary, "👌");
@@ -241,7 +350,7 @@ impl BountySubmit{
 
 use serde::{Serialize,Deserialize};
 
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize,Deserialize,PartialEq, Eq)]
 pub struct Bounty{
     pub gold:BountyBBQ,
     pub silver:BountyBBQ,
@@ -249,7 +358,7 @@ pub struct Bounty{
     pub free:BountyBBQ,
     pub event:BountyBBQ
 }
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize,Deserialize,PartialEq, Eq)]
 pub struct BountyBBQ{
     pub bbq1:BountyDesc,
     pub bbq2:BountyDesc,
@@ -278,7 +387,7 @@ pub struct BountyBBQ{
     pub bbq25:BountyDesc,
 }
 use super::super::bitwise::ItemCode;
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize,Deserialize,PartialEq, Eq)]
 pub struct BountyDesc {
     pub description:String,
     pub cooldown:u32,
@@ -288,7 +397,7 @@ pub struct BountyDesc {
     pub solo:BountyReward,
     pub multi:BountyReward
 }
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize,Deserialize,PartialEq, Eq)]
 pub struct BountyReward{
     coin:u32,
     ticket:u32,

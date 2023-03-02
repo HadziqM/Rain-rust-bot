@@ -1,4 +1,4 @@
-use serenity::{builder::CreateCommand, all::CommandType, model::Permissions};
+use serenity::{builder::{CreateCommand, CreateCommandOption}, all::CommandType, model::Permissions};
 
 
 
@@ -16,5 +16,14 @@ impl AppReg{
     }
     pub fn admin_slash(name:&str,desc:&str)->CreateCommand{
         CreateCommand::new(name).description(desc).default_member_permissions(Permissions::ADMINISTRATOR)
+    }
+    pub fn subcommand(name:&str,desc:&str)->CreateCommandOption{
+        CreateCommandOption::new(serenity::all::CommandOptionType::SubCommand, name, desc)
+    }
+    pub fn user_option(name:&str,desc:&str)->CreateCommandOption{
+        CreateCommandOption::new(serenity::all::CommandOptionType::User, name, desc)
+    }
+    pub fn int_option(name:&str,desc:&str)->CreateCommandOption{
+        CreateCommandOption::new(serenity::all::CommandOptionType::Integer, name, desc)
     }
 }

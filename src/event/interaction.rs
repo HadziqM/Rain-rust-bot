@@ -238,6 +238,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "trading"=>commands::market::trading::discord_slash(&bnd).await,
                 "check"=>commands::register::change_pasword::discord_check(&bnd).await,
                 "ferias"=>commands::misc::ferias::discord_slash(&bnd).await,
+                "guild"=>commands::guild::guild::discord_slash(&bnd).await,
                 "monitor"=>commands::admin::monitor::discord_auto(&bnd).await,
                 "mod_pass"=>commands::admin::password::discord_slash(&bnd).await,
                 "add"=>commands::admin::add::discord_slash(&bnd).await,
@@ -276,6 +277,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
             match wth{
                 "market"=>commands::admin::market::discord_auto(&bnd).await,
                 "trading"=>commands::market::trading::discord_auto(&bnd).await,
+                "guild"=>commands::guild::guild::discord_auto(&bnd).await,
                 "ferias"=>commands::misc::ferias::discord_auto(&bnd).await,
                 "test"=>commands::admin::test::discord_auto(&bnd).await,
                 _=>{return;}

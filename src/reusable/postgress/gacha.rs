@@ -8,6 +8,7 @@ pub struct GachaPg{
     pub pity:i32,
     pub ticket:i32
 }
+
 impl<'a> PgConn<'a> {
     pub async fn get_coin(&self)->Result<i32,BitwiseError>{
         Ok(sqlx::query("SELECT bounty From discord where discord_id=$1")

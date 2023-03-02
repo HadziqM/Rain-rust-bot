@@ -4,7 +4,7 @@ use serde::{Serialize,Deserialize};
 
 pub mod distribution;
 
-#[derive(Debug,Serialize,Deserialize,Clone,PartialEq)]
+#[derive(Debug,Serialize,Deserialize,Clone,PartialEq,Eq)]
 pub struct ItemCode {
     pub key: String,
     pub count: u16,
