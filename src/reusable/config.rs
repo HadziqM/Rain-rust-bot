@@ -12,7 +12,7 @@ pub struct Init {
     // pub(crate) transmog_contest: TransmogContest,
     // pub(crate) gacha_channel: GachaChannel,
     // pub(crate) bounty_message_id:BountyMessageId,
-    // pub(crate) bounty_channel:BountyChannel,
+    pub(crate) bounty:Bounty,
     pub(crate) server_role:ServerRole,
     // pub(crate) server_channel_url:ServerChannelUrl,
     // pub(crate) server_channel:ServerChannel,
@@ -94,14 +94,16 @@ pub struct ServerRole {
     pub(crate) judge_role: u64,
     pub(crate) maintainer_role: u64,
 }
-// #[derive(Debug,Deserialize,Clone)]
-// pub struct BountyChannel {
-//     pub(crate) board: u64,
-//     pub(crate) conquered: u64,
-//     pub(crate) promotion: u64,
-//     pub(crate) cooldown_ch: u64,
-//     pub(crate) judge_ch: u64,
-// }
+#[derive(Debug,Deserialize,Clone,Serialize)]
+pub struct Bounty {
+    pub(crate) board_ch: u64,
+    pub(crate) conquered_ch: u64,
+    pub(crate) receptionist_ch: u64,
+    pub(crate) promotion_ch: u64,
+    pub(crate) cooldown_ch: u64,
+    pub(crate) cooldown_msg: u64,
+    pub(crate) judge_ch: u64,
+}
 // #[derive(Debug,Deserialize,Clone)]
 // pub struct BountyMessageId {
 //     pub(crate) cooldown_msg: u64,
@@ -152,14 +154,12 @@ impl Init {
     }
 }
 
-// #[cfg(test)]
-// mod tests{
-//     use super::*;
-//
-//     #[test]
-//     fn config() {
-//         let idk = get_config().unwrap();
-//         println!("{}",cfg!(unix));
-//         assert_eq!(idk.discord.prefix,"%".to_string());
-//     }
-// }
+#[cfg(test)]
+mod tests{
+    use super::*;
+
+    #[test]
+    fn config() {
+        Init::block_new().unwrap();
+    }
+}

@@ -242,6 +242,7 @@ impl Default for Tag {
 mod testing{
     use super::*;
     #[tokio::test]
+    #[ignore = "already have"]
     async fn default() {
         let x = Tag::default();
         x.save().await.unwrap();

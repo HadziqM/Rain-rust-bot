@@ -2,6 +2,7 @@ use sqlx::{FromRow, Row};
 use crate::material::ItemPedia;
 use super::PgConn;
 use super::super::bitwise::{Bitwise,BitwiseError,ItemCode};
+use super::card::Event;
 
 #[derive(FromRow,Debug)]
 pub struct GachaPg{
@@ -26,24 +27,36 @@ impl<'a> PgConn<'a> {
         sqlx::query("update discord set gacha=gacha+$1 where ticket is not null").bind(ticket).bind(&self.did).execute(&self.pool).await?;
         Ok(())
     }
+    pub async fn send_item(&self,data:&[ItemCode],cid:i32,name:&str,desc:&str)->Result<(),BitwiseError>{
+        let byte = Bitwise::new(data);
+        sqlx::query("INSERT into distribution (character_id,data,type,bot,event_name,description) Values ($1,$2,1,true,$3,$4)").bind(cid).bind(byte.multiple_item()?).bind(name).bind(&format!("~C05 {}",desc)).execute(&self.pool).await?;
+        Ok(())
+    }
     pub async fn send_distrib(&self,pg:&GachaPg,data:&[ItemCode],cid:i32,pedia:&ItemPedia)->Result<(),BitwiseError>{
         sqlx::query("UPDATE discord set gacha=$1,pity=$2 where discord_id=$3").bind(pg.ticket)
         .bind(pg.pity).bind(&self.did).execute(&self.pool).await?;
-        let byte = Bitwise::new(data);
         if data.len() == 1{
             let text = match data.first().unwrap().text(pedia){
                 Some(x)=>x,
                 None=>{return Err(BitwiseError::NoItem);}
             };
-            sqlx::query("INSERT into distribution (character_id,data,type,bot,event_name,description) Values ($1,$2,1,true,$3,$4)").bind(cid).bind(byte.multiple_item()?).bind(&text).bind(&format!("~C05 Congratulation on Getting {}",&text)).execute(&self.pool).await?;
+            self.send_item(data, cid, &text, &format!("congratulation on getting {}",&text)).await?;
             return Ok(());
         }
-        sqlx::query("INSERT into distribution (character_id,data,type,bot,event_name,description) Values ($1,$2,1,true,$3,$4)").bind(cid).bind(byte.multiple_item()?).bind("Multi Gacha Reward").bind("~C05 Sorry cant list all the reward in game").execute(&self.pool).await?;
+        self.send_item(data, cid, "Multi Gacha Rewards", "cant list all reward in description").await?;
         Ok(())
     }
     pub async fn bounty_transaction(&self,price:i32)->Result<(),BitwiseError>{
         sqlx::query("UPDATE discord set bounty=bounty-$1 where discord_id=$2").bind(price)
         .bind(&self.did).execute(&self.pool).await?;
+        Ok(())
+    }
+    pub async fn bounty_event(&self,event:&Event)->Result<(),BitwiseError>{
+        sqlx::query("UPDATE discord set bounty=$1,gacha=$2,gold=$3,silver=$4,bronze=$5,latest_bounty=$6
+            ,latest_bounty_time=$6,title=$7 where discord_id=$8")
+            .bind(event.bounty).bind(event.gacha).bind(event.gold).bind(event.silver).bind(event.bronze)
+            .bind(&event.latest_bounty).bind(event.latest_bounty_time).bind(event.title).bind(&self.did)
+            .execute(&self.pool).await?;
         Ok(())
     }
     pub async fn bounty_all(&self,gift:i32)->Result<(),BitwiseError>{

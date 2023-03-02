@@ -17,11 +17,12 @@ use material::ItemPedia;
 use serenity::prelude::{*, Mutex};
 use event::Handler;
 use lazy_static::lazy_static;
+use reusable::component::bounty::BountySubmit;
 
 lazy_static!{
     static ref COOLDOWN:Mutex<HashMap<String,i64>> = Mutex::new(HashMap::new());
     static ref MONITOR:Mutex<bool> = Mutex::new(true);
-    // static ref INIT:Mutex<Init> = Mutex::new(Init::block_new().unwrap());
+    static ref BOUNTY:Mutex<HashMap<String,BountySubmit>> = Mutex::new(HashMap::new());
 }
 
 #[tokio::main]

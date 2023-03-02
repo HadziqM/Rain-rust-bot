@@ -3233,7 +3233,7 @@
   "free": {
     "bbq1": {
       "description": "this is bbq description",
-      "cooldown": 0,
+      "cooldown": 100,
       "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "rules": [
@@ -3276,7 +3276,7 @@
     },
     "bbq2": {
       "description": "this is bbq description",
-      "cooldown": 0,
+      "cooldown": 5,
       "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "rules": [
@@ -3319,7 +3319,7 @@
     },
     "bbq3": {
       "description": "this is bbq description",
-      "cooldown": 0,
+      "cooldown": 5,
       "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "rules": [
@@ -3362,7 +3362,7 @@
     },
     "bbq4": {
       "description": "this is bbq description",
-      "cooldown": 0,
+      "cooldown": 5,
       "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "rules": [
@@ -3405,7 +3405,7 @@
     },
     "bbq5": {
       "description": "this is bbq description",
-      "cooldown": 0,
+      "cooldown": 5,
       "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "rules": [
@@ -3448,7 +3448,7 @@
     },
     "bbq6": {
       "description": "this is bbq description",
-      "cooldown": 0,
+      "cooldown": 5,
       "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "rules": [
@@ -3491,7 +3491,7 @@
     },
     "bbq7": {
       "description": "this is bbq description",
-      "cooldown": 0,
+      "cooldown": 5,
       "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "rules": [
@@ -3534,7 +3534,7 @@
     },
     "bbq8": {
       "description": "this is bbq description",
-      "cooldown": 0,
+      "cooldown": 5,
       "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "rules": [
@@ -3577,7 +3577,7 @@
     },
     "bbq9": {
       "description": "this is bbq description",
-      "cooldown": 0,
+      "cooldown": 5,
       "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "rules": [

@@ -1,16 +1,18 @@
 use serenity::all::*;
-use crate::{MyErr,MsgBundle};
+use crate::{MyErr,MsgBundle,Components};
 use crate::reusable::component::market::Tag;
-use crate::reusable::utils::{dumb_matching,Color};
+use crate::reusable::utils::dumb_matching;
 
 
 #[hertz::hertz_msg(false)]
 async fn message(bnd:&MsgBundle<'_>)->Result<(),MyErr>{
     let tag = Tag::new().await?;
-    let arg = bnd.msg.content.split(" ").nth(1).ok_or(MyErr::Custom("cant get message argument".to_owned()))?;
+    let arg = bnd.msg.content.split(" ").nth(1)
+        .ok_or(MyErr::Custom("cant get message argument".to_owned()))?;
     let name:Vec<_> = tag.tag.iter().map(|x|x.command.to_owned()).collect();
-    let mut embed = CreateEmbed::new().color(Color::Green.throw())
-        .footer(CreateEmbedFooter::new(format!("requested by {}",&bnd.msg.author.name)).icon_url(bnd.msg.author.face()));
+    let mut embed = CreateEmbed::new().color(Color::DARK_GREEN)
+        .footer(CreateEmbedFooter::new(format!("requested by {}",&bnd.msg.author.name))
+                .icon_url(bnd.msg.author.face()));
     match arg{
         "list"=>{
             let mut desc = Vec::new();
@@ -27,7 +29,7 @@ async fn message(bnd:&MsgBundle<'_>)->Result<(),MyErr>{
             }else {
                 let mut filtered = vec!["Maybe This Command is what you need\n".to_owned()];
                 for i in name{
-                    if dumb_matching(&i, arg) > 0.5{
+                    if dumb_matching(&i, arg) > 0.4{
                         filtered.push(format!("`?tag {}`",i));
                         filtered.push(", ".to_owned());
                     }
@@ -37,16 +39,10 @@ async fn message(bnd:&MsgBundle<'_>)->Result<(),MyErr>{
             }
         }
     };
-    let mut msg;
-    match &bnd.msg.referenced_message{
-        Some(x)=>{
-            msg = x.reply_ping(&bnd.ctx.http, "tag command").await?;
-            embed = embed.author(CreateEmbedAuthor::new(&bnd.msg.author.name).icon_url(bnd.msg.author.face()));
-        }
-        None=>{
-            msg = bnd.msg.reply(&bnd.ctx.http, "tag command").await?;
-        }
+    if let Some(x)= &bnd.msg.referenced_message{
+        embed = embed.author(CreateEmbedAuthor::new(&x.author.name).icon_url(x.author.face()));
     }
-    msg.edit(&bnd.ctx.http, EditMessage::new().embed(embed).content("")).await?;
+    bnd.msg.channel_id.send_message(&bnd.ctx.http,
+        Components::msg_reply_raw(bnd).embed(embed)).await?;
     Ok(())
 }

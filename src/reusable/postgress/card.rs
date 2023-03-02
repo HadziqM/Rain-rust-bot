@@ -30,7 +30,7 @@ impl Default for Card{
     }
 }
 
-#[derive(FromRow)]
+#[derive(FromRow,Clone)]
 pub struct Event {
     pub bounty:i32,
     pub gacha:i32,
@@ -42,6 +42,7 @@ pub struct Event {
     pub silver:i32,
     pub gold:i32,
     pub name:String,
+    pub char_id:i32
 }
 #[derive(Debug,FromRow)]
 pub struct UserData {
@@ -50,7 +51,7 @@ pub struct UserData {
 }
 impl<'a> PgConn<'a>{
     pub async fn get_event(&self)->Result<Event,BitwiseError>{
-        Ok(sqlx::query_as::<_,Event>("Select characters.name as name,bounty,gacha,pity,latest_bounty,latest_bounty_time,title,bronze,silver,gold from discord inner join characters on discord.char_id=characters.id  where discord_id=$1").bind(&self.did).fetch_one(&self.pool).await?)
+        Ok(sqlx::query_as::<_,Event>("Select characters.name as name,char_id,bounty,gacha,pity,latest_bounty,latest_bounty_time,title,bronze,silver,gold from discord inner join characters on discord.char_id=characters.id  where discord_id=$1").bind(&self.did).fetch_one(&self.pool).await?)
     }
     pub async fn get_user(&self)-> Result<(i32,String),BitwiseError>{
         let row = sqlx::query("SELECT user_id,username FROM discord_register LEFT OUTER JOIN users ON user_id=users.id WHERE discord_id=$1").bind(&self.did)

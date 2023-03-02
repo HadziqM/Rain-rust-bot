@@ -40,6 +40,18 @@ impl Components{
         }
         Ok(bnd.msg.channel_id.send_message(&bnd.ctx.http, CreateMessage::new().content(content)).await?)
     }
+    pub fn msg_reply_raw(bnd:&MsgBundle<'_>)->CreateMessage{
+        let mut msg = CreateMessage::new();
+        match &bnd.msg.referenced_message{
+            Some(m)=>{
+                msg = msg.reference_message(&**m);
+            }
+            None=>{
+                msg = msg.reference_message(bnd.msg);
+            }
+        };
+        msg
+    }
     pub async fn msg_adv(bnd:&MsgBundle<'_>,content:CreateMessage)->Result<Message,MyErr>{
         Ok(bnd.msg.channel_id.send_message(&bnd.ctx.http, content).await?)
     }

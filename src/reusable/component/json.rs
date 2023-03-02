@@ -34,6 +34,7 @@ pub trait MyConfig {
 }
 
 
+unsafe impl Sync for Bounty {}
 #[async_trait]
 impl MyConfig for Bounty{
     async fn check(data:&str)->Result<(),MyErr>{

@@ -15,6 +15,9 @@ impl ItemCode{
         let item = item.dictionary(self.types, &self.key)?;
         Some(format!("{} x{}",item,self.count))
     }
+    pub fn check(&self,item:&ItemPedia)->bool{
+        item.dictionary(self.types, &self.key).is_some()
+    }
 } 
 impl<'a> Default for Bitwise<'a> {
     fn default() -> Bitwise<'a> {

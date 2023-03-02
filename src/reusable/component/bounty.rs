@@ -2,10 +2,14 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use serenity::all::*;
+use crate::BOUNTY;
+use crate::event::interaction::SlashBundle;
+use crate::material::ItemPedia;
 use crate::reusable::utils::Color;
 use super::MyErr;
-
-
+use std::cell::RefCell;
+use crate::reusable::postgress::card::Event;
+#[derive(Clone)]
 pub struct Title{
     pub bounty_bronze:bool,
     pub bounty_silver:bool,
@@ -53,7 +57,7 @@ impl Title{
     }
 }
 
-
+#[derive(Clone)]
 pub enum Methode{
     Solo,
     Multi
@@ -77,10 +81,16 @@ impl Methode{
             ("1".to_owned(),"Multi".to_owned()),
         ]
     }
+    fn get_reward<'a>(&self,bnt:&'a BountyDesc)->&'a BountyReward{
+        match self{
+            Self::Solo=>&bnt.solo,
+            Self::Multi=>&bnt.multi
+        }
+    }
 }
 
 
-    
+#[derive(PartialEq, Eq,Clone)]  
 pub enum Category{
     Bronze,
     Silver,
@@ -97,6 +107,15 @@ impl Category{
             3=>Ok(Category::Free),
             4=>Ok(Category::Event),
             _=>Err(MyErr::Custom("cant get category".to_string()))
+        }
+    }
+    pub fn encode(self)->u8{
+        match self{
+            Category::Bronze=>0,
+            Category::Silver=>1,
+            Category::Gold=>2,
+            Category::Free=>3,
+            Category::Event=>4,
         }
     }
     pub fn name(&self)->String{
@@ -135,11 +154,41 @@ impl Category{
             Self::Event=>&bounty.event
         }
     }
-
+    fn rank(&self,event:&Event)->i32{
+        let idk = match self{
+            Self::Gold=>event.gold + 1,
+            Self::Bronze=>event.bronze + 1,
+            Self::Silver=>event.silver + 1,
+            _ => 0
+        };
+        idk
+    }
+    fn check_rank(&self,event:&Event,code:u8)->bool{
+        if code as i32> self.rank(event){
+            return false;
+        }
+        true
+    }
+    fn change_rank(&self,hunt:&mut Hunter,code:u8){
+        if code as i32 == self.rank(&hunt.event){
+            match self {
+                Self::Gold=>{
+                    hunt.event.gold += 1;
+                }
+                Self::Silver=>{
+                    hunt.event.silver += 1;
+                }
+                Self::Bronze=>{
+                    hunt.event.bronze += 1
+                }
+                _ =>{return;}
+            }
+        }
+    }
 }
 
 
-
+#[derive(PartialEq, Eq,Clone)]
 pub enum BBQ{
     BBQ01,
     BBQ02,
@@ -196,6 +245,35 @@ impl BBQ{
             23=>Ok(BBQ::BBQ24),
             24=>Ok(BBQ::BBQ25),
             _=>Err(MyErr::Custom("cant get bbq".to_string()))
+        }
+    }
+    pub fn encode(&self)->u8{
+        match self{
+            BBQ::BBQ01=>0,
+            BBQ::BBQ02=>1,
+            BBQ::BBQ03=>2,
+            BBQ::BBQ04=>3,
+            BBQ::BBQ05=>4,
+            BBQ::BBQ06=>5,
+            BBQ::BBQ07=>6,
+            BBQ::BBQ08=>7,
+            BBQ::BBQ09=>8,
+            BBQ::BBQ10=>9,
+            BBQ::BBQ11=>10,
+            BBQ::BBQ12=>11,
+            BBQ::BBQ13=>12,
+            BBQ::BBQ14=>13,
+            BBQ::BBQ15=>14,
+            BBQ::BBQ16=>15,
+            BBQ::BBQ17=>16,
+            BBQ::BBQ18=>17,
+            BBQ::BBQ19=>18,
+            BBQ::BBQ20=>19,
+            BBQ::BBQ21=>20,
+            BBQ::BBQ22=>21,
+            BBQ::BBQ23=>22,
+            BBQ::BBQ24=>23,
+            BBQ::BBQ25=>24,
         }
     }
     pub fn name(&self)->String{
@@ -286,65 +364,206 @@ impl BBQ{
         }
     }
 }
-
+#[derive(Clone)]
 pub struct Hunter{
-    pub member:User,
+    pub member:Member,
     pub title:Title,
-    pub name:String
+    pub event:Event,
 }
+#[derive(Clone)]
 pub struct BountySubmit{
     pub method:Methode,
     pub category:Category,
     pub bbq:BBQ,
     pub hunter:Vec<Hunter>,
     pub url:String,
-    pub thumb:String
+    pub thumb:String,
+    pub time:i64,
+    pub reward:BountyReward
 }
 use super::Components;
+use super::market::Market;
 use crate::PgConn;
+use crate::reusable::utils::MyTime;
 impl Hunter {
-    async fn new(user:User,msg:&Message,pg:&mut PgConn<'_>)->Result<Vec<Hunter>,MyErr>{
+    async fn new(bnd:&SlashBundle<'_>,bypass:bool,user:Member,msg:&Message,pg:&mut PgConn<'_>,bbq:&BBQ,category:&Category)->Result<Vec<Hunter>,MyErr>{
         let mut vec = vec![user];
         let mut hunter = Vec::new();
+        let guild = bnd.cmd.guild_id.unwrap().to_partial_guild(&bnd.ctx.http).await?;
         for i in &msg.mentions{
-            vec.push(i.to_owned())
+            let mem = guild.member(&bnd.ctx.http, i.id).await?;
+            vec.push(mem);
         }
         for us in vec{
-            pg.did = us.id.to_string();
+            pg.did = us.user.id.to_string();
             let event = pg.get_event().await
                 .ok().ok_or(MyErr::Custom(format!("{} most likely isnt binded yet please check",us.to_string())))?;
             let title = Title::new(u8::try_from(event.title).unwrap());
-            hunter.push(Hunter{member:us.to_owned(),title,name:event.name.to_owned()});
+            if !bypass{
+                if let Some((x,y))=BountyTitle::decrypt(&event.latest_bounty){
+                    let time;
+                    if &x==category && &y==bbq{
+                        time = event.latest_bounty_time + 40*60*60;
+                    }else {
+                        time = event.latest_bounty_time + 20*60*60;
+                    }
+                    if time > MyTime::now() && *category != Category::Event{
+                        return Err(MyErr::Custom(format!("{} still on cooldown till <t:{time}:R>",us.to_string())));
+                    }
+                }
+                let tresh = bbq.encode() +1;
+                if !category.check_rank(&event,tresh){
+                    return Err(MyErr::Custom(format!("{} cant take BBQ higher than {} for category {}"
+                        ,us.to_string(),BBQ::new(tresh)?.name(),category.name())));
+                }
+
+            }
+            hunter.push(Hunter{member:us.to_owned(),title,event});
         }
         Ok(hunter)
     }
 }
 
+use std::collections::HashMap;
 impl BountySubmit{
-    async fn new(user:User,msg:&Message,pg:&mut PgConn<'_>,bounty:&Bounty,url:&str,method:Methode,bbq:BBQ,category:Category)
+    pub async fn new(bnd:&SlashBundle<'_>,bypass:bool,user:Member,msg:&Message,pg:&mut PgConn<'_>,bounty:&Bounty,url:&str,method:Methode,bbq:BBQ,category:Category)
         ->Result<BountySubmit,MyErr>{
-        let hunter = Hunter::new(user, msg, pg).await?;
+        let hunter = Hunter::new(bnd,bypass,user, msg, pg,&bbq,&category).await?;
         let idk = category.get_bounty(bounty);
         let desc = bbq.get_bounty(idk);
-        Ok(BountySubmit{hunter,method,bbq,category,url:url.to_owned(),thumb:desc.icon.to_owned()})
+        let reward = method.get_reward(desc).clone();
+        Ok(BountySubmit{hunter,method,bbq,category,url:url.to_owned(),thumb:desc.icon.to_owned(),reward,time:MyTime::now()})
+    }
+    async fn send_reward(&self,pg:&mut PgConn<'_>)->Result<(),MyErr>{
+        let name = format!("{} {} {} Rewards",self.method.name(),self.category.name(),self.bbq.name());
+        let desc = format!("Reward for clearing server event {} {} as {}",self.category.name(),self.bbq.name(),self.method.name());
+        for i in &self.hunter{
+            pg.did = i.member.user.id.to_string();
+            pg.send_item(&self.reward.items.as_slice(), i.event.char_id, &name, &desc).await?;
+            pg.bounty_event(&i.event).await?;
+        }
+        Ok(())
+    }
+    pub async fn reward(&mut self,bypass:bool,bnd:&SlashBundle<'_>,pg:&mut PgConn<'_>)->Result<(),MyErr>{
+        for hunt in self.hunter.iter_mut(){
+            let bounty = self.reward.coin as f32 * hunt.title.bonus();
+            hunt.event.bounty += bounty as i32;
+            hunt.event.gacha += self.reward.ticket as i32;
+            self.category.change_rank(hunt, self.bbq.encode() + 1);
+            if self.category != Category::Event{
+                hunt.event.latest_bounty = BountyTitle::encrypt(self.category.clone(), self.bbq.clone());
+                if !bypass{
+                    hunt.event.latest_bounty_time = self.time;
+                }
+            }
+        }
+        self.send_reward(pg).await?;
+        let ch = ChannelId::new(bnd.init.bounty.receptionist_ch);
+        for (user,embed) in self.reward_embed(bnd.pedia){
+            ch.send_message(&bnd.ctx.http, CreateMessage::new().embed(embed)
+                .content(format!("{}'s {} {} {} Reward already distributed"
+                    ,user.to_string(), self.method.name(),self.category.name()
+                    ,self.bbq.name()))).await?;
+        }
+        Ok(())
+    }
+    pub async fn title(&mut self,bnd:&SlashBundle<'_>,title:&BountyTitle)->Result<(),MyErr>{
+        let code = BountyTitle::encrypt(self.category.clone(), self.bbq.clone());
+        for hunt in self.hunter.iter_mut(){
+            for i in title.get_trigger(){
+                if code == i.trigger{
+                    if i.db_code != 0{
+                        if Title::matching(hunt.event.title as u8, i.db_code){
+                            hunt.event.title += i.db_code as i32;
+                            hunt.title = Title::new(hunt.event.title as u8);
+                        }else {
+                            return Ok(());
+                        }
+                    }else{
+                        if hunt.member.roles.contains(&RoleId::new(i.role_id)){
+                            return Ok(());
+                        }
+                    }
+                    hunt.member.add_role(&bnd.ctx.http, RoleId::new(i.role_id)).await?;
+                    i.send_title(bnd, &hunt.member.user).await?;
+                }
+            }
+        }
+        Ok(())
+    }
+    pub async fn save(&self,did:&str){
+        let mut bounty = BOUNTY.lock().await;
+        match bounty.get_mut(did){
+            Some(x)=>{
+                *x = self.clone();
+            }
+            None=>{
+                bounty.insert(did.to_owned(), self.clone());
+            }
+        }
+    }
+    pub async fn open(did:&str)->Option<Self>{
+        BOUNTY.lock().await.get(did).cloned()
+    }
+    pub async fn delete(did:&str){
+        BOUNTY.lock().await.remove(did);
     }
     pub fn embed(&self)->CreateEmbed{
         let title = format!("{} {} {}",self.category.name(),self.bbq.name(),self.method.name());
         let mut desc = Vec::new();
         for i in &self.hunter{
             desc.push("\n".to_owned());
-            desc.push(format!("```\nname\t:\t{}\ndiscord\t:\t{}\n```",&i.name,&i.member.name));
+            desc.push(format!("```\nname\t:\t{}\ndiscord\t:\t{}\n```",&i.event.name,&i.member.user.name));
         }
-        let res = desc[1..].concat();
+        let res = format!("Submitted At <t:{}:F>\n{}",self.time,desc[1..].concat());
         let author = &self.hunter[0].member;
         CreateEmbed::new().title(title).description(res).thumbnail(&self.thumb).image(&self.url)
-            .author(CreateEmbedAuthor::new(&author.name).url(author.face())).color(self.category.color().throw())
+            .author(CreateEmbedAuthor::new(&author.user.name).url(author.face())).color(self.category.color().throw())
     }
     pub fn button(&self)->Vec<CreateActionRow>{
         let accept = Components::normal_button("Approve", "bounty_a", ButtonStyle::Primary, "👌");
         let reject = Components::normal_button("Reject", "bounty_r", ButtonStyle::Danger, "👎");
         let arow = CreateActionRow::Buttons(vec![accept,reject]);
         vec![arow]
+    }
+    pub fn cooldown(&self,bnt:&mut Bounty)->bool{
+        if self.category != Category::Free{
+            return true;
+        }
+        let dec = self.bbq.get_bounty(self.category.get_bounty(bnt));
+        if dec.cooldown > RefCell::new(0) {
+            dec.cooldown.replace_with(|&mut x|x-1);
+            return true;
+        }
+        false
+    }
+    pub fn reward_embed<'a>(&'a self,item:&ItemPedia)->HashMap<&'a User,CreateEmbed>{
+        let mut out = HashMap::new();
+        let mut reward = Vec::new();
+        let ticket = format!("Ticket Reward: {} Ticket(s)"
+            ,self.reward.ticket);
+        for i in &self.reward.items{
+            reward.push("/n".to_owned());
+            reward.push(i.text(item).unwrap());
+        }
+        for j in &self.hunter{
+            let bon = j.title.bonus()*100.0;
+            let percent = format!("{}%",bon as u32);
+            let bonus = self.reward.coin as f64 * j.title.bonus() as f64;
+            let bounty =  format!("Bounty Reward: {}\nTitle Bonus: {}\nReward With Bonus: {}"
+                ,Market::currency(self.reward.coin as i64),percent,Market::currency(bonus as i64));
+            let embed = CreateEmbed::new().title("Bounty Reward")
+                .description(format!("{}'s reward for {} {} category {}",j.member.to_string()
+                    ,self.method.name(),self.bbq.name(),self.category.name()))
+                .fields(vec![
+                        ("Bounty Coin",bounty,false),
+                        ("Gacha Tickets",ticket.to_owned(),false),
+                        ("Items/Equipment",reward[1..].to_vec().concat(),false),
+                ]).color(Color::Gold.throw())
+                .author(CreateEmbedAuthor::new(&j.member.user.name).icon_url(j.member.user.face()));
+            out.insert(&j.member.user, embed);
+        }
+        out
     }
 }
 
@@ -390,14 +609,14 @@ use super::super::bitwise::ItemCode;
 #[derive(Serialize,Deserialize,PartialEq, Eq)]
 pub struct BountyDesc {
     pub description:String,
-    pub cooldown:u32,
+    pub cooldown:RefCell<u32>,
     pub icon:String,
     pub thumbnail:String,
     pub rules:Vec<String>,
     pub solo:BountyReward,
     pub multi:BountyReward
 }
-#[derive(Serialize,Deserialize,PartialEq, Eq)]
+#[derive(Serialize,Deserialize,PartialEq, Eq,Clone)]
 pub struct BountyReward{
     coin:u32,
     ticket:u32,
@@ -456,11 +675,262 @@ impl Bounty{
     }
     pub async fn check(data:&str)->Result<(),MyErr>{
         let x = serde_json::from_str::<Self>(&data)?;
+        let pedia = ItemPedia::default();
+        for i in &x.get_items(){
+            if !i.check(&pedia){
+                return Err(MyErr::Custom(format!("There is item missmatch on 
+                    data struct\n`{i:?}`\nthose item isnt exist on database")));
+            }
+        }
         x.save().await?;
         Ok(())
     }
+    fn get_items(&self)->Vec<ItemCode>{
+        let mut out = Vec::new();
+        out.append(&mut self.gold.bbq1.solo.items.clone());
+        out.append(&mut self.gold.bbq1.multi.items.clone());
+        out.append(&mut self.gold.bbq2.solo.items.clone());
+        out.append(&mut self.gold.bbq2.multi.items.clone());
+        out.append(&mut self.gold.bbq3.solo.items.clone());
+        out.append(&mut self.gold.bbq3.multi.items.clone());
+        out.append(&mut self.gold.bbq4.solo.items.clone());
+        out.append(&mut self.gold.bbq4.multi.items.clone());
+        out.append(&mut self.gold.bbq5.solo.items.clone());
+        out.append(&mut self.gold.bbq5.multi.items.clone());
+        out.append(&mut self.gold.bbq6.solo.items.clone());
+        out.append(&mut self.gold.bbq6.multi.items.clone());
+        out.append(&mut self.gold.bbq7.solo.items.clone());
+        out.append(&mut self.gold.bbq8.multi.items.clone());
+        out.append(&mut self.gold.bbq9.solo.items.clone());
+        out.append(&mut self.gold.bbq9.multi.items.clone());
+        out.append(&mut self.gold.bbq10.solo.items.clone());
+        out.append(&mut self.gold.bbq10.multi.items.clone());
+        out.append(&mut self.gold.bbq11.solo.items.clone());
+        out.append(&mut self.gold.bbq11.multi.items.clone());
+        out.append(&mut self.gold.bbq12.solo.items.clone());
+        out.append(&mut self.gold.bbq12.multi.items.clone());
+        out.append(&mut self.gold.bbq13.solo.items.clone());
+        out.append(&mut self.gold.bbq13.multi.items.clone());
+        out.append(&mut self.gold.bbq14.solo.items.clone());
+        out.append(&mut self.gold.bbq14.multi.items.clone());
+        out.append(&mut self.gold.bbq15.solo.items.clone());
+        out.append(&mut self.gold.bbq15.multi.items.clone());
+        out.append(&mut self.gold.bbq16.solo.items.clone());
+        out.append(&mut self.gold.bbq16.multi.items.clone());
+        out.append(&mut self.gold.bbq17.solo.items.clone());
+        out.append(&mut self.gold.bbq17.multi.items.clone());
+        out.append(&mut self.gold.bbq18.solo.items.clone());
+        out.append(&mut self.gold.bbq18.multi.items.clone());
+        out.append(&mut self.gold.bbq19.solo.items.clone());
+        out.append(&mut self.gold.bbq19.multi.items.clone());
+        out.append(&mut self.gold.bbq20.solo.items.clone());
+        out.append(&mut self.gold.bbq20.multi.items.clone());
+        out.append(&mut self.gold.bbq21.solo.items.clone());
+        out.append(&mut self.gold.bbq21.multi.items.clone());
+        out.append(&mut self.gold.bbq22.solo.items.clone());
+        out.append(&mut self.gold.bbq22.multi.items.clone());
+        out.append(&mut self.gold.bbq23.solo.items.clone());
+        out.append(&mut self.gold.bbq23.multi.items.clone());
+        out.append(&mut self.gold.bbq24.solo.items.clone());
+        out.append(&mut self.gold.bbq24.multi.items.clone());
+        out.append(&mut self.gold.bbq25.solo.items.clone());
+        out.append(&mut self.gold.bbq25.multi.items.clone());
+        out.append(&mut self.silver.bbq1.solo.items.clone());
+        out.append(&mut self.silver.bbq1.multi.items.clone());
+        out.append(&mut self.silver.bbq2.solo.items.clone());
+        out.append(&mut self.silver.bbq2.multi.items.clone());
+        out.append(&mut self.silver.bbq3.solo.items.clone());
+        out.append(&mut self.silver.bbq3.multi.items.clone());
+        out.append(&mut self.silver.bbq4.solo.items.clone());
+        out.append(&mut self.silver.bbq4.multi.items.clone());
+        out.append(&mut self.silver.bbq5.solo.items.clone());
+        out.append(&mut self.silver.bbq5.multi.items.clone());
+        out.append(&mut self.silver.bbq6.solo.items.clone());
+        out.append(&mut self.silver.bbq6.multi.items.clone());
+        out.append(&mut self.silver.bbq7.solo.items.clone());
+        out.append(&mut self.silver.bbq8.multi.items.clone());
+        out.append(&mut self.silver.bbq9.solo.items.clone());
+        out.append(&mut self.silver.bbq9.multi.items.clone());
+        out.append(&mut self.silver.bbq10.solo.items.clone());
+        out.append(&mut self.silver.bbq10.multi.items.clone());
+        out.append(&mut self.silver.bbq11.solo.items.clone());
+        out.append(&mut self.silver.bbq11.multi.items.clone());
+        out.append(&mut self.silver.bbq12.solo.items.clone());
+        out.append(&mut self.silver.bbq12.multi.items.clone());
+        out.append(&mut self.silver.bbq13.solo.items.clone());
+        out.append(&mut self.silver.bbq13.multi.items.clone());
+        out.append(&mut self.silver.bbq14.solo.items.clone());
+        out.append(&mut self.silver.bbq14.multi.items.clone());
+        out.append(&mut self.silver.bbq15.solo.items.clone());
+        out.append(&mut self.silver.bbq15.multi.items.clone());
+        out.append(&mut self.silver.bbq16.solo.items.clone());
+        out.append(&mut self.silver.bbq16.multi.items.clone());
+        out.append(&mut self.silver.bbq17.solo.items.clone());
+        out.append(&mut self.silver.bbq17.multi.items.clone());
+        out.append(&mut self.silver.bbq18.solo.items.clone());
+        out.append(&mut self.silver.bbq18.multi.items.clone());
+        out.append(&mut self.silver.bbq19.solo.items.clone());
+        out.append(&mut self.silver.bbq19.multi.items.clone());
+        out.append(&mut self.silver.bbq20.solo.items.clone());
+        out.append(&mut self.silver.bbq20.multi.items.clone());
+        out.append(&mut self.silver.bbq21.solo.items.clone());
+        out.append(&mut self.silver.bbq21.multi.items.clone());
+        out.append(&mut self.silver.bbq22.solo.items.clone());
+        out.append(&mut self.silver.bbq22.multi.items.clone());
+        out.append(&mut self.silver.bbq23.solo.items.clone());
+        out.append(&mut self.silver.bbq23.multi.items.clone());
+        out.append(&mut self.silver.bbq24.solo.items.clone());
+        out.append(&mut self.silver.bbq24.multi.items.clone());
+        out.append(&mut self.silver.bbq25.solo.items.clone());
+        out.append(&mut self.silver.bbq25.multi.items.clone());
+        out.append(&mut self.bronze.bbq1.solo.items.clone());
+        out.append(&mut self.bronze.bbq1.multi.items.clone());
+        out.append(&mut self.bronze.bbq2.solo.items.clone());
+        out.append(&mut self.bronze.bbq2.multi.items.clone());
+        out.append(&mut self.bronze.bbq3.solo.items.clone());
+        out.append(&mut self.bronze.bbq3.multi.items.clone());
+        out.append(&mut self.bronze.bbq4.solo.items.clone());
+        out.append(&mut self.bronze.bbq4.multi.items.clone());
+        out.append(&mut self.bronze.bbq5.solo.items.clone());
+        out.append(&mut self.bronze.bbq5.multi.items.clone());
+        out.append(&mut self.bronze.bbq6.solo.items.clone());
+        out.append(&mut self.bronze.bbq6.multi.items.clone());
+        out.append(&mut self.bronze.bbq7.solo.items.clone());
+        out.append(&mut self.bronze.bbq8.multi.items.clone());
+        out.append(&mut self.bronze.bbq9.solo.items.clone());
+        out.append(&mut self.bronze.bbq9.multi.items.clone());
+        out.append(&mut self.bronze.bbq10.solo.items.clone());
+        out.append(&mut self.bronze.bbq10.multi.items.clone());
+        out.append(&mut self.bronze.bbq11.solo.items.clone());
+        out.append(&mut self.bronze.bbq11.multi.items.clone());
+        out.append(&mut self.bronze.bbq12.solo.items.clone());
+        out.append(&mut self.bronze.bbq12.multi.items.clone());
+        out.append(&mut self.bronze.bbq13.solo.items.clone());
+        out.append(&mut self.bronze.bbq13.multi.items.clone());
+        out.append(&mut self.bronze.bbq14.solo.items.clone());
+        out.append(&mut self.bronze.bbq14.multi.items.clone());
+        out.append(&mut self.bronze.bbq15.solo.items.clone());
+        out.append(&mut self.bronze.bbq15.multi.items.clone());
+        out.append(&mut self.bronze.bbq16.solo.items.clone());
+        out.append(&mut self.bronze.bbq16.multi.items.clone());
+        out.append(&mut self.bronze.bbq17.solo.items.clone());
+        out.append(&mut self.bronze.bbq17.multi.items.clone());
+        out.append(&mut self.bronze.bbq18.solo.items.clone());
+        out.append(&mut self.bronze.bbq18.multi.items.clone());
+        out.append(&mut self.bronze.bbq19.solo.items.clone());
+        out.append(&mut self.bronze.bbq19.multi.items.clone());
+        out.append(&mut self.bronze.bbq20.solo.items.clone());
+        out.append(&mut self.bronze.bbq20.multi.items.clone());
+        out.append(&mut self.bronze.bbq21.solo.items.clone());
+        out.append(&mut self.bronze.bbq21.multi.items.clone());
+        out.append(&mut self.bronze.bbq22.solo.items.clone());
+        out.append(&mut self.bronze.bbq22.multi.items.clone());
+        out.append(&mut self.bronze.bbq23.solo.items.clone());
+        out.append(&mut self.bronze.bbq23.multi.items.clone());
+        out.append(&mut self.bronze.bbq24.solo.items.clone());
+        out.append(&mut self.bronze.bbq24.multi.items.clone());
+        out.append(&mut self.bronze.bbq25.solo.items.clone());
+        out.append(&mut self.bronze.bbq25.multi.items.clone());
+        out.append(&mut self.free.bbq1.solo.items.clone());
+        out.append(&mut self.free.bbq1.multi.items.clone());
+        out.append(&mut self.free.bbq2.solo.items.clone());
+        out.append(&mut self.free.bbq2.multi.items.clone());
+        out.append(&mut self.free.bbq3.solo.items.clone());
+        out.append(&mut self.free.bbq3.multi.items.clone());
+        out.append(&mut self.free.bbq4.solo.items.clone());
+        out.append(&mut self.free.bbq4.multi.items.clone());
+        out.append(&mut self.free.bbq5.solo.items.clone());
+        out.append(&mut self.free.bbq5.multi.items.clone());
+        out.append(&mut self.free.bbq6.solo.items.clone());
+        out.append(&mut self.free.bbq6.multi.items.clone());
+        out.append(&mut self.free.bbq7.solo.items.clone());
+        out.append(&mut self.free.bbq8.multi.items.clone());
+        out.append(&mut self.free.bbq9.solo.items.clone());
+        out.append(&mut self.free.bbq9.multi.items.clone());
+        out.append(&mut self.free.bbq10.solo.items.clone());
+        out.append(&mut self.free.bbq10.multi.items.clone());
+        out.append(&mut self.free.bbq11.solo.items.clone());
+        out.append(&mut self.free.bbq11.multi.items.clone());
+        out.append(&mut self.free.bbq12.solo.items.clone());
+        out.append(&mut self.free.bbq12.multi.items.clone());
+        out.append(&mut self.free.bbq13.solo.items.clone());
+        out.append(&mut self.free.bbq13.multi.items.clone());
+        out.append(&mut self.free.bbq14.solo.items.clone());
+        out.append(&mut self.free.bbq14.multi.items.clone());
+        out.append(&mut self.free.bbq15.solo.items.clone());
+        out.append(&mut self.free.bbq15.multi.items.clone());
+        out.append(&mut self.free.bbq16.solo.items.clone());
+        out.append(&mut self.free.bbq16.multi.items.clone());
+        out.append(&mut self.free.bbq17.solo.items.clone());
+        out.append(&mut self.free.bbq17.multi.items.clone());
+        out.append(&mut self.free.bbq18.solo.items.clone());
+        out.append(&mut self.free.bbq18.multi.items.clone());
+        out.append(&mut self.free.bbq19.solo.items.clone());
+        out.append(&mut self.free.bbq19.multi.items.clone());
+        out.append(&mut self.free.bbq20.solo.items.clone());
+        out.append(&mut self.free.bbq20.multi.items.clone());
+        out.append(&mut self.free.bbq21.solo.items.clone());
+        out.append(&mut self.free.bbq21.multi.items.clone());
+        out.append(&mut self.free.bbq22.solo.items.clone());
+        out.append(&mut self.free.bbq22.multi.items.clone());
+        out.append(&mut self.free.bbq23.solo.items.clone());
+        out.append(&mut self.free.bbq23.multi.items.clone());
+        out.append(&mut self.free.bbq24.solo.items.clone());
+        out.append(&mut self.free.bbq24.multi.items.clone());
+        out.append(&mut self.free.bbq25.solo.items.clone());
+        out.append(&mut self.free.bbq25.multi.items.clone());
+        out.append(&mut self.event.bbq1.solo.items.clone());
+        out.append(&mut self.event.bbq1.multi.items.clone());
+        out.append(&mut self.event.bbq2.solo.items.clone());
+        out.append(&mut self.event.bbq2.multi.items.clone());
+        out.append(&mut self.event.bbq3.solo.items.clone());
+        out.append(&mut self.event.bbq3.multi.items.clone());
+        out.append(&mut self.event.bbq4.solo.items.clone());
+        out.append(&mut self.event.bbq4.multi.items.clone());
+        out.append(&mut self.event.bbq5.solo.items.clone());
+        out.append(&mut self.event.bbq5.multi.items.clone());
+        out.append(&mut self.event.bbq6.solo.items.clone());
+        out.append(&mut self.event.bbq6.multi.items.clone());
+        out.append(&mut self.event.bbq7.solo.items.clone());
+        out.append(&mut self.event.bbq8.multi.items.clone());
+        out.append(&mut self.event.bbq9.solo.items.clone());
+        out.append(&mut self.event.bbq9.multi.items.clone());
+        out.append(&mut self.event.bbq10.solo.items.clone());
+        out.append(&mut self.event.bbq10.multi.items.clone());
+        out.append(&mut self.event.bbq11.solo.items.clone());
+        out.append(&mut self.event.bbq11.multi.items.clone());
+        out.append(&mut self.event.bbq12.solo.items.clone());
+        out.append(&mut self.event.bbq12.multi.items.clone());
+        out.append(&mut self.event.bbq13.solo.items.clone());
+        out.append(&mut self.event.bbq13.multi.items.clone());
+        out.append(&mut self.event.bbq14.solo.items.clone());
+        out.append(&mut self.event.bbq14.multi.items.clone());
+        out.append(&mut self.event.bbq15.solo.items.clone());
+        out.append(&mut self.event.bbq15.multi.items.clone());
+        out.append(&mut self.event.bbq16.solo.items.clone());
+        out.append(&mut self.event.bbq16.multi.items.clone());
+        out.append(&mut self.event.bbq17.solo.items.clone());
+        out.append(&mut self.event.bbq17.multi.items.clone());
+        out.append(&mut self.event.bbq18.solo.items.clone());
+        out.append(&mut self.event.bbq18.multi.items.clone());
+        out.append(&mut self.event.bbq19.solo.items.clone());
+        out.append(&mut self.event.bbq19.multi.items.clone());
+        out.append(&mut self.event.bbq20.solo.items.clone());
+        out.append(&mut self.event.bbq20.multi.items.clone());
+        out.append(&mut self.event.bbq21.solo.items.clone());
+        out.append(&mut self.event.bbq21.multi.items.clone());
+        out.append(&mut self.event.bbq22.solo.items.clone());
+        out.append(&mut self.event.bbq22.multi.items.clone());
+        out.append(&mut self.event.bbq23.solo.items.clone());
+        out.append(&mut self.event.bbq23.multi.items.clone());
+        out.append(&mut self.event.bbq24.solo.items.clone());
+        out.append(&mut self.event.bbq24.multi.items.clone());
+        out.append(&mut self.event.bbq25.solo.items.clone());
+        out.append(&mut self.event.bbq25.multi.items.clone());
+        out
+    }
     pub async fn new()->Result<Self,MyErr>{
-        let file = tokio::fs::read_to_string(BountyRefresh::path()).await?;
+        let file = tokio::fs::read_to_string(Bounty::path()).await?;
         Ok(serde_json::from_str(&file)?)
     }
     pub async fn save(&self)->Result<(),Error>{
@@ -468,10 +938,77 @@ impl Bounty{
         tokio::fs::write(Bounty::path(), string.as_bytes()).await?;
         Ok(())
     }
+    pub fn refresh(&mut self,reff:&BountyRefresh){
+        self.free.bbq1.cooldown.replace(reff.bbq1);
+        self.free.bbq2.cooldown.replace(reff.bbq2);
+        self.free.bbq3.cooldown.replace(reff.bbq3);
+        self.free.bbq4.cooldown.replace(reff.bbq4);
+        self.free.bbq5.cooldown.replace(reff.bbq5);
+        self.free.bbq6.cooldown.replace(reff.bbq6);
+        self.free.bbq7.cooldown.replace(reff.bbq7);
+        self.free.bbq8.cooldown.replace(reff.bbq8);
+        self.free.bbq9.cooldown.replace(reff.bbq9);
+        self.free.bbq10.cooldown.replace(reff.bbq10);
+        self.free.bbq11.cooldown.replace(reff.bbq11);
+        self.free.bbq12.cooldown.replace(reff.bbq12);
+        self.free.bbq13.cooldown.replace(reff.bbq13);
+        self.free.bbq14.cooldown.replace(reff.bbq14);
+        self.free.bbq15.cooldown.replace(reff.bbq15);
+        self.free.bbq16.cooldown.replace(reff.bbq16);
+        self.free.bbq17.cooldown.replace(reff.bbq17);
+        self.free.bbq18.cooldown.replace(reff.bbq18);
+        self.free.bbq19.cooldown.replace(reff.bbq19);
+        self.free.bbq20.cooldown.replace(reff.bbq20);
+        self.free.bbq21.cooldown.replace(reff.bbq21);
+        self.free.bbq22.cooldown.replace(reff.bbq22);
+        self.free.bbq23.cooldown.replace(reff.bbq23);
+        self.free.bbq24.cooldown.replace(reff.bbq24);
+        self.free.bbq25.cooldown.replace(reff.bbq25);
+    }
+    pub async fn cooldown(&self,bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+        let mut msg = ChannelId::new(bnd.init.bounty.cooldown_ch)
+            .message(&bnd.ctx.http, MessageId::new(bnd.init.bounty.cooldown_msg)).await?;
+        msg.edit(&bnd.ctx.http, EditMessage::new().embed(self.free.cooldown_embed())).await?;
+        Ok(())
+    }
+    pub fn set_cd(&mut self,bbq:&BBQ,cd:u32){
+        let x = bbq.get_bounty(&self.free);
+        x.cooldown.replace(cd);
+    }
+}
+impl BountyBBQ {
+    pub fn cooldown_embed(&self)->CreateEmbed{
+        let mut idk = format!("```\nBBQ01 ====== {} left",self.bbq1.cooldown.borrow());
+        idk.push_str(&format!("\nBBQ02 ====== {} left",self.bbq2.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ03 ====== {} left",self.bbq3.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ04 ====== {} left",self.bbq4.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ05 ====== {} left",self.bbq5.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ06 ====== {} left",self.bbq6.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ07 ====== {} left",self.bbq7.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ08 ====== {} left",self.bbq8.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ09 ====== {} left",self.bbq9.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ10 ====== {} left",self.bbq10.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ11 ====== {} left",self.bbq11.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ12 ====== {} left",self.bbq12.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ13 ====== {} left",self.bbq13.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ14 ====== {} left",self.bbq14.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ15 ====== {} left",self.bbq15.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ16 ====== {} left",self.bbq16.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ17 ====== {} left",self.bbq17.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ18 ====== {} left",self.bbq18.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ19 ====== {} left",self.bbq19.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ20 ====== {} left",self.bbq20.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ21 ====== {} left",self.bbq21.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ22 ====== {} left",self.bbq22.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ23 ====== {} left",self.bbq23.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ24 ====== {} left",self.bbq24.cooldown.borrow()));
+        idk.push_str(&format!("\nBBQ25 ====== {} left\n```",self.bbq25.cooldown.borrow()));
+        CreateEmbed::new().title("Free Category Cooldown").description(idk)
+    }
 }
 impl Default for BountyDesc{
     fn default() -> Self {
-        BountyDesc { description: "this is bbq description".to_owned(), cooldown: 0, solo:BountyReward::default(),multi:BountyReward::default(),
+        BountyDesc { description: "this is bbq description".to_owned(), cooldown: RefCell::new(0), solo:BountyReward::default(),multi:BountyReward::default(),
             icon:"https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png".to_owned(),
             thumbnail:"https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png".to_owned(),
             rules:vec!["HR equipment only".to_owned(),"no MS".to_owned(),"naked".to_owned()]
@@ -538,6 +1075,7 @@ pub struct CustomTitle{
     pub image:TitleImage,
     pub trigger:String,
     pub role_id:u64,
+    pub db_code:u8
 }
 #[derive(Serialize,Deserialize,PartialEq, Eq,Clone)]
 pub struct BountyTitle{
@@ -548,6 +1086,21 @@ pub struct BountyTitle{
     pub silver_trading:CustomTitle,
     pub gold_trading:CustomTitle,
     pub custom:Vec<CustomTitle>
+}
+impl CustomTitle{
+    pub fn embed(&self,user:&User)->CreateEmbed{
+        let color = BountyTitle::decrypt(&self.trigger).unwrap().0.color().throw();
+        CreateEmbed::new().title("Congratulation On Promotion").color(color)
+            .image("attachment://title.jpg").author(CreateEmbedAuthor::new(&user.name).icon_url(user.face()))
+    }
+    pub async fn send_title(&self,bnd:&SlashBundle<'_>,user:&User)->Result<(),MyErr>{
+        let image = self.image.title(&user.static_avatar_url().unwrap_or(user.default_avatar_url())).await?;
+        ChannelId::new(bnd.init.bounty.promotion_ch)
+            .send_message(&bnd.ctx.http, CreateMessage::new().add_file(CreateAttachment::bytes(image, "title.jpg"))
+                .embed(self.embed(user))
+                .content(format!("for {}",user.to_string()))).await?;
+        Ok(())
+    }
 }
 impl BountyTitle{
     fn path()->PathBuf{
@@ -563,8 +1116,42 @@ impl BountyTitle{
     }
     pub async fn check(data:&str)->Result<(),MyErr>{
         let x = serde_json::from_str::<Self>(data)?;
+        for i in &x.custom{
+            if i.db_code != 0{
+                return Err(MyErr::Custom("you cant set value other than 0 for custom title's db_code".to_owned()));
+            }
+        }
         x.save().await?;
         Ok(())
+    }
+    fn decrypt(code:&str)->Option<(Category,BBQ)>{
+        let mut x = code.split("_");
+        let cat =Category::new(x.next()?.parse::<u8>().ok()?).ok()?;
+        let bbq = BBQ::new(x.next()?.parse::<u8>().ok()?).ok()?;
+        Some((cat,bbq))
+    }
+    fn encrypt(category:Category,bbq:BBQ)->String{
+        format!("{}_{}",category.encode(),bbq.encode())
+    }
+    fn get_trigger<'a>(&'a self)->Vec<&'a CustomTitle>{
+        let mut out = vec![
+            &self.silver_bounty,
+            &self.bronze_bounty,
+            &self.gold_bounty,
+            &self.silver_trading,
+            &self.gold_trading,
+            &self.bronze_trading,
+        ];
+        for i in &self.custom{
+            out.push(i);
+        }
+        out
+    }
+    fn name(code:&str)->String{
+        match Self::decrypt(code){
+            Some((x,y))=>format!("{} {}",x.name(),y.name()),
+            None=>String::from(code)
+        }
     }
 }
 impl Default for TitleImage {
@@ -576,7 +1163,7 @@ impl Default for TitleImage {
 impl Default for CustomTitle {
     fn default() -> Self {
         CustomTitle { image: TitleImage::default(),
-        trigger: "4_0".to_owned(), role_id: 1031595216538452038 }
+        trigger: "4_0".to_owned(), role_id: 1031595216538452038,db_code:0 }
     }
 }
 impl Default for BountyTitle {
@@ -592,6 +1179,7 @@ impl Default for BountyTitle {
 mod testing{
     use super::*;
     #[tokio::test]
+    #[ignore = "already had"]
     async fn get_json() {
         let x = Bounty::default();
         let y = BountyRefresh::default();
@@ -599,5 +1187,21 @@ mod testing{
         x.save().await.unwrap();
         y.save().await.unwrap();
         z.save().await.unwrap();
+    }
+    #[tokio::test]
+    #[ignore = "already tested"]
+    async fn refresh() {
+        let mut x = Bounty::default();
+        let y = BountyRefresh::new().await.unwrap();
+        x.refresh(&y);
+        x.save().await.unwrap();
+    }
+    #[tokio::test]
+    #[ignore = "already tested"]
+    async fn reset_cd() {
+        let mut x = Bounty::new().await.unwrap();
+        x.set_cd(&BBQ::BBQ01, 100);
+        assert_eq!(x.free.bbq1.cooldown.borrow().to_owned(),100);
+        x.save().await.unwrap();
     }
 }
