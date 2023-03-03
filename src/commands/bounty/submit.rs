@@ -108,6 +108,7 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     pg.close().await;
     Ok(())
 }
+
 pub(super) async fn submit(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let url = &bnd.cmd.data.resolved.attachments.values()
         .next().ok_or(MyErr::Custom("Cant get attachment".to_owned()))?.url;
@@ -145,7 +146,35 @@ pub(super) async fn submit(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     Ok(())
 }
 
-
+#[hertz::hertz_slash_normal(0,false)]
+async fn distrib(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+    let mut mention = "";
+    let mut methode ="";
+    let mut category = "";
+    let mut bbq = "";
+    for i in &bnd.cmd.data.options{
+        if let CommandDataOptionValue::String(x)=&i.value{
+            match i.name.as_str(){
+                "category"=>{category=x.as_str()},
+                "methode"=>{methode=x.as_str()},
+                "mentions"=>{mention=x.as_str()},
+                "bbq"=>{bbq=x.as_str()},
+                _=>{continue;}
+            }
+        }
+    }
+    let cat = Category::new(category.parse::<u8>().unwrap())?;
+    let bb = BBQ::new(bbq.parse::<u8>().unwrap())?;
+    let met = Methode::new(methode.parse::<u8>().unwrap());
+    let member = *bnd.cmd.member.clone().unwrap();
+    let mut pg = PgConn::create(bnd.init, member.user.id.to_string()).await?;
+    let bounty = Bounty::new().await?;
+    let mut submit = BountySubmit::new(bnd, true, member, mentions(mention)?,&mut pg, &bounty, "", met, bb, cat).await?;
+    Components::response(bnd, "trying to send all the distribution", true).await?;
+    submit.reward(true, bnd, &mut pg).await?;
+    pg.close().await;
+    Ok(())
+}
 
 #[hertz::hertz_button_normal(0,false)]
 async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{

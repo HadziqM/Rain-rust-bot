@@ -12,6 +12,7 @@ pub mod purge;
 pub mod query;
 pub mod test;
 
+
 pub fn reg(init: &Init) -> Vec<CreateCommand> {
     let tests = AppReg::admin_slash("test", "test bounty title given trigger").add_option(
         CreateCommandOption::new(

@@ -160,9 +160,8 @@ async fn auto(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     Components::response_adv(bnd, content).await?;
     Ok(())
 }
-
 #[hertz::hertz_slash_normal(0,false)]
-async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+pub async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let option = MarketHandle::new(bnd.cmd)?;
     let user = option.user.to_user(&bnd.ctx.http).await.unwrap();
     let mut reg = Reg::check(bnd, &user).await?;

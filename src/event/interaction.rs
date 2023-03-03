@@ -240,6 +240,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "👤 Card"=>commands::binded::card::discord_userr(&bnd).await,
                 "🎀 Event"=>commands::binded::event::discord_userr(&bnd).await,
                 "🎮 Submit"=>commands::bounty::submit::discord_slash(&bnd).await,
+                "distribution"=>commands::bounty::submit::discord_distrib(&bnd).await,
                 "dm_save"=>commands::binded::save::discord_all(&bnd).await,
                 "transfer"=>commands::binded::transfer::discord_slash(&bnd).await,
                 "bounty"=>commands::bounty::pedia::discord_slash(&bnd).await,
