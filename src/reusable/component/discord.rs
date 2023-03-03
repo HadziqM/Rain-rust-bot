@@ -26,4 +26,10 @@ impl AppReg{
     pub fn int_option(name:&str,desc:&str)->CreateCommandOption{
         CreateCommandOption::new(serenity::all::CommandOptionType::Integer, name, desc)
     }
+    pub fn att_option(name:&str,desc:&str)->CreateCommandOption{
+        CreateCommandOption::new(serenity::all::CommandOptionType::Attachment, name, desc)
+    }
+    pub fn str_option(name:&str,desc:&str)->CreateCommandOption{
+        CreateCommandOption::new(serenity::all::CommandOptionType::String, name, desc)
+    }
 }

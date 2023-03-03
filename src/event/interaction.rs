@@ -31,6 +31,7 @@ pub trait Mybundle {
     type Cmd:Mytrait;
     fn ctx<'a>(&'a self)->&'a Context;
     fn init<'a>(&'a self)->&'a Init;
+    fn pedia<'a>(&'a self)->&'a ItemPedia;
     fn user(&self)->User;
     fn cmd<'a>(&'a self)->&'a Self::Cmd;
     fn name(&self)->String;
@@ -46,6 +47,9 @@ impl Mybundle for SlashBundle<'_>{
     }
     fn init<'a>(&'a self)->&'a Init {
         self.init
+    }
+    fn pedia<'a>(&'a self)->&'a ItemPedia {
+        self.pedia
     }
     fn user(&self)->User {
         self.cmd.user.clone()
@@ -91,6 +95,9 @@ impl Mybundle for ComponentBundle<'_>{
     fn user(&self)->User {
         self.cmd.user.clone()
     }
+    fn pedia<'a>(&'a self)->&'a ItemPedia {
+        self.pedia
+    }
     fn cmd<'a>(&'a self)->&'a Self::Cmd {
         self.cmd
     }
@@ -128,6 +135,9 @@ impl Mybundle for ModalBundle<'_>{
     }
     fn init<'a>(&'a self)->&'a Init {
         self.init
+    }
+    fn pedia<'a>(&'a self)->&'a ItemPedia {
+        self.pedia
     }
     fn user(&self)->User {
         self.cmd.user.clone()
@@ -229,8 +239,11 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "switch"=>switch(&bnd).await,
                 "👤 Card"=>commands::binded::card::discord_userr(&bnd).await,
                 "🎀 Event"=>commands::binded::event::discord_userr(&bnd).await,
+                "🎮 Submit"=>commands::bounty::submit::discord_slash(&bnd).await,
                 "dm_save"=>commands::binded::save::discord_all(&bnd).await,
                 "transfer"=>commands::binded::transfer::discord_slash(&bnd).await,
+                "bounty"=>commands::bounty::pedia::discord_slash(&bnd).await,
+                "cooldown"=>commands::bounty::cooldown::discord_slash(&bnd).await,
                 "send"=>commands::admin::market::discord_slash(&bnd).await,
                 "purge"=>commands::admin::purge::discord_slash(&bnd).await,
                 "pull"=>commands::gacha::pull::discord_slash(&bnd).await,
@@ -248,11 +261,14 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
         }
         Interaction::Component(cmd)=>{
             let bnd = ComponentBundle{cmd,init,image,pedia,ctx};
-            let wth = cmd.data.custom_id.as_str();
-            if wth.contains("save"){
+            let code = cmd.data.custom_id.as_str();
+            if code.contains("save"){
                 return commands::binded::transfer::discord_button(&bnd).await;
             }
-            match wth{
+            if code.contains("submit"){
+                return commands::bounty::submit::discord_button(&bnd).await;
+            }
+            match code{
                 "register"=>commands::register::create::discord_all(&bnd).await,
                 "bind"=>commands::register::create::discord_all(&bnd).await,
                 "dms"=>commands::binded::save::discord_all(&bnd).await,

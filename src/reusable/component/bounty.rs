@@ -386,12 +386,12 @@ use super::market::Market;
 use crate::PgConn;
 use crate::reusable::utils::MyTime;
 impl Hunter {
-    async fn new(bnd:&SlashBundle<'_>,bypass:bool,user:Member,msg:&Message,pg:&mut PgConn<'_>,bbq:&BBQ,category:&Category)->Result<Vec<Hunter>,MyErr>{
+    async fn new(bnd:&SlashBundle<'_>,bypass:bool,user:Member,uid:Vec<UserId>,pg:&mut PgConn<'_>,bbq:&BBQ,category:&Category)->Result<Vec<Hunter>,MyErr>{
         let mut vec = vec![user];
         let mut hunter = Vec::new();
         let guild = bnd.cmd.guild_id.unwrap().to_partial_guild(&bnd.ctx.http).await?;
-        for i in &msg.mentions{
-            let mem = guild.member(&bnd.ctx.http, i.id).await?;
+        for i in &uid{
+            let mem = guild.member(&bnd.ctx.http, i.to_owned()).await?;
             vec.push(mem);
         }
         for us in vec{
@@ -425,10 +425,11 @@ impl Hunter {
 }
 
 use std::collections::HashMap;
+use crate::Mybundle;
 impl BountySubmit{
-    pub async fn new(bnd:&SlashBundle<'_>,bypass:bool,user:Member,msg:&Message,pg:&mut PgConn<'_>,bounty:&Bounty,url:&str,method:Methode,bbq:BBQ,category:Category)
+    pub async fn new(bnd:&SlashBundle<'_>,bypass:bool,user:Member,uid:Vec<UserId>,pg:&mut PgConn<'_>,bounty:&Bounty,url:&str,method:Methode,bbq:BBQ,category:Category)
         ->Result<BountySubmit,MyErr>{
-        let hunter = Hunter::new(bnd,bypass,user, msg, pg,&bbq,&category).await?;
+        let hunter = Hunter::new(bnd,bypass,user, uid, pg,&bbq,&category).await?;
         let idk = category.get_bounty(bounty);
         let desc = bbq.get_bounty(idk);
         let reward = method.get_reward(desc).clone();
@@ -444,7 +445,7 @@ impl BountySubmit{
         }
         Ok(())
     }
-    pub async fn reward(&mut self,bypass:bool,bnd:&SlashBundle<'_>,pg:&mut PgConn<'_>)->Result<(),MyErr>{
+    pub async fn reward<T:Mybundle>(&mut self,bypass:bool,bnd:&T,pg:&mut PgConn<'_>)->Result<(),MyErr>{
         for hunt in self.hunter.iter_mut(){
             let bounty = self.reward.coin as f32 * hunt.title.bonus();
             hunt.event.bounty += bounty as i32;
@@ -458,16 +459,16 @@ impl BountySubmit{
             }
         }
         self.send_reward(pg).await?;
-        let ch = ChannelId::new(bnd.init.bounty.receptionist_ch);
-        for (user,embed) in self.reward_embed(bnd.pedia){
-            ch.send_message(&bnd.ctx.http, CreateMessage::new().embed(embed)
+        let ch = ChannelId::new(bnd.init().bounty.receptionist_ch);
+        for (user,embed) in self.reward_embed(bnd.pedia()){
+            ch.send_message(&bnd.ctx().http, CreateMessage::new().embed(embed)
                 .content(format!("{}'s {} {} {} Reward already distributed"
                     ,user.to_string(), self.method.name(),self.category.name()
                     ,self.bbq.name()))).await?;
         }
         Ok(())
     }
-    pub async fn title(&mut self,bnd:&SlashBundle<'_>,title:&BountyTitle)->Result<(),MyErr>{
+    pub async fn title<T:Mybundle>(&mut self,bnd:&T,title:&BountyTitle)->Result<(),MyErr>{
         let code = BountyTitle::encrypt(self.category.clone(), self.bbq.clone());
         for hunt in self.hunter.iter_mut(){
             for i in title.get_trigger(){
@@ -484,7 +485,7 @@ impl BountySubmit{
                             return Ok(());
                         }
                     }
-                    hunt.member.add_role(&bnd.ctx.http, RoleId::new(i.role_id)).await?;
+                    hunt.member.add_role(&bnd.ctx().http, RoleId::new(i.role_id)).await?;
                     i.send_title(bnd, &hunt.member.user).await?;
                 }
             }
@@ -505,8 +506,8 @@ impl BountySubmit{
     pub async fn open(did:&str)->Option<Self>{
         BOUNTY.lock().await.get(did).cloned()
     }
-    pub async fn delete(did:&str){
-        BOUNTY.lock().await.remove(did);
+    pub async fn delete(&self){
+        BOUNTY.lock().await.remove(&self.hunter[0].member.user.id.to_string());
     }
     pub fn embed(&self)->CreateEmbed{
         let title = format!("{} {} {}",self.category.name(),self.bbq.name(),self.method.name());
@@ -521,23 +522,22 @@ impl BountySubmit{
             .author(CreateEmbedAuthor::new(&author.user.name).url(author.face())).color(self.category.color().throw())
     }
     pub fn button(&self)->Vec<CreateActionRow>{
-        let accept = Components::normal_button("Approve", "bounty_a", ButtonStyle::Primary, "👌");
-        let reject = Components::normal_button("Reject", "bounty_r", ButtonStyle::Danger, "👎");
+        let accept = Components::normal_button("Approve", &format!("bounty_{}_a",self.hunter[0].member.user.id.to_string()), ButtonStyle::Primary, "👌");
+        let reject = Components::normal_button("Reject", &format!("bounty_{}_r",self.hunter[0].member.user.id.to_string()), ButtonStyle::Danger, "👎");
         let arow = CreateActionRow::Buttons(vec![accept,reject]);
         vec![arow]
     }
     pub fn cooldown(&self,bnt:&mut Bounty)->bool{
-        if self.category != Category::Free{
-            return true;
-        }
         let dec = self.bbq.get_bounty(self.category.get_bounty(bnt));
         if dec.cooldown > RefCell::new(0) {
-            dec.cooldown.replace_with(|&mut x|x-1);
+            if self.category != Category::Free{
+                dec.cooldown.replace_with(|&mut x|x-1);
+            }
             return true;
         }
         false
     }
-    pub fn reward_embed<'a>(&'a self,item:&ItemPedia)->HashMap<&'a User,CreateEmbed>{
+    fn reward_embed<'a>(&'a self,item:&ItemPedia)->HashMap<&'a User,CreateEmbed>{
         let mut out = HashMap::new();
         let mut reward = Vec::new();
         let ticket = format!("Ticket Reward: {} Ticket(s)"
@@ -672,6 +672,36 @@ impl BountyRefresh{
 impl Bounty{
     pub fn path()->PathBuf{
         Path::new(".").join("static").join("bounty.json")
+    }
+    pub fn desc<T:Mybundle>(&self,bnd:&T,category:&Category,bbq:&BBQ)->CreateEmbed{
+        let pedia = bnd.pedia();
+        let bdesc = bbq.get_bounty(category.get_bounty(&self));
+        let mut rules = vec!["> ".to_owned()];
+        let mut solo = vec!["> ".to_owned()];
+        let mut multi = vec!["> ".to_owned()];
+        let rulen = bdesc.rules.len() -1;
+        let mulen = bdesc.multi.items.len() -1;
+        let solen = bdesc.solo.items.len() -1;
+        for i in &bdesc.rules{
+            rules.push(i.to_owned());
+            rules.push("\n".to_owned());
+        }
+        for i in &bdesc.solo.items{
+            solo.push(i.text(pedia).unwrap());
+            solo.push("\n".to_owned());
+        }
+        for i in &bdesc.multi.items{
+            multi.push(i.text(pedia).unwrap());
+            multi.push("\n".to_owned());
+        }
+        CreateEmbed::new().title(format!("{} {}",category.name(),bbq.name()))
+            .description(&bdesc.description)
+            .thumbnail(&bdesc.icon).image(&bdesc.thumbnail)
+            .field("Rules", rules[..rulen].concat(), false)
+            .field("Solo Rewards", format!("Bounty Coin: {}\nGacha Ticket: {} Ticket\n{}"
+                ,Market::currency(bdesc.solo.coin as i64),bdesc.solo.ticket,solo[..solen].concat()), false)
+            .field("Multiplayer Rewards", format!("Bounty Coin: {}\nGacha Ticket: {} Ticket\n{}"
+                ,Market::currency(bdesc.multi.coin as i64),bdesc.multi.ticket,multi[..mulen].concat()), false)
     }
     pub async fn check(data:&str)->Result<(),MyErr>{
         let x = serde_json::from_str::<Self>(&data)?;
@@ -1006,6 +1036,9 @@ impl BountyBBQ {
         CreateEmbed::new().title("Free Category Cooldown").description(idk)
     }
 }
+
+unsafe impl Sync for BountyBBQ {}
+
 impl Default for BountyDesc{
     fn default() -> Self {
         BountyDesc { description: "this is bbq description".to_owned(), cooldown: RefCell::new(0), solo:BountyReward::default(),multi:BountyReward::default(),
@@ -1093,10 +1126,10 @@ impl CustomTitle{
         CreateEmbed::new().title("Congratulation On Promotion").color(color)
             .image("attachment://title.jpg").author(CreateEmbedAuthor::new(&user.name).icon_url(user.face()))
     }
-    pub async fn send_title(&self,bnd:&SlashBundle<'_>,user:&User)->Result<(),MyErr>{
+    pub async fn send_title<T:Mybundle>(&self,bnd:&T,user:&User)->Result<(),MyErr>{
         let image = self.image.title(&user.static_avatar_url().unwrap_or(user.default_avatar_url())).await?;
-        ChannelId::new(bnd.init.bounty.promotion_ch)
-            .send_message(&bnd.ctx.http, CreateMessage::new().add_file(CreateAttachment::bytes(image, "title.jpg"))
+        ChannelId::new(bnd.init().bounty.promotion_ch)
+            .send_message(&bnd.ctx().http, CreateMessage::new().add_file(CreateAttachment::bytes(image, "title.jpg"))
                 .embed(self.embed(user))
                 .content(format!("for {}",user.to_string()))).await?;
         Ok(())

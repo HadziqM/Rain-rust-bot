@@ -1,10 +1,16 @@
 pub mod submit;
+pub mod pedia;
+pub mod cooldown;
 
 use crate::AppReg;
 use serenity::all::*;
+use crate::reusable::component::bounty::{BBQ,Methode,Category};
 
 pub fn reg() -> Vec<CreateCommand> {
-    let cooldown = AppReg::normal_slash("cooldown", "cooldown")
+    let mut methode = AppReg::str_option("methode", "methode used to clear bounty").required(true);
+    let mut category = AppReg::str_option("category", "category you pick for bounty").required(true);
+    let mut bbq = AppReg::str_option("bbq", "stage you pick for bounty").required(true);
+    let cooldown = AppReg::admin_slash("cooldown", "cooldown")
         .add_option(AppReg::subcommand(
             "refresh",
             "refresh free category bounty cd",
@@ -16,11 +22,30 @@ pub fn reg() -> Vec<CreateCommand> {
         .add_option(
             AppReg::subcommand("bounty", "set specified bounty cd")
                 .add_sub_option(
-                    AppReg::int_option("bounty", "the bounty needed to reset").required(true),
+                    bbq.to_owned(),
                 )
                 .add_sub_option(
                     AppReg::int_option("cooldown", "set to match input").required(true),
                 ),
         );
-    vec![cooldown, AppReg::message_context("🎮 Submit")]
+    for i in Methode::option_str(){
+        methode = methode.add_string_choice(i.1, i.0);
+    }
+    for i in Category::option_str(){
+        category = category.add_string_choice(i.1, i.0);
+    }
+    for i in BBQ::option_str(){
+        bbq = bbq.add_string_choice(i.1, i.0);
+    }
+    let bounty = AppReg::normal_slash("bounty", "command group for bounty")
+        .add_option(AppReg::subcommand("submit", "submit your bounty useing second methode")
+            .add_sub_option(AppReg::att_option("image", "the image proof for your bounty").required(true))
+            .add_sub_option(methode.clone())
+            .add_sub_option(category.clone())
+            .add_sub_option(bbq.clone())
+            .add_sub_option(AppReg::str_option("mentions", "your team on bounty if multiplier")))
+        .add_option(AppReg::subcommand("Pedia", "your bounty wikipedia")
+            .add_sub_option(category.clone())
+            .add_sub_option(bbq.clone()));
+    vec![cooldown, AppReg::message_context("🎮 Submit"),bounty]
 }
