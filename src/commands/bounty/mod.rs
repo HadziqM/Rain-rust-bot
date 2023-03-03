@@ -38,10 +38,10 @@ pub fn reg() -> Vec<CreateCommand> {
         bbq = bbq.add_string_choice(i.1, i.0);
     }
     let dist =AppReg::admin_slash("distribution", "distribute bounty reward to player")
-        .add_option(AppReg::str_option("mentions", "mention all user (can be more than 1) to send"))
         .add_option(methode.to_owned())
         .add_option(category.to_owned())
-        .add_option(bbq.to_owned());
+        .add_option(bbq.to_owned())
+        .add_option(AppReg::str_option("mentions", "mention all user (can be more than 1) to send"));
     let bounty = AppReg::normal_slash("bounty", "command group for bounty")
         .add_option(AppReg::subcommand("submit", "submit your bounty useing second methode")
             .add_sub_option(AppReg::att_option("image", "the image proof for your bounty").required(true))
@@ -49,8 +49,12 @@ pub fn reg() -> Vec<CreateCommand> {
             .add_sub_option(category.clone())
             .add_sub_option(bbq.clone())
             .add_sub_option(AppReg::str_option("mentions", "your team on bounty if multiplier")))
-        .add_option(AppReg::subcommand("Pedia", "your bounty wikipedia")
+        .add_option(AppReg::subcommand("pedia", "your bounty wikipedia")
             .add_sub_option(category.clone())
             .add_sub_option(bbq.clone()));
-    vec![cooldown, AppReg::message_context("🎮 Submit"),bounty,dist]
+    vec![AppReg::message_context("🎮 Submit")
+        ,bounty
+        ,dist
+        ,cooldown
+    ]
 }
