@@ -1,3 +1,4 @@
+use crate::reusable::component::bounty::Category;
 use crate::{AppReg, Init};
 use serenity::all::CommandOptionType;
 use serenity::builder::{CreateCommand, CreateCommandOption};
@@ -14,6 +15,10 @@ pub mod test;
 
 
 pub fn reg(init: &Init) -> Vec<CreateCommand> {
+    let mut category = AppReg::str_option("category", "category you pick for bounty").required(true);
+    for i in Category::option_str(){
+        category = category.add_string_choice(i.1, i.0);
+    }
     let tests = AppReg::admin_slash("test", "test bounty title given trigger").add_option(
         CreateCommandOption::new(
             CommandOptionType::String,
@@ -297,6 +302,7 @@ pub fn reg(init: &Init) -> Vec<CreateCommand> {
                     "bounty",
                     "send your gacha.json file",
                 )
+                .add_sub_option(category)
                 .add_sub_option(att_op.to_owned()),
             )
             .add_option(

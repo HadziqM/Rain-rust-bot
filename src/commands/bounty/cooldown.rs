@@ -1,5 +1,5 @@
 use crate::{MyErr,Mybundle,Mytrait,Components,SlashBundle,Reg,PgConn};
-use crate::reusable::component::bounty::{Bounty,BountyRefresh,BBQ};
+use crate::reusable::component::bounty::{Bounty,BountyRefresh,BBQ, Category};
 
 #[hertz::hertz_slash_normal(0,false)]
 async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
@@ -17,29 +17,12 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     };
     Ok(())
 }
-
-fn unsafe_allocate_bounty() -> Result<Box<Bounty>,MyErr> {
-    let grid_box: Box<Bounty>;
-    println!("unsafe block");
-    unsafe {
-        use std::alloc::{alloc, Layout};
-        let layout = Layout::new::<Bounty>();
-        let ptr = alloc(layout) as *mut Bounty;
-        println!("allocated");
-        (*ptr) = serde_json::from_slice(&std::fs::read(Bounty::path()).unwrap())?;
-        println!("populate pointer");
-        grid_box = Box::from_raw(ptr);
-    }
-    return Ok(grid_box);
-}
 async fn refresh(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
-    println!("try to load bounty_refresh.json");
     let refresh =BountyRefresh::new().await?;
-    println!("try to load bounty.json");
-    let mut bounty = unsafe_allocate_bounty()?;
-    println!("try to change serialized bounty");
+    let category = Category::Free;
+    let mut bounty = Box::new(Bounty::new(&category).await?);
     bounty.refresh(&refresh);
-    bounty.save().await?;
+    bounty.save(&category).await?;
     Components::response(bnd, "success", true).await?;
     bounty.cooldown(bnd).await?;
     Ok(())
@@ -55,9 +38,10 @@ async fn bounty(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
         }
     }
     let bbq = BBQ::new(bb.parse::<u8>().unwrap())?;
-    let mut bounty = Bounty::new().await?;
+    let category = Category::Free;
+    let mut bounty = Box::new(Bounty::new(&category).await?);
     bounty.set_cd(&bbq, cd as u32);
-    bounty.save().await?;
+    bounty.save(&category).await?;
     Components::response(bnd, "success", true).await?;
     bounty.cooldown(bnd).await?;
     Ok(())

@@ -33,8 +33,8 @@ async fn pedia(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     }
     let cat = Category::new(category.parse::<u8>().unwrap())?;
     let bb = BBQ::new(bbq.parse::<u8>().unwrap())?;
-    let bounty = Bounty::new().await?;
-    let embed = bounty.desc(bnd, &cat, &bb);
+    let bounty = Box::new(Bounty::new(&cat).await?);
+    let embed = bounty.desc(bnd, &bb,&cat)?;
     Components::response_adv(bnd, serenity::builder::CreateInteractionResponse::Message(
             CreateInteractionResponseMessage::new().embed(embed))).await?;
     Ok(())

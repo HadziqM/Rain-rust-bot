@@ -92,11 +92,12 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
         }
     }
     let mem = *bnd.cmd.member.clone().unwrap();
+    let cat = Category::new(category.unwrap())?;
     let mut pg = PgConn::create(bnd.init,bnd.cmd.user.id.to_string()).await?;
-    let mut bounty = Bounty::new().await?;
+    let mut bounty = Box::new(Bounty::new(&cat).await?);
     let uid = msg.mentions.iter().map(|x|x.id).collect::<Vec<_>>();
     let submit = BountySubmit::new(bnd, false, mem,
-    uid, &mut pg, &bounty, &link, Methode::new(methode.unwrap()), BBQ::new(bbq.unwrap())?, Category::new(category.unwrap())?).await?;
+    uid, &mut pg, &bounty, &link, Methode::new(methode.unwrap()), BBQ::new(bbq.unwrap())?, cat.clone()).await?;
     if !submit.cooldown(&mut bounty){
         return Err(MyErr::Custom("The Bounty You selected is on cooldown or disabled".to_owned()));
     }
@@ -104,7 +105,7 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     msg.reply(&bnd.ctx.http, "Your bounty is already submitted to Judge").await?;
     submit.save(&bnd.user().id.to_string()).await;
     bounty.cooldown(bnd).await?;
-    bounty.save().await?;
+    bounty.save(&cat).await?;
     pg.close().await;
     Ok(())
 }
@@ -132,8 +133,8 @@ pub(super) async fn submit(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let met = Methode::new(methode.parse::<u8>().unwrap());
     let member = *bnd.cmd.member.clone().unwrap();
     let mut pg = PgConn::create(bnd.init, member.user.id.to_string()).await?;
-    let mut bounty = Bounty::new().await?;
-    let submit = BountySubmit::new(bnd, false, member, mentions(mention)?,&mut pg, &bounty, &url, met, bb, cat).await?;
+    let mut bounty = Box::new(Bounty::new(&cat).await?);
+    let submit = BountySubmit::new(bnd, false, member, mentions(mention)?,&mut pg, &bounty, &url, met, bb, cat.clone()).await?;
     if !submit.cooldown(&mut bounty){
         return Err(MyErr::Custom("The Bounty You selected is on cooldown or disabled".to_owned()));
     }
@@ -141,7 +142,7 @@ pub(super) async fn submit(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     ChannelId::new(bnd.init.bounty.judge_ch).send_message(&bnd.ctx.http, CreateMessage::new().embed(submit.embed()).components(submit.button())).await?;
     submit.save(&bnd.user().id.to_string()).await;
     bounty.cooldown(bnd).await?;
-    bounty.save().await?;
+    bounty.save(&cat).await?;
     pg.close().await;
     Ok(())
 }
@@ -168,7 +169,7 @@ async fn distrib(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let met = Methode::new(methode.parse::<u8>().unwrap());
     let member = *bnd.cmd.member.clone().unwrap();
     let mut pg = PgConn::create(bnd.init, member.user.id.to_string()).await?;
-    let bounty = Bounty::new().await?;
+    let bounty = Box::new(Bounty::new(&cat).await?);
     let mut submit = BountySubmit::new(bnd, true, member, mentions(mention)?,&mut pg, &bounty, "", met, bb, cat).await?;
     Components::response(bnd, "trying to send all the distribution", true).await?;
     submit.reward(true, bnd, &mut pg).await?;

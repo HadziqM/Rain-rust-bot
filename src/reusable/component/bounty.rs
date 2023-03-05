@@ -7,7 +7,6 @@ use crate::event::interaction::SlashBundle;
 use crate::material::ItemPedia;
 use crate::reusable::utils::Color;
 use super::MyErr;
-use std::cell::RefCell;
 use crate::reusable::postgress::card::Event;
 #[derive(Clone)]
 pub struct Title{
@@ -145,15 +144,6 @@ impl Category{
             ("4".to_owned(),"Event".to_owned()),
         ]
     }
-    fn get_bounty<'a>(&self,bounty:&'a Bounty)->&'a BountyBBQ{
-        match self{
-            Self::Gold=>&bounty.gold,
-            Self::Silver=>&bounty.silver,
-            Self::Bronze=>&bounty.bronze,
-            Self::Free=>&bounty.free,
-            Self::Event=>&bounty.event
-        }
-    }
     fn rank(&self,event:&Event)->i32{
         let idk = match self{
             Self::Gold=>event.gold + 1,
@@ -183,6 +173,16 @@ impl Category{
                 }
                 _ =>{return;}
             }
+        }
+    }
+    fn bounty_path(&self)->PathBuf{
+        let x = Path::new(".").join("static");
+        match self{
+            Self::Gold=>x.join("gold_bounty.json"),
+            Self::Silver=>x.join("silver_bounty.json"),
+            Self::Bronze=>x.join("bronze_bounty.json"),
+            Self::Free=>x.join("free_bounty.json"),
+            Self::Event=>x.join("event_bounty.json"),
         }
     }
 }
@@ -334,34 +334,13 @@ impl BBQ{
             ("24".to_owned(),"BBQ25".to_owned()),
         ]
     }
-    fn get_bounty<'a>(&self,bbq:&'a BountyBBQ)->&'a BountyDesc{
-        match self{
-            BBQ::BBQ01=>&bbq.bbq1,
-            BBQ::BBQ02=>&bbq.bbq2,
-            BBQ::BBQ03=>&bbq.bbq3,
-            BBQ::BBQ04=>&bbq.bbq4,
-            BBQ::BBQ05=>&bbq.bbq5,
-            BBQ::BBQ06=>&bbq.bbq6,
-            BBQ::BBQ07=>&bbq.bbq7,
-            BBQ::BBQ08=>&bbq.bbq8,
-            BBQ::BBQ09=>&bbq.bbq9,
-            BBQ::BBQ10=>&bbq.bbq10,
-            BBQ::BBQ11=>&bbq.bbq11,
-            BBQ::BBQ12=>&bbq.bbq12,
-            BBQ::BBQ13=>&bbq.bbq13,
-            BBQ::BBQ14=>&bbq.bbq14,
-            BBQ::BBQ15=>&bbq.bbq15,
-            BBQ::BBQ16=>&bbq.bbq16,
-            BBQ::BBQ17=>&bbq.bbq17,
-            BBQ::BBQ18=>&bbq.bbq18,
-            BBQ::BBQ19=>&bbq.bbq19,
-            BBQ::BBQ20=>&bbq.bbq20,
-            BBQ::BBQ21=>&bbq.bbq21,
-            BBQ::BBQ22=>&bbq.bbq22,
-            BBQ::BBQ23=>&bbq.bbq23,
-            BBQ::BBQ24=>&bbq.bbq24,
-            BBQ::BBQ25=>&bbq.bbq25,
+    fn get_bounty<'a>(&self,bbq:&'a Bounty)->Result<&'a BountyDesc,MyErr>{
+        for i in &bbq.bounty{
+            if i.bbq == self.encode(){
+                return Ok(i);
+            }
         }
+        Err(MyErr::Custom("the jsont inst configured yet".to_owned()))
     }
 }
 #[derive(Clone)]
@@ -427,11 +406,10 @@ impl Hunter {
 use std::collections::HashMap;
 use crate::Mybundle;
 impl BountySubmit{
-    pub async fn new(bnd:&SlashBundle<'_>,bypass:bool,user:Member,uid:Vec<UserId>,pg:&mut PgConn<'_>,bounty:&Bounty,url:&str,method:Methode,bbq:BBQ,category:Category)
+    pub async fn new(bnd:&SlashBundle<'_>,bypass:bool,user:Member,uid:Vec<UserId>,pg:&mut PgConn<'_>,bounty:&Box<Bounty>,url:&str,method:Methode,bbq:BBQ,category:Category)
         ->Result<BountySubmit,MyErr>{
         let hunter = Hunter::new(bnd,bypass,user, uid, pg,&bbq,&category).await?;
-        let idk = category.get_bounty(bounty);
-        let desc = bbq.get_bounty(idk);
+        let desc = bbq.get_bounty(*&bounty)?;
         let reward = method.get_reward(desc).clone();
         Ok(BountySubmit{hunter,method,bbq,category,url:url.to_owned(),thumb:desc.icon.to_owned(),reward,time:MyTime::now()})
     }
@@ -527,13 +505,14 @@ impl BountySubmit{
         let arow = CreateActionRow::Buttons(vec![accept,reject]);
         vec![arow]
     }
-    pub fn cooldown(&self,bnt:&mut Bounty)->bool{
-        let dec = self.bbq.get_bounty(self.category.get_bounty(bnt));
-        if dec.cooldown > RefCell::new(0) {
-            if self.category != Category::Free{
-                dec.cooldown.replace_with(|&mut x|x-1);
+    pub fn cooldown(&self,bnt:&mut Box<Bounty>,)->bool{
+        for i in bnt.bounty.iter_mut(){
+            if i.cooldown == 0 && i.bbq == self.bbq.encode() {
+                if self.category == Category::Free{
+                    i.cooldown -= 1;
+                }
+                return true;
             }
-            return true;
         }
         false
     }
@@ -571,52 +550,21 @@ use serde::{Serialize,Deserialize};
 
 #[derive(Serialize,Deserialize,PartialEq, Eq)]
 pub struct Bounty{
-    pub gold:BountyBBQ,
-    pub silver:BountyBBQ,
-    pub bronze:BountyBBQ,
-    pub free:BountyBBQ,
-    pub event:BountyBBQ
-}
-#[derive(Serialize,Deserialize,PartialEq, Eq)]
-pub struct BountyBBQ{
-    pub bbq1:BountyDesc,
-    pub bbq2:BountyDesc,
-    pub bbq3:BountyDesc,
-    pub bbq4:BountyDesc,
-    pub bbq5:BountyDesc,
-    pub bbq6:BountyDesc,
-    pub bbq7:BountyDesc,
-    pub bbq8:BountyDesc,
-    pub bbq9:BountyDesc,
-    pub bbq10:BountyDesc,
-    pub bbq11:BountyDesc,
-    pub bbq12:BountyDesc,
-    pub bbq13:BountyDesc,
-    pub bbq14:BountyDesc,
-    pub bbq15:BountyDesc,
-    pub bbq16:BountyDesc,
-    pub bbq17:BountyDesc,
-    pub bbq18:BountyDesc,
-    pub bbq19:BountyDesc,
-    pub bbq20:BountyDesc,
-    pub bbq21:BountyDesc,
-    pub bbq22:BountyDesc,
-    pub bbq23:BountyDesc,
-    pub bbq24:BountyDesc,
-    pub bbq25:BountyDesc,
+    pub bounty:[BountyDesc; 25],
 }
 use super::super::bitwise::ItemCode;
-#[derive(Serialize,Deserialize,PartialEq, Eq)]
+#[derive(Serialize,Deserialize,PartialEq, Eq,Clone,Debug)]
 pub struct BountyDesc {
+    pub bbq:u8,
     pub description:String,
-    pub cooldown:RefCell<u32>,
+    pub cooldown:u32,
     pub icon:String,
     pub thumbnail:String,
     pub rules:Vec<String>,
     pub solo:BountyReward,
     pub multi:BountyReward
 }
-#[derive(Serialize,Deserialize,PartialEq, Eq,Clone)]
+#[derive(Serialize,Deserialize,PartialEq, Eq,Clone,Debug)]
 pub struct BountyReward{
     coin:u32,
     ticket:u32,
@@ -668,14 +616,43 @@ impl BountyRefresh{
         let x = serde_json::from_slice::<Self>(&data)?;
         Ok(x.save().await?)
     }
+    fn hashmap(&self)->[(BBQ,u32); 25]{
+        [
+            (BBQ::BBQ01,self.bbq1),
+            (BBQ::BBQ02,self.bbq2),
+            (BBQ::BBQ03,self.bbq3),
+            (BBQ::BBQ04,self.bbq4),
+            (BBQ::BBQ05,self.bbq5),
+            (BBQ::BBQ06,self.bbq6),
+            (BBQ::BBQ07,self.bbq7),
+            (BBQ::BBQ08,self.bbq8),
+            (BBQ::BBQ09,self.bbq9),
+            (BBQ::BBQ10,self.bbq10),
+            (BBQ::BBQ11,self.bbq11),
+            (BBQ::BBQ12,self.bbq12),
+            (BBQ::BBQ13,self.bbq13),
+            (BBQ::BBQ14,self.bbq14),
+            (BBQ::BBQ15,self.bbq15),
+            (BBQ::BBQ16,self.bbq16),
+            (BBQ::BBQ17,self.bbq17),
+            (BBQ::BBQ18,self.bbq18),
+            (BBQ::BBQ19,self.bbq19),
+            (BBQ::BBQ20,self.bbq20),
+            (BBQ::BBQ21,self.bbq21),
+            (BBQ::BBQ22,self.bbq22),
+            (BBQ::BBQ23,self.bbq23),
+            (BBQ::BBQ24,self.bbq24),
+            (BBQ::BBQ25,self.bbq25),
+        ]
+    }
 }
 impl Bounty{
-    pub fn path()->PathBuf{
-        Path::new(".").join("static").join("bounty.json")
+    pub fn path(category:&Category)->PathBuf{
+        category.bounty_path()
     }
-    pub fn desc<T:Mybundle>(&self,bnd:&T,category:&Category,bbq:&BBQ)->CreateEmbed{
+    pub fn desc<T:Mybundle>(&self,bnd:&T,bbq:&BBQ,category:&Category)->Result<CreateEmbed,MyErr>{
         let pedia = bnd.pedia();
-        let bdesc = bbq.get_bounty(category.get_bounty(&self));
+        let bdesc = bbq.get_bounty(&self)?;
         let mut rules = vec!["> ".to_owned()];
         let mut solo = vec!["> ".to_owned()];
         let mut multi = vec!["> ".to_owned()];
@@ -694,358 +671,80 @@ impl Bounty{
             multi.push(i.text(pedia).unwrap());
             multi.push("\n".to_owned());
         }
-        CreateEmbed::new().title(format!("{} {}",category.name(),bbq.name()))
+        Ok(CreateEmbed::new().title(format!("{} {}",category.name(),bbq.name()))
             .description(&bdesc.description)
             .thumbnail(&bdesc.icon).image(&bdesc.thumbnail)
             .field("Rules", rules[..rulen].concat(), false)
             .field("Solo Rewards", format!("Bounty Coin: {}\nGacha Ticket: {} Ticket\n{}"
                 ,Market::currency(bdesc.solo.coin as i64),bdesc.solo.ticket,solo[..solen].concat()), false)
             .field("Multiplayer Rewards", format!("Bounty Coin: {}\nGacha Ticket: {} Ticket\n{}"
-                ,Market::currency(bdesc.multi.coin as i64),bdesc.multi.ticket,multi[..mulen].concat()), false)
+                ,Market::currency(bdesc.multi.coin as i64),bdesc.multi.ticket,multi[..mulen].concat()), false))
     }
-    pub async fn check(data:&str)->Result<(),MyErr>{
-        let x = serde_json::from_str::<Self>(&data)?;
+    pub async fn check(data:&[u8],category:&Category)->Result<(),MyErr>{
+        let x = serde_json::from_slice::<Self>(&data)?;
         let pedia = ItemPedia::default();
-        for i in &x.get_items(){
-            if !i.check(&pedia){
-                return Err(MyErr::Custom(format!("There is item missmatch on 
-                    data struct\n`{i:?}`\nthose item isnt exist on database")));
+        for i in &x.bounty{
+            let mut item = i.solo.items.clone();
+            item.append(&mut i.multi.items.clone());
+            for it in item{
+                if !it.check(&pedia){
+                    return Err(MyErr::Custom(format!("There is item missmatch on 
+                        data struct\n`{it:?}`\nthose item isnt exist on database")));
+                }
             }
         }
-        x.save().await?;
+        x.save(category).await?;
         Ok(())
     }
-    fn get_items(&self)->Vec<ItemCode>{
-        let mut out = Vec::new();
-        out.append(&mut self.gold.bbq1.solo.items.clone());
-        out.append(&mut self.gold.bbq1.multi.items.clone());
-        out.append(&mut self.gold.bbq2.solo.items.clone());
-        out.append(&mut self.gold.bbq2.multi.items.clone());
-        out.append(&mut self.gold.bbq3.solo.items.clone());
-        out.append(&mut self.gold.bbq3.multi.items.clone());
-        out.append(&mut self.gold.bbq4.solo.items.clone());
-        out.append(&mut self.gold.bbq4.multi.items.clone());
-        out.append(&mut self.gold.bbq5.solo.items.clone());
-        out.append(&mut self.gold.bbq5.multi.items.clone());
-        out.append(&mut self.gold.bbq6.solo.items.clone());
-        out.append(&mut self.gold.bbq6.multi.items.clone());
-        out.append(&mut self.gold.bbq7.solo.items.clone());
-        out.append(&mut self.gold.bbq8.multi.items.clone());
-        out.append(&mut self.gold.bbq9.solo.items.clone());
-        out.append(&mut self.gold.bbq9.multi.items.clone());
-        out.append(&mut self.gold.bbq10.solo.items.clone());
-        out.append(&mut self.gold.bbq10.multi.items.clone());
-        out.append(&mut self.gold.bbq11.solo.items.clone());
-        out.append(&mut self.gold.bbq11.multi.items.clone());
-        out.append(&mut self.gold.bbq12.solo.items.clone());
-        out.append(&mut self.gold.bbq12.multi.items.clone());
-        out.append(&mut self.gold.bbq13.solo.items.clone());
-        out.append(&mut self.gold.bbq13.multi.items.clone());
-        out.append(&mut self.gold.bbq14.solo.items.clone());
-        out.append(&mut self.gold.bbq14.multi.items.clone());
-        out.append(&mut self.gold.bbq15.solo.items.clone());
-        out.append(&mut self.gold.bbq15.multi.items.clone());
-        out.append(&mut self.gold.bbq16.solo.items.clone());
-        out.append(&mut self.gold.bbq16.multi.items.clone());
-        out.append(&mut self.gold.bbq17.solo.items.clone());
-        out.append(&mut self.gold.bbq17.multi.items.clone());
-        out.append(&mut self.gold.bbq18.solo.items.clone());
-        out.append(&mut self.gold.bbq18.multi.items.clone());
-        out.append(&mut self.gold.bbq19.solo.items.clone());
-        out.append(&mut self.gold.bbq19.multi.items.clone());
-        out.append(&mut self.gold.bbq20.solo.items.clone());
-        out.append(&mut self.gold.bbq20.multi.items.clone());
-        out.append(&mut self.gold.bbq21.solo.items.clone());
-        out.append(&mut self.gold.bbq21.multi.items.clone());
-        out.append(&mut self.gold.bbq22.solo.items.clone());
-        out.append(&mut self.gold.bbq22.multi.items.clone());
-        out.append(&mut self.gold.bbq23.solo.items.clone());
-        out.append(&mut self.gold.bbq23.multi.items.clone());
-        out.append(&mut self.gold.bbq24.solo.items.clone());
-        out.append(&mut self.gold.bbq24.multi.items.clone());
-        out.append(&mut self.gold.bbq25.solo.items.clone());
-        out.append(&mut self.gold.bbq25.multi.items.clone());
-        out.append(&mut self.silver.bbq1.solo.items.clone());
-        out.append(&mut self.silver.bbq1.multi.items.clone());
-        out.append(&mut self.silver.bbq2.solo.items.clone());
-        out.append(&mut self.silver.bbq2.multi.items.clone());
-        out.append(&mut self.silver.bbq3.solo.items.clone());
-        out.append(&mut self.silver.bbq3.multi.items.clone());
-        out.append(&mut self.silver.bbq4.solo.items.clone());
-        out.append(&mut self.silver.bbq4.multi.items.clone());
-        out.append(&mut self.silver.bbq5.solo.items.clone());
-        out.append(&mut self.silver.bbq5.multi.items.clone());
-        out.append(&mut self.silver.bbq6.solo.items.clone());
-        out.append(&mut self.silver.bbq6.multi.items.clone());
-        out.append(&mut self.silver.bbq7.solo.items.clone());
-        out.append(&mut self.silver.bbq8.multi.items.clone());
-        out.append(&mut self.silver.bbq9.solo.items.clone());
-        out.append(&mut self.silver.bbq9.multi.items.clone());
-        out.append(&mut self.silver.bbq10.solo.items.clone());
-        out.append(&mut self.silver.bbq10.multi.items.clone());
-        out.append(&mut self.silver.bbq11.solo.items.clone());
-        out.append(&mut self.silver.bbq11.multi.items.clone());
-        out.append(&mut self.silver.bbq12.solo.items.clone());
-        out.append(&mut self.silver.bbq12.multi.items.clone());
-        out.append(&mut self.silver.bbq13.solo.items.clone());
-        out.append(&mut self.silver.bbq13.multi.items.clone());
-        out.append(&mut self.silver.bbq14.solo.items.clone());
-        out.append(&mut self.silver.bbq14.multi.items.clone());
-        out.append(&mut self.silver.bbq15.solo.items.clone());
-        out.append(&mut self.silver.bbq15.multi.items.clone());
-        out.append(&mut self.silver.bbq16.solo.items.clone());
-        out.append(&mut self.silver.bbq16.multi.items.clone());
-        out.append(&mut self.silver.bbq17.solo.items.clone());
-        out.append(&mut self.silver.bbq17.multi.items.clone());
-        out.append(&mut self.silver.bbq18.solo.items.clone());
-        out.append(&mut self.silver.bbq18.multi.items.clone());
-        out.append(&mut self.silver.bbq19.solo.items.clone());
-        out.append(&mut self.silver.bbq19.multi.items.clone());
-        out.append(&mut self.silver.bbq20.solo.items.clone());
-        out.append(&mut self.silver.bbq20.multi.items.clone());
-        out.append(&mut self.silver.bbq21.solo.items.clone());
-        out.append(&mut self.silver.bbq21.multi.items.clone());
-        out.append(&mut self.silver.bbq22.solo.items.clone());
-        out.append(&mut self.silver.bbq22.multi.items.clone());
-        out.append(&mut self.silver.bbq23.solo.items.clone());
-        out.append(&mut self.silver.bbq23.multi.items.clone());
-        out.append(&mut self.silver.bbq24.solo.items.clone());
-        out.append(&mut self.silver.bbq24.multi.items.clone());
-        out.append(&mut self.silver.bbq25.solo.items.clone());
-        out.append(&mut self.silver.bbq25.multi.items.clone());
-        out.append(&mut self.bronze.bbq1.solo.items.clone());
-        out.append(&mut self.bronze.bbq1.multi.items.clone());
-        out.append(&mut self.bronze.bbq2.solo.items.clone());
-        out.append(&mut self.bronze.bbq2.multi.items.clone());
-        out.append(&mut self.bronze.bbq3.solo.items.clone());
-        out.append(&mut self.bronze.bbq3.multi.items.clone());
-        out.append(&mut self.bronze.bbq4.solo.items.clone());
-        out.append(&mut self.bronze.bbq4.multi.items.clone());
-        out.append(&mut self.bronze.bbq5.solo.items.clone());
-        out.append(&mut self.bronze.bbq5.multi.items.clone());
-        out.append(&mut self.bronze.bbq6.solo.items.clone());
-        out.append(&mut self.bronze.bbq6.multi.items.clone());
-        out.append(&mut self.bronze.bbq7.solo.items.clone());
-        out.append(&mut self.bronze.bbq8.multi.items.clone());
-        out.append(&mut self.bronze.bbq9.solo.items.clone());
-        out.append(&mut self.bronze.bbq9.multi.items.clone());
-        out.append(&mut self.bronze.bbq10.solo.items.clone());
-        out.append(&mut self.bronze.bbq10.multi.items.clone());
-        out.append(&mut self.bronze.bbq11.solo.items.clone());
-        out.append(&mut self.bronze.bbq11.multi.items.clone());
-        out.append(&mut self.bronze.bbq12.solo.items.clone());
-        out.append(&mut self.bronze.bbq12.multi.items.clone());
-        out.append(&mut self.bronze.bbq13.solo.items.clone());
-        out.append(&mut self.bronze.bbq13.multi.items.clone());
-        out.append(&mut self.bronze.bbq14.solo.items.clone());
-        out.append(&mut self.bronze.bbq14.multi.items.clone());
-        out.append(&mut self.bronze.bbq15.solo.items.clone());
-        out.append(&mut self.bronze.bbq15.multi.items.clone());
-        out.append(&mut self.bronze.bbq16.solo.items.clone());
-        out.append(&mut self.bronze.bbq16.multi.items.clone());
-        out.append(&mut self.bronze.bbq17.solo.items.clone());
-        out.append(&mut self.bronze.bbq17.multi.items.clone());
-        out.append(&mut self.bronze.bbq18.solo.items.clone());
-        out.append(&mut self.bronze.bbq18.multi.items.clone());
-        out.append(&mut self.bronze.bbq19.solo.items.clone());
-        out.append(&mut self.bronze.bbq19.multi.items.clone());
-        out.append(&mut self.bronze.bbq20.solo.items.clone());
-        out.append(&mut self.bronze.bbq20.multi.items.clone());
-        out.append(&mut self.bronze.bbq21.solo.items.clone());
-        out.append(&mut self.bronze.bbq21.multi.items.clone());
-        out.append(&mut self.bronze.bbq22.solo.items.clone());
-        out.append(&mut self.bronze.bbq22.multi.items.clone());
-        out.append(&mut self.bronze.bbq23.solo.items.clone());
-        out.append(&mut self.bronze.bbq23.multi.items.clone());
-        out.append(&mut self.bronze.bbq24.solo.items.clone());
-        out.append(&mut self.bronze.bbq24.multi.items.clone());
-        out.append(&mut self.bronze.bbq25.solo.items.clone());
-        out.append(&mut self.bronze.bbq25.multi.items.clone());
-        out.append(&mut self.free.bbq1.solo.items.clone());
-        out.append(&mut self.free.bbq1.multi.items.clone());
-        out.append(&mut self.free.bbq2.solo.items.clone());
-        out.append(&mut self.free.bbq2.multi.items.clone());
-        out.append(&mut self.free.bbq3.solo.items.clone());
-        out.append(&mut self.free.bbq3.multi.items.clone());
-        out.append(&mut self.free.bbq4.solo.items.clone());
-        out.append(&mut self.free.bbq4.multi.items.clone());
-        out.append(&mut self.free.bbq5.solo.items.clone());
-        out.append(&mut self.free.bbq5.multi.items.clone());
-        out.append(&mut self.free.bbq6.solo.items.clone());
-        out.append(&mut self.free.bbq6.multi.items.clone());
-        out.append(&mut self.free.bbq7.solo.items.clone());
-        out.append(&mut self.free.bbq8.multi.items.clone());
-        out.append(&mut self.free.bbq9.solo.items.clone());
-        out.append(&mut self.free.bbq9.multi.items.clone());
-        out.append(&mut self.free.bbq10.solo.items.clone());
-        out.append(&mut self.free.bbq10.multi.items.clone());
-        out.append(&mut self.free.bbq11.solo.items.clone());
-        out.append(&mut self.free.bbq11.multi.items.clone());
-        out.append(&mut self.free.bbq12.solo.items.clone());
-        out.append(&mut self.free.bbq12.multi.items.clone());
-        out.append(&mut self.free.bbq13.solo.items.clone());
-        out.append(&mut self.free.bbq13.multi.items.clone());
-        out.append(&mut self.free.bbq14.solo.items.clone());
-        out.append(&mut self.free.bbq14.multi.items.clone());
-        out.append(&mut self.free.bbq15.solo.items.clone());
-        out.append(&mut self.free.bbq15.multi.items.clone());
-        out.append(&mut self.free.bbq16.solo.items.clone());
-        out.append(&mut self.free.bbq16.multi.items.clone());
-        out.append(&mut self.free.bbq17.solo.items.clone());
-        out.append(&mut self.free.bbq17.multi.items.clone());
-        out.append(&mut self.free.bbq18.solo.items.clone());
-        out.append(&mut self.free.bbq18.multi.items.clone());
-        out.append(&mut self.free.bbq19.solo.items.clone());
-        out.append(&mut self.free.bbq19.multi.items.clone());
-        out.append(&mut self.free.bbq20.solo.items.clone());
-        out.append(&mut self.free.bbq20.multi.items.clone());
-        out.append(&mut self.free.bbq21.solo.items.clone());
-        out.append(&mut self.free.bbq21.multi.items.clone());
-        out.append(&mut self.free.bbq22.solo.items.clone());
-        out.append(&mut self.free.bbq22.multi.items.clone());
-        out.append(&mut self.free.bbq23.solo.items.clone());
-        out.append(&mut self.free.bbq23.multi.items.clone());
-        out.append(&mut self.free.bbq24.solo.items.clone());
-        out.append(&mut self.free.bbq24.multi.items.clone());
-        out.append(&mut self.free.bbq25.solo.items.clone());
-        out.append(&mut self.free.bbq25.multi.items.clone());
-        out.append(&mut self.event.bbq1.solo.items.clone());
-        out.append(&mut self.event.bbq1.multi.items.clone());
-        out.append(&mut self.event.bbq2.solo.items.clone());
-        out.append(&mut self.event.bbq2.multi.items.clone());
-        out.append(&mut self.event.bbq3.solo.items.clone());
-        out.append(&mut self.event.bbq3.multi.items.clone());
-        out.append(&mut self.event.bbq4.solo.items.clone());
-        out.append(&mut self.event.bbq4.multi.items.clone());
-        out.append(&mut self.event.bbq5.solo.items.clone());
-        out.append(&mut self.event.bbq5.multi.items.clone());
-        out.append(&mut self.event.bbq6.solo.items.clone());
-        out.append(&mut self.event.bbq6.multi.items.clone());
-        out.append(&mut self.event.bbq7.solo.items.clone());
-        out.append(&mut self.event.bbq8.multi.items.clone());
-        out.append(&mut self.event.bbq9.solo.items.clone());
-        out.append(&mut self.event.bbq9.multi.items.clone());
-        out.append(&mut self.event.bbq10.solo.items.clone());
-        out.append(&mut self.event.bbq10.multi.items.clone());
-        out.append(&mut self.event.bbq11.solo.items.clone());
-        out.append(&mut self.event.bbq11.multi.items.clone());
-        out.append(&mut self.event.bbq12.solo.items.clone());
-        out.append(&mut self.event.bbq12.multi.items.clone());
-        out.append(&mut self.event.bbq13.solo.items.clone());
-        out.append(&mut self.event.bbq13.multi.items.clone());
-        out.append(&mut self.event.bbq14.solo.items.clone());
-        out.append(&mut self.event.bbq14.multi.items.clone());
-        out.append(&mut self.event.bbq15.solo.items.clone());
-        out.append(&mut self.event.bbq15.multi.items.clone());
-        out.append(&mut self.event.bbq16.solo.items.clone());
-        out.append(&mut self.event.bbq16.multi.items.clone());
-        out.append(&mut self.event.bbq17.solo.items.clone());
-        out.append(&mut self.event.bbq17.multi.items.clone());
-        out.append(&mut self.event.bbq18.solo.items.clone());
-        out.append(&mut self.event.bbq18.multi.items.clone());
-        out.append(&mut self.event.bbq19.solo.items.clone());
-        out.append(&mut self.event.bbq19.multi.items.clone());
-        out.append(&mut self.event.bbq20.solo.items.clone());
-        out.append(&mut self.event.bbq20.multi.items.clone());
-        out.append(&mut self.event.bbq21.solo.items.clone());
-        out.append(&mut self.event.bbq21.multi.items.clone());
-        out.append(&mut self.event.bbq22.solo.items.clone());
-        out.append(&mut self.event.bbq22.multi.items.clone());
-        out.append(&mut self.event.bbq23.solo.items.clone());
-        out.append(&mut self.event.bbq23.multi.items.clone());
-        out.append(&mut self.event.bbq24.solo.items.clone());
-        out.append(&mut self.event.bbq24.multi.items.clone());
-        out.append(&mut self.event.bbq25.solo.items.clone());
-        out.append(&mut self.event.bbq25.multi.items.clone());
-        out
-    }
-    pub async fn new()->Result<Self,MyErr>{
-        let file = tokio::fs::read(Bounty::path()).await?;
+    pub async fn new(category:&Category)->Result<Self,MyErr>{
+        let file = tokio::fs::read(Bounty::path(category)).await?;
         Ok(serde_json::from_slice(&file)?)
     }
-    pub fn new_block()->Result<Self,MyErr>{
-        let file = std::fs::read(Bounty::path()).unwrap();
-        Ok(serde_json::from_slice(&file)?)
-    }
-    pub async fn save(&self)->Result<(),Error>{
+    pub async fn save(&self,category:&Category)->Result<(),Error>{
         let string = serde_json::to_string_pretty(&self)?;
-        tokio::fs::write(Bounty::path(), string.as_bytes()).await?;
+        tokio::fs::write(Bounty::path(category), string.as_bytes()).await?;
         Ok(())
     }
     pub fn refresh(&mut self,reff:&BountyRefresh){
-        self.free.bbq1.cooldown.replace(reff.bbq1);
-        self.free.bbq2.cooldown.replace(reff.bbq2);
-        self.free.bbq3.cooldown.replace(reff.bbq3);
-        self.free.bbq4.cooldown.replace(reff.bbq4);
-        self.free.bbq5.cooldown.replace(reff.bbq5);
-        self.free.bbq6.cooldown.replace(reff.bbq6);
-        self.free.bbq7.cooldown.replace(reff.bbq7);
-        self.free.bbq8.cooldown.replace(reff.bbq8);
-        self.free.bbq9.cooldown.replace(reff.bbq9);
-        self.free.bbq10.cooldown.replace(reff.bbq10);
-        self.free.bbq11.cooldown.replace(reff.bbq11);
-        self.free.bbq12.cooldown.replace(reff.bbq12);
-        self.free.bbq13.cooldown.replace(reff.bbq13);
-        self.free.bbq14.cooldown.replace(reff.bbq14);
-        self.free.bbq15.cooldown.replace(reff.bbq15);
-        self.free.bbq16.cooldown.replace(reff.bbq16);
-        self.free.bbq17.cooldown.replace(reff.bbq17);
-        self.free.bbq18.cooldown.replace(reff.bbq18);
-        self.free.bbq19.cooldown.replace(reff.bbq19);
-        self.free.bbq20.cooldown.replace(reff.bbq20);
-        self.free.bbq21.cooldown.replace(reff.bbq21);
-        self.free.bbq22.cooldown.replace(reff.bbq22);
-        self.free.bbq23.cooldown.replace(reff.bbq23);
-        self.free.bbq24.cooldown.replace(reff.bbq24);
-        self.free.bbq25.cooldown.replace(reff.bbq25);
+        for (k,v) in &reff.hashmap(){
+            for i in self.bounty.iter_mut(){
+                if i.bbq == k.encode(){
+                    i.cooldown = *v;
+                }
+            }
+        }
     }
     pub async fn cooldown(&self,bnd:&SlashBundle<'_>)->Result<(),MyErr>{
         let mut msg = ChannelId::new(bnd.init.bounty.cooldown_ch)
             .message(&bnd.ctx.http, MessageId::new(bnd.init.bounty.cooldown_msg)).await?;
-        msg.edit(&bnd.ctx.http, EditMessage::new().embed(self.free.cooldown_embed())).await?;
+        msg.edit(&bnd.ctx.http, EditMessage::new().embed(self.cooldown_embed())).await?;
         Ok(())
     }
     pub fn set_cd(&mut self,bbq:&BBQ,cd:u32){
-        let x = bbq.get_bounty(&self.free);
-        x.cooldown.replace(cd);
+        for i in self.bounty.iter_mut(){
+            if i.bbq == bbq.encode(){
+                i.cooldown = cd
+            }
+        }
     }
-}
-impl BountyBBQ {
-    pub fn cooldown_embed(&self)->CreateEmbed{
-        let mut idk = format!("```\nBBQ01 ====== {} left",self.bbq1.cooldown.borrow());
-        idk.push_str(&format!("\nBBQ02 ====== {} left",self.bbq2.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ03 ====== {} left",self.bbq3.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ04 ====== {} left",self.bbq4.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ05 ====== {} left",self.bbq5.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ06 ====== {} left",self.bbq6.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ07 ====== {} left",self.bbq7.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ08 ====== {} left",self.bbq8.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ09 ====== {} left",self.bbq9.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ10 ====== {} left",self.bbq10.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ11 ====== {} left",self.bbq11.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ12 ====== {} left",self.bbq12.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ13 ====== {} left",self.bbq13.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ14 ====== {} left",self.bbq14.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ15 ====== {} left",self.bbq15.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ16 ====== {} left",self.bbq16.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ17 ====== {} left",self.bbq17.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ18 ====== {} left",self.bbq18.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ19 ====== {} left",self.bbq19.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ20 ====== {} left",self.bbq20.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ21 ====== {} left",self.bbq21.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ22 ====== {} left",self.bbq22.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ23 ====== {} left",self.bbq23.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ24 ====== {} left",self.bbq24.cooldown.borrow()));
-        idk.push_str(&format!("\nBBQ25 ====== {} left\n```",self.bbq25.cooldown.borrow()));
+    fn cooldown_embed(&self)->CreateEmbed{
+        let mut idk = "```".to_owned();
+        for i in &self.bounty{
+            idk.push_str(&format!("\nBBQ{} ======= {} left",add_0(i.bbq),i.cooldown));
+        }
+        idk.push_str("\n```");
         CreateEmbed::new().title("Free Category Cooldown").description(idk)
     }
 }
-
-unsafe impl Sync for BountyBBQ {}
-
+fn add_0(num:u8)->String{
+    if num < 10{
+        return format!("0{num}");
+    }
+    num.to_string()
+}
 impl Default for BountyDesc{
     fn default() -> Self {
-        BountyDesc { description: "this is bbq description".to_owned(), cooldown: RefCell::new(0), solo:BountyReward::default(),multi:BountyReward::default(),
+        BountyDesc { description: "this is bbq description".to_owned(), cooldown: 0,bbq:0, solo:BountyReward::default(),multi:BountyReward::default(),
             icon:"https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png".to_owned(),
             thumbnail:"https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png".to_owned(),
             rules:vec!["HR equipment only".to_owned(),"no MS".to_owned(),"naked".to_owned()]
@@ -1057,31 +756,12 @@ impl Default for BountyReward {
         BountyReward { coin: 1, ticket: 1, items:vec![ItemCode::default(),ItemCode::default()]}
     }
 }
-impl Default for BountyBBQ {
-    fn default() -> Self {
-        BountyBBQ { bbq1: BountyDesc::default(), bbq3: BountyDesc::default(),
-        bbq4: BountyDesc::default(), bbq5: BountyDesc::default(),
-        bbq2: BountyDesc::default(),
-        bbq6: BountyDesc::default(), bbq7: BountyDesc::default(), 
-        bbq8: BountyDesc::default(), bbq9: BountyDesc::default(), 
-        bbq10: BountyDesc::default(), bbq11: BountyDesc::default(), 
-        bbq12: BountyDesc::default(), bbq13: BountyDesc::default(), 
-        bbq14: BountyDesc::default(), bbq15: BountyDesc::default(), 
-        bbq16: BountyDesc::default(), bbq17: BountyDesc::default(),
-        bbq18: BountyDesc::default(), bbq19: BountyDesc::default(),
-        bbq20: BountyDesc::default(), bbq21: BountyDesc::default(),
-        bbq22: BountyDesc::default(), bbq23: BountyDesc::default(),
-        bbq24: BountyDesc::default(), bbq25: BountyDesc::default() }
-    }
-}
 impl Default for Bounty {
     fn default() -> Self {
-        Bounty { gold: BountyBBQ::default(), 
-        silver: BountyBBQ::default(), 
-        bronze: BountyBBQ::default(),
-        free: BountyBBQ::default(),
-        event: BountyBBQ::default() 
-        }
+        let x:[BountyDesc; 25] = (0..25)
+            .map(|_|BountyDesc::default())
+            .collect::<Vec<_>>().try_into().unwrap();
+        Bounty { bounty: x}
     }
 }
 impl Default for BountyRefresh {
@@ -1216,12 +896,11 @@ impl Default for BountyTitle {
 mod testing{
     use super::*;
     #[tokio::test]
-    #[ignore = "already had"]
     async fn get_json() {
         let x = Bounty::default();
         let y = BountyRefresh::default();
         let z = BountyTitle::default();
-        x.save().await.unwrap();
+        x.save(&Category::Free).await.unwrap();
         y.save().await.unwrap();
         z.save().await.unwrap();
     }
@@ -1231,21 +910,22 @@ mod testing{
         let mut x = Bounty::default();
         let y = BountyRefresh::new().await.unwrap();
         x.refresh(&y);
-        x.save().await.unwrap();
+        x.save(&Category::Free).await.unwrap();
     }
     #[tokio::test]
     #[ignore = "already tested"]
     async fn reset_cd() {
-        let mut x = Bounty::new().await.unwrap();
+        let mut x = Bounty::new(&Category::Free).await.unwrap();
         x.set_cd(&BBQ::BBQ01, 100);
-        assert_eq!(x.free.bbq1.cooldown.borrow().to_owned(),100);
-        x.save().await.unwrap();
+        assert_eq!(x.bounty[0].cooldown,100);
+        x.save(&Category::Free).await.unwrap();
     }
     #[tokio::test]
+    #[ignore = "queried"]
     async fn overflow() {
         let refresh = BountyRefresh::new().await.unwrap();
-        let mut bounty = Bounty::new().await.unwrap();
+        let mut bounty = Bounty::new(&Category::Free).await.unwrap();
         bounty.refresh(&refresh);
-        bounty.save().await.unwrap();
+        bounty.save(&Category::Free).await.unwrap();
     }
 }

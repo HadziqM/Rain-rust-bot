@@ -1,7 +1,7 @@
 use crate::SlashBundle;
 use super::{Components,MyErr};
 use serenity::all::*;
-use super::bounty::{Bounty,BountyRefresh,BountyTitle};
+use super::bounty::{Bounty,BountyRefresh,BountyTitle,Category};
 use serenity::async_trait;
 use super::gacha::Gacha;
 use super::market::{Market,Meal,Trading,Tag};
@@ -25,6 +25,12 @@ impl Components {
         T::update(bnd).await?;
         Ok(())
     }
+    pub async fn bounty_config(bnd:&SlashBundle<'_>,category:&Category)->Result<(),MyErr>{
+        let att = Components::get_att(bnd.cmd)?;
+        let byte = att.download().await?;
+        Bounty::check(&byte, category).await?;
+        Ok(())
+    }
 }
 #[async_trait]
 pub trait MyConfig {
@@ -33,16 +39,6 @@ pub trait MyConfig {
 }
 
 
-unsafe impl Sync for Bounty {}
-#[async_trait]
-impl MyConfig for Bounty{
-    async fn check(data:&[u8])->Result<(),MyErr>{
-        Ok(Bounty::check(data).await?)
-    }
-    async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
-        Ok(())
-    }
-}
 #[async_trait]
 impl MyConfig for BountyRefresh {
     async fn check(data:&[u8])->Result<(),MyErr>{
