@@ -5,7 +5,7 @@ use crate::{Components,Reg,SlashBundle,ComponentBundle,MyErr,Mytrait,Mybundle};
 use crate::reusable::utils::Color;
 use std::num::NonZeroU64;
 use std::path::Path;
-use std::time::SystemTime;
+use std::time::{SystemTime, Duration};
 
 pub struct FileSave{
     pub name:String,
@@ -125,9 +125,25 @@ async fn slash(bnd:&SlashBundle<'_>,_reg:&Reg<'_>)->Result<(),MyErr>{
     let content = EditInteractionResponse::new().embed(data.make_embed());
     let ch = ChannelId(NonZeroU64::new(bnd.init.log_channel.transfer_channel).unwrap());
     Components::edit_adv(bnd, content).await?;
-    ch.send_message(&bnd.ctx.http,CreateMessage::new()
+    let msg = ch.send_message(&bnd.ctx.http,CreateMessage::new()
         .content(format!("<@&{}>",bnd.init.server_role.judge_role))
         .embed(data.make_embed()).components(vec![data.make_button()])).await?;
+    tokio::time::sleep(Duration::new(5*60, 0)).await;
+    auto_accept(msg, SaveAcknowladge { uid: "".to_owned(), accept: true }, bnd, _reg).await?;
+    Ok(())
+}
+async fn auto_accept(mut msg:Message,ack:SaveAcknowladge,bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
+    if msg.components.len() != 0{
+        let files = ack.get_files().await?;
+        let user = bnd.user();
+        for file in &files{
+            reg.pg.transfer_file(file, reg.cid).await?;
+        }
+        user.direct_message(&bnd.ctx.http, CreateMessage::new().content("your save file is already approved automatically by bot,\nyou can login into the game now")).await?;
+        msg.edit(&bnd.ctx.http, EditMessage::new()
+            .content(format!("Approved automatically by bot At <t:{}:F>",SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs())).components(vec![])).await?;
+    }
     Ok(())
 }
 
