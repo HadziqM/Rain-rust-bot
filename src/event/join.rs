@@ -48,10 +48,13 @@ pub(super) async fn join(ctx:&Context,member:&Member,init:&Init)->Result<(),MyEr
     Ok(())
 }
 
-pub(super) async fn leave(ctx:&Context,user:&Member,guild:&GuildId,init:&Init)->Result<(),MyErr>{
+pub(super) async fn leave(ctx:&Context,user:&User,guild:&GuildId,init:&Init)->Result<(),MyErr>{
     let count = guild.to_partial_guild_with_counts(&ctx.http).await?.approximate_member_count.unwrap();
-    let roles = user.roles.iter().map(|x|x.to_string()).collect::<Vec<_>>().concat();
-    let embed = CreateEmbed::new().title("Member Leave").description(format!("{} leave at <t:{}:F>\n now we had {} member left",user.user.to_string(),utils::MyTime::now(),count))
+    let roles = match &user.member{
+        Some(x)=>x.roles.iter().map(|x|x.to_string()).collect::<Vec<_>>().concat(),
+        None=>String::from("cant get member info")
+    };
+    let embed = CreateEmbed::new().title("Member Leave").description(format!("{} leave at <t:{}:F>\n now we had {} member left",user.to_string(),utils::MyTime::now(),count))
         .color(Color::DARK_RED).field("Roles They Had", roles, false);
     ChannelId::new(init.log_channel.leave_channel).send_message(&ctx.http, CreateMessage::new().embed(embed)).await?;
     Ok(())

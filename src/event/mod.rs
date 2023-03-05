@@ -57,10 +57,9 @@ impl EventHandler for Handler{
             }
         }
     }
-    async fn guild_member_removal(&self,ctx:Context,guild:GuildId,_:User,member:Option<Member>) {
-        let mem = member.unwrap();
+    async fn guild_member_removal(&self,ctx:Context,guild:GuildId,user:User,_member:Option<Member>) {
         if self.config.bot_config.member_leave{
-            if let Err(why) = join::leave(&ctx,&mem,&guild,&self.config).await{
+            if let Err(why) = join::leave(&ctx,&user,&guild,&self.config).await{
                 eprintln!("member leave fail : {why:?}")
             }
         }

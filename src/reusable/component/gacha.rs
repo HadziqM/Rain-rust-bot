@@ -30,10 +30,10 @@ impl Gacha{
         let path = Path::new(".").join("static").join("gacha.json");
         Ok(serde_json::from_str(&tokio::fs::read_to_string(&path).await?)?)
     }
-    pub async fn check(data:&str)->Result<(),MyErr>{
-        serde_json::from_str::<Self>(data)?;
+    pub async fn check(data:&[u8])->Result<(),MyErr>{
+        serde_json::from_slice::<Self>(data)?;
         let path = Path::new(".").join("static").join("gacha.json");
-        tokio::fs::write(path, data.as_bytes()).await?;
+        tokio::fs::write(path, data.to_vec()).await?;
         Ok(())
     }
     fn pull(&self)->GachaData{

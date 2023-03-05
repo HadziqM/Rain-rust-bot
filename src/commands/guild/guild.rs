@@ -28,7 +28,7 @@ async fn auto(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
         if let CommandDataOptionValue::Autocomplete { kind:_, value } = &i.value{
             let mut pg = PgConn::create(bnd.init,bnd.cmd.user.id.to_string()).await?;
             let list = pg.guild_list().await?;
-            let auto = list.iter().filter_map(|x|{
+            let mut aut = list.iter().filter_map(|x|{
                 let name = x.name.to_lowercase();
                 let foc = value.to_lowercase();
                 if name.contains(&foc) || name.starts_with(&foc){
@@ -36,7 +36,10 @@ async fn auto(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
                 }
                 None
             }).collect::<Vec<_>>();
-            bnd.cmd.create_response(&bnd.ctx.http, CreateInteractionResponse::Autocomplete(CreateAutocompleteResponse::new().set_choices(auto))).await?;
+            if aut.len() > 25{
+                aut = aut[..20].to_vec();
+            }
+            bnd.cmd.create_response(&bnd.ctx.http, CreateInteractionResponse::Autocomplete(CreateAutocompleteResponse::new().set_choices(aut))).await?;
             pg.close().await;
         }
     }
@@ -72,7 +75,7 @@ impl Guild{
                 ,self.id,self.rank_rp),false),
             ("Leader Details",format!(" 🆔 Leader_id: {}\n 🏷️ Leader Name: {} \n 🎮 Leader Discord: {leader}"
                 ,self.leader_id,self.lead_name),false),
-        ]);
+        ]).color(crate::reusable::utils::Color::Random.throw());
         if leader.as_str() != "None"{
             let user = UserId::new(self.discord_id.clone().unwrap().parse::<u64>().unwrap()).to_user(&bnd.ctx.http).await?;
             emb = emb.footer(CreateEmbedFooter::new(format!("Owned by {}",&user.name)).icon_url(user.face()));

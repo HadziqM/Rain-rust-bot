@@ -52,8 +52,8 @@ impl Market {
         Ok(tokio::fs::write(&Market::path(),
             serde_json::to_string_pretty(&self)?.as_bytes()).await?)
     }
-    pub async fn check(data:&str)->Result<(),MyErr>{
-        let x = serde_json::from_str::<Self>(data)?;
+    pub async fn check(data:&[u8])->Result<(),MyErr>{
+        let x = serde_json::from_slice::<Self>(data)?;
         x.save().await?;
         Ok(())
     }
@@ -133,8 +133,8 @@ impl Meal{
         let file = serde_json::to_string_pretty(&self)?;
         Ok(tokio::fs::write(Meal::path(), file.as_bytes()).await?)
     }
-    pub async fn check(data:&str)->Result<(),MyErr>{
-        let x = serde_json::from_str::<Self>(data)?;
+    pub async fn check(data:&[u8])->Result<(),MyErr>{
+        let x = serde_json::from_slice::<Self>(data)?;
         x.save().await?;
         Ok(())
     }
@@ -177,8 +177,8 @@ impl Trading{
         let file = serde_json::to_string_pretty(&self)?;
         Ok(tokio::fs::write(Trading::path(), file.as_bytes()).await?)
     }
-    pub async fn check(data:&str)->Result<(),MyErr>{
-        let x = serde_json::from_str::<Self>(data)?;
+    pub async fn check(data:&[u8])->Result<(),MyErr>{
+        let x = serde_json::from_slice::<Self>(data)?;
         x.save().await?;
         Ok(())
     }
@@ -221,8 +221,8 @@ impl Tag{
         let file = serde_json::to_string_pretty(&self)?;
         Ok(tokio::fs::write(Tag::path(), file.as_bytes()).await?)
     }
-    pub async fn check(data:&str)->Result<(),MyErr>{
-        let x = serde_json::from_str::<Self>(data)?;
+    pub async fn check(data:&[u8])->Result<(),MyErr>{
+        let x = serde_json::from_slice::<Self>(data)?;
         x.save().await?;
         Ok(())
     }

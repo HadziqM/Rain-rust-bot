@@ -2,7 +2,7 @@ use sqlx::Row;
 use super::{BitwiseError,PgConn};
 use crate::MyErr;
 
-#[derive(sqlx::FromRow)]
+#[derive(sqlx::FromRow,Debug)]
 pub struct GuildList{
     pub id:i32,
     pub name:String
@@ -72,5 +72,19 @@ impl PgConn<'_>{
                 return Err(BitwiseError::from(why).into());
             }
         Ok(())
+    }
+}
+#[cfg(test)]
+mod test{
+    use super::*;
+    use crate::Init;
+
+    #[tokio::test]
+    async fn guild_list() {
+        let init = Init::new().await.unwrap();
+        let did = init.discord.author_id.to_string();
+        let mut pg = PgConn::create(&init, did).await.unwrap();
+        println!("{:?}",pg.guild_list().await.unwrap());
+        pg.close().await;
     }
 }

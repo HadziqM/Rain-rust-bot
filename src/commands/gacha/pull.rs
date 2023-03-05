@@ -13,7 +13,7 @@ fn create_embed(user:&User,pg:&GachaPg)->CreateEmbed{
         .author(CreateEmbedAuthor::new(&user.name).icon_url(user.face())).image("attachment://gacha.jpg").color(Color::Random.throw())
 }
 
-#[hertz::hertz_slash_reg(60,true)]
+#[hertz::hertz_slash_reg(10,true)]
 async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
     let mut multi = false;
     for i in &bnd.cmd.data.options{

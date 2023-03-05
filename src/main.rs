@@ -27,7 +27,7 @@ lazy_static!{
 
 #[tokio::main]
 async fn main(){
-    let intents = GatewayIntents::GUILDS | GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
+    let intents = GatewayIntents::GUILDS | GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MEMBERS;
     match Init::new().await{
         Ok(conf)=> {
             let mut client = Client::builder(conf.discord.token.to_owned(), intents)

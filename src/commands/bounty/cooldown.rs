@@ -18,9 +18,26 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     Ok(())
 }
 
+fn unsafe_allocate_bounty() -> Result<Box<Bounty>,MyErr> {
+    let grid_box: Box<Bounty>;
+    println!("unsafe block");
+    unsafe {
+        use std::alloc::{alloc, Layout};
+        let layout = Layout::new::<Bounty>();
+        let ptr = alloc(layout) as *mut Bounty;
+        println!("allocated");
+        (*ptr) = serde_json::from_slice(&std::fs::read(Bounty::path()).unwrap())?;
+        println!("populate pointer");
+        grid_box = Box::from_raw(ptr);
+    }
+    return Ok(grid_box);
+}
 async fn refresh(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
-    let refresh = BountyRefresh::new().await?;
-    let mut bounty = Bounty::new().await?;
+    println!("try to load bounty_refresh.json");
+    let refresh =BountyRefresh::new().await?;
+    println!("try to load bounty.json");
+    let mut bounty = unsafe_allocate_bounty()?;
+    println!("try to change serialized bounty");
     bounty.refresh(&refresh);
     bounty.save().await?;
     Components::response(bnd, "success", true).await?;

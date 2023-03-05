@@ -664,8 +664,8 @@ impl BountyRefresh{
         tokio::fs::write(BountyRefresh::path(), string.as_bytes()).await?;
         Ok(())
     }
-    pub async fn check(data:&str)->Result<(),Error>{
-        let x = serde_json::from_str::<Self>(&data)?;
+    pub async fn check(data:&[u8])->Result<(),Error>{
+        let x = serde_json::from_slice::<Self>(&data)?;
         Ok(x.save().await?)
     }
 }
@@ -960,8 +960,12 @@ impl Bounty{
         out
     }
     pub async fn new()->Result<Self,MyErr>{
-        let file = tokio::fs::read_to_string(Bounty::path()).await?;
-        Ok(serde_json::from_str(&file)?)
+        let file = tokio::fs::read(Bounty::path()).await?;
+        Ok(serde_json::from_slice(&file)?)
+    }
+    pub fn new_block()->Result<Self,MyErr>{
+        let file = std::fs::read(Bounty::path()).unwrap();
+        Ok(serde_json::from_slice(&file)?)
     }
     pub async fn save(&self)->Result<(),Error>{
         let string = serde_json::to_string_pretty(&self)?;
@@ -1147,8 +1151,8 @@ impl BountyTitle{
         let file = serde_json::to_string_pretty(&self)?;
         Ok(tokio::fs::write(BountyTitle::path(), file.as_bytes()).await?)
     }
-    pub async fn check(data:&str)->Result<(),MyErr>{
-        let x = serde_json::from_str::<Self>(data)?;
+    pub async fn check(data:&[u8])->Result<(),MyErr>{
+        let x = serde_json::from_slice::<Self>(data)?;
         for i in &x.custom{
             if i.db_code != 0{
                 return Err(MyErr::Custom("you cant set value other than 0 for custom title's db_code".to_owned()));
@@ -1236,5 +1240,12 @@ mod testing{
         x.set_cd(&BBQ::BBQ01, 100);
         assert_eq!(x.free.bbq1.cooldown.borrow().to_owned(),100);
         x.save().await.unwrap();
+    }
+    #[tokio::test]
+    async fn overflow() {
+        let refresh = BountyRefresh::new().await.unwrap();
+        let mut bounty = Bounty::new().await.unwrap();
+        bounty.refresh(&refresh);
+        bounty.save().await.unwrap();
     }
 }

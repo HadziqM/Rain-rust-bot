@@ -21,15 +21,14 @@ impl Components {
     pub async fn json_config<T:MyConfig>(bnd:&SlashBundle<'_>,_tip:T)->Result<(),MyErr>{
         let att = Components::get_att(bnd.cmd)?;
         let byte = att.download().await?;
-        let utf8 = std::str::from_utf8(&byte)?.to_owned();
-        T::check(&utf8).await?;
+        T::check(&byte).await?;
         T::update(bnd).await?;
         Ok(())
     }
 }
 #[async_trait]
 pub trait MyConfig {
-    async fn check(data:&str)->Result<(),MyErr>;
+    async fn check(data:&[u8])->Result<(),MyErr>;
     async fn update(bnd:&SlashBundle<'_>)->Result<(),MyErr>;
 }
 
@@ -37,7 +36,7 @@ pub trait MyConfig {
 unsafe impl Sync for Bounty {}
 #[async_trait]
 impl MyConfig for Bounty{
-    async fn check(data:&str)->Result<(),MyErr>{
+    async fn check(data:&[u8])->Result<(),MyErr>{
         Ok(Bounty::check(data).await?)
     }
     async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
@@ -46,7 +45,7 @@ impl MyConfig for Bounty{
 }
 #[async_trait]
 impl MyConfig for BountyRefresh {
-    async fn check(data:&str)->Result<(),MyErr>{
+    async fn check(data:&[u8])->Result<(),MyErr>{
         Ok(BountyRefresh::check(data).await?)
     }
     async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
@@ -55,7 +54,7 @@ impl MyConfig for BountyRefresh {
 }
 #[async_trait]
 impl MyConfig for BountyTitle {
-    async fn check(data:&str)->Result<(),MyErr>{
+    async fn check(data:&[u8])->Result<(),MyErr>{
         Ok(BountyTitle::check(data).await?)
     }
     async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
@@ -64,7 +63,7 @@ impl MyConfig for BountyTitle {
 }
 #[async_trait]
 impl MyConfig for Gacha {
-    async fn check(data:&str)->Result<(),MyErr>{
+    async fn check(data:&[u8])->Result<(),MyErr>{
         Ok(Gacha::check(data).await?)
     }
     async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
@@ -73,7 +72,7 @@ impl MyConfig for Gacha {
 }
 #[async_trait]
 impl MyConfig for Market {
-    async fn check(data:&str)->Result<(),MyErr>{
+    async fn check(data:&[u8])->Result<(),MyErr>{
         Ok(Market::check(data).await?)
     }
     async fn update(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
@@ -83,7 +82,7 @@ impl MyConfig for Market {
 }
 #[async_trait]
 impl MyConfig for Meal {
-    async fn check(data:&str)->Result<(),MyErr>{
+    async fn check(data:&[u8])->Result<(),MyErr>{
         Ok(Meal::check(data).await?)
     }
     async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
@@ -92,7 +91,7 @@ impl MyConfig for Meal {
 }
 #[async_trait]
 impl MyConfig for Trading {
-    async fn check(data:&str)->Result<(),MyErr>{
+    async fn check(data:&[u8])->Result<(),MyErr>{
         Ok(Trading::check(data).await?)
     }
     async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
@@ -101,7 +100,7 @@ impl MyConfig for Trading {
 }
 #[async_trait]
 impl MyConfig for Tag {
-    async fn check(data:&str)->Result<(),MyErr>{
+    async fn check(data:&[u8])->Result<(),MyErr>{
         Ok(Tag::check(data).await?)
     }
     async fn update(_bnd:&SlashBundle<'_>)->Result<(),MyErr>{
