@@ -149,7 +149,7 @@ impl Category{
             Self::Gold=>event.gold + 1,
             Self::Bronze=>event.bronze + 1,
             Self::Silver=>event.silver + 1,
-            _ => 0
+            _ => 50
         };
         idk
     }
@@ -492,7 +492,7 @@ impl BountySubmit{
         let mut desc = Vec::new();
         for i in &self.hunter{
             desc.push("\n".to_owned());
-            desc.push(format!("```\nname\t:\t{}\ndiscord\t:\t{}\n```",&i.event.name,&i.member.user.name));
+            desc.push(format!("```\nname : {}\ndiscord : {}\n```",&i.event.name,&i.member.user.name));
         }
         let res = format!("Submitted At <t:{}:F>\n{}",self.time,desc[1..].concat());
         let author = &self.hunter[0].member;
@@ -507,7 +507,7 @@ impl BountySubmit{
     }
     pub fn cooldown(&self,bnt:&mut Box<Bounty>,)->bool{
         for i in bnt.bounty.iter_mut(){
-            if i.cooldown == 0 && i.bbq == self.bbq.encode() {
+            if i.cooldown != 0 && i.bbq == self.bbq.encode() {
                 if self.category == Category::Free{
                     i.cooldown -= 1;
                 }
@@ -653,14 +653,11 @@ impl Bounty{
     pub fn desc<T:Mybundle>(&self,bnd:&T,bbq:&BBQ,category:&Category)->Result<CreateEmbed,MyErr>{
         let pedia = bnd.pedia();
         let bdesc = bbq.get_bounty(&self)?;
-        let mut rules = vec!["> ".to_owned()];
-        let mut solo = vec!["> ".to_owned()];
-        let mut multi = vec!["> ".to_owned()];
-        let rulen = bdesc.rules.len() -1;
-        let mulen = bdesc.multi.items.len() -1;
-        let solen = bdesc.solo.items.len() -1;
-        for i in &bdesc.rules{
-            rules.push(i.to_owned());
+        let mut rules = vec![">>> ".to_owned()];
+        let mut solo = vec![">>> ".to_owned()];
+        let mut multi = vec![">>> ".to_owned()];
+        for (i,v) in bdesc.rules.iter().enumerate(){
+            rules.push(format!("{}. {v}",i+1));
             rules.push("\n".to_owned());
         }
         for i in &bdesc.solo.items{
@@ -671,6 +668,9 @@ impl Bounty{
             multi.push(i.text(pedia).unwrap());
             multi.push("\n".to_owned());
         }
+        let rulen = rules.len() -1;
+        let mulen = multi.len() -1;
+        let solen = solo.len() -1;
         Ok(CreateEmbed::new().title(format!("{} {}",category.name(),bbq.name()))
             .description(&bdesc.description)
             .thumbnail(&bdesc.icon).image(&bdesc.thumbnail)
@@ -678,7 +678,8 @@ impl Bounty{
             .field("Solo Rewards", format!("Bounty Coin: {}\nGacha Ticket: {} Ticket\n{}"
                 ,Market::currency(bdesc.solo.coin as i64),bdesc.solo.ticket,solo[..solen].concat()), false)
             .field("Multiplayer Rewards", format!("Bounty Coin: {}\nGacha Ticket: {} Ticket\n{}"
-                ,Market::currency(bdesc.multi.coin as i64),bdesc.multi.ticket,multi[..mulen].concat()), false))
+                ,Market::currency(bdesc.multi.coin as i64),bdesc.multi.ticket,multi[..mulen].concat()), false)
+            .color(Color::Random.throw()))
     }
     pub async fn check(data:&[u8],category:&Category)->Result<(),MyErr>{
         let x = serde_json::from_slice::<Self>(&data)?;
@@ -730,10 +731,11 @@ impl Bounty{
     fn cooldown_embed(&self)->CreateEmbed{
         let mut idk = "```".to_owned();
         for i in &self.bounty{
-            idk.push_str(&format!("\nBBQ{} ======= {} left",add_0(i.bbq),i.cooldown));
+            idk.push_str(&format!("\nBBQ{} ======= {} left",add_0(i.bbq+1),i.cooldown));
         }
         idk.push_str("\n```");
         CreateEmbed::new().title("Free Category Cooldown").description(idk)
+            .color(Color::Random.throw())
     }
 }
 fn add_0(num:u8)->String{
@@ -896,6 +898,7 @@ impl Default for BountyTitle {
 mod testing{
     use super::*;
     #[tokio::test]
+    #[ignore = "already have"]
     async fn get_json() {
         let x = Bounty::default();
         let y = BountyRefresh::default();
@@ -921,7 +924,6 @@ mod testing{
         x.save(&Category::Free).await.unwrap();
     }
     #[tokio::test]
-    #[ignore = "queried"]
     async fn overflow() {
         let refresh = BountyRefresh::new().await.unwrap();
         let mut bounty = Bounty::new(&Category::Free).await.unwrap();

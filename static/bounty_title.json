@@ -7,7 +7,8 @@
       "y_start": 170
     },
     "trigger": "4_0",
-    "role_id": 1031595216538452038
+    "role_id": 1031595216538452038,
+    "db_code": 0
   },
   "silver_bounty": {
     "image": {
@@ -17,7 +18,8 @@
       "y_start": 170
     },
     "trigger": "4_0",
-    "role_id": 1031595216538452038
+    "role_id": 1031595216538452038,
+    "db_code": 0
   },
   "gold_bounty": {
     "image": {
@@ -27,7 +29,8 @@
       "y_start": 170
     },
     "trigger": "4_0",
-    "role_id": 1031595216538452038
+    "role_id": 1031595216538452038,
+    "db_code": 0
   },
   "bronze_trading": {
     "image": {
@@ -37,7 +40,8 @@
       "y_start": 170
     },
     "trigger": "4_0",
-    "role_id": 1031595216538452038
+    "role_id": 1031595216538452038,
+    "db_code": 0
   },
   "silver_trading": {
     "image": {
@@ -47,7 +51,8 @@
       "y_start": 170
     },
     "trigger": "4_0",
-    "role_id": 1031595216538452038
+    "role_id": 1031595216538452038,
+    "db_code": 0
   },
   "gold_trading": {
     "image": {
@@ -57,7 +62,8 @@
       "y_start": 170
     },
     "trigger": "4_0",
-    "role_id": 1031595216538452038
+    "role_id": 1031595216538452038,
+    "db_code": 0
   },
   "custom": [
     {
@@ -68,7 +74,8 @@
         "y_start": 170
       },
       "trigger": "4_0",
-      "role_id": 1031595216538452038
+      "role_id": 1031595216538452038,
+      "db_code": 0
     },
     {
       "image": {
@@ -78,7 +85,8 @@
         "y_start": 170
       },
       "trigger": "4_0",
-      "role_id": 1031595216538452038
+      "role_id": 1031595216538452038,
+      "db_code": 0
     }
   ]
 }

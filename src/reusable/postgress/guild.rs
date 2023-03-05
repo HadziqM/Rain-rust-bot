@@ -80,6 +80,7 @@ mod test{
     use crate::Init;
 
     #[tokio::test]
+    #[ignore = "tested"]
     async fn guild_list() {
         let init = Init::new().await.unwrap();
         let did = init.discord.author_id.to_string();

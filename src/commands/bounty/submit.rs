@@ -59,33 +59,33 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
                 if let ComponentInteractionDataKind::StringSelect { values } = &pat.data.kind{
                     methode = Some(values.first().unwrap().to_owned().parse::<u8>().unwrap());
                     pat.defer(&bnd.ctx.http).await?;
+                    m_menu = m_menu.disabled(true);
+                    msg_edit(&mut msg, make_arow(vec![m_menu.clone(),c_menu.clone(),b_menu.clone()]), bnd.ctx).await?;
                     if bbq.is_some() && category.is_some(){
                         break;
                     }
-                    m_menu = m_menu.disabled(true);
-                    msg_edit(&mut msg, make_arow(vec![m_menu.clone(),c_menu.clone(),b_menu.clone()]), bnd.ctx).await?;
                 }
             }
             "category" => {
                 if let ComponentInteractionDataKind::StringSelect { values } = &pat.data.kind{
                     category = Some(values.first().unwrap().to_owned().parse::<u8>().unwrap());
                     pat.defer(&bnd.ctx.http).await?;
+                    c_menu = c_menu.disabled(true);
+                    msg_edit(&mut msg, make_arow(vec![m_menu.clone(),c_menu.clone(),b_menu.clone()]), bnd.ctx).await?;
                     if bbq.is_some() && methode.is_some(){
                         break;
                     }
-                    c_menu = c_menu.disabled(true);
-                    msg_edit(&mut msg, make_arow(vec![m_menu.clone(),c_menu.clone(),b_menu.clone()]), bnd.ctx).await?;
                 }
             }
             "bbq" => {
                 if let ComponentInteractionDataKind::StringSelect { values } = &pat.data.kind{
                     bbq = Some(values.first().unwrap().to_owned().parse::<u8>().unwrap());
                     pat.defer(&bnd.ctx.http).await?;
+                    b_menu = b_menu.disabled(true);
+                    msg_edit(&mut msg, make_arow(vec![m_menu.clone(),c_menu.clone(),b_menu.clone()]), bnd.ctx).await?;
                     if methode.is_some() && category.is_some(){
                         break;
                     }
-                    b_menu = b_menu.disabled(true);
-                    msg_edit(&mut msg, make_arow(vec![m_menu.clone(),c_menu.clone(),b_menu.clone()]), bnd.ctx).await?;
                 }
             }
             _ =>{continue;}
@@ -180,8 +180,9 @@ async fn distrib(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
 #[hertz::hertz_button_normal(0,false)]
 async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{
     let mut code = bnd.cmd.data.custom_id.split("_");
-    let user = code.nth(1).ok_or(MyErr::Custom("cant get user id in custom id".to_owned()))?;
-    let state = code.nth(2).ok_or(MyErr::Custom("cant get the button state in custom id".to_owned()))?;
+    code.next();
+    let user = code.next().ok_or(MyErr::Custom("cant get user id in custom id".to_owned()))?;
+    let state = code.next().ok_or(MyErr::Custom("cant get the button state in custom id".to_owned()))?;
     let mut submit = BountySubmit::open(user).await
         .ok_or(MyErr::Custom("submit data doesnt exist on cache".to_owned()))?;
     if state == "r"{

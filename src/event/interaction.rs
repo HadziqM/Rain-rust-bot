@@ -266,7 +266,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
             if code.contains("save"){
                 return commands::binded::transfer::discord_button(&bnd).await;
             }
-            if code.contains("submit"){
+            if code.contains("bounty"){
                 return commands::bounty::submit::discord_button(&bnd).await;
             }
             match code{
@@ -292,7 +292,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
             let bnd = SlashBundle{cmd,init,image,pedia,ctx};
             let wth = cmd.data.name.as_str();
             match wth{
-                "market"=>commands::admin::market::discord_auto(&bnd).await,
+                "send"=>commands::admin::market::discord_auto(&bnd).await,
                 "trading"=>commands::market::trading::discord_auto(&bnd).await,
                 "guild"=>commands::guild::guild::discord_auto(&bnd).await,
                 "ferias"=>commands::misc::ferias::discord_auto(&bnd).await,

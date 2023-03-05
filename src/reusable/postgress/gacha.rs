@@ -53,7 +53,7 @@ impl<'a> PgConn<'a> {
     }
     pub async fn bounty_event(&self,event:&Event)->Result<(),BitwiseError>{
         sqlx::query("UPDATE discord set bounty=$1,gacha=$2,gold=$3,silver=$4,bronze=$5,latest_bounty=$6
-            ,latest_bounty_time=$6,title=$7 where discord_id=$8")
+            ,latest_bounty_time=$7,title=$8 where discord_id=$9")
             .bind(event.bounty).bind(event.gacha).bind(event.gold).bind(event.silver).bind(event.bronze)
             .bind(&event.latest_bounty).bind(event.latest_bounty_time).bind(event.title).bind(&self.did)
             .execute(&self.pool).await?;
@@ -82,48 +82,51 @@ impl<'a> PgConn<'a> {
     }
 }
 
-// #[cfg(test)]
-// mod testing{
-//     use crate::reusable::config::get_config;
-//
-//     use super::*;
-//
-//     // #[tokio::test]
-//     // async fn get_pity() {
-//     //     let init = get_config().unwrap();
-//     //     let did = init.discord.author_id.to_string();
-//     //     let mut pg = PgConn::create(&init, did).await.unwrap();
-//     //     println!("{:?}",pg.get_pity().await.unwrap());
-//     //     pg.close().await;
-//     // }
-//     #[tokio::test]
-//     async fn send_distrib() {
-//         let init = get_config().unwrap();
-//         let did = init.discord.author_id.to_string();
-//         let mut pg = PgConn::create(&init, did).await.unwrap();
-//         let data = ItemCode { key: "0700".to_owned(), count: 1, types: 7 };
-//         pg.market(&data, 843, Some(1)).await.unwrap();
-//         pg.close().await;
-//     }
-//     #[tokio::test]
-//     async fn single() {
-//         let init = get_config().unwrap();
-//         let did = init.discord.author_id.to_string();
-//         let mut pg = PgConn::create(&init, did).await.unwrap();
-//         let data = [ItemCode { key: "0700".to_owned(), count: 1, types: 7 }];
-//         let gac = GachaPg{pity:30,ticket:20};
-//         pg.send_distrib(&gac, &data,843).await.unwrap();
-//         pg.close().await;
-//     }
-//     #[tokio::test]
-//     async fn multiple() {
-//         let init = get_config().unwrap();
-//         let did = init.discord.author_id.to_string();
-//         let mut pg = PgConn::create(&init, did).await.unwrap();
-//         let data = [ItemCode { key: "0700".to_owned(), count: 1, types: 7 },
-//         ItemCode { key: "0700".to_owned(), count: 20, types: 7 }];
-//         let gac = GachaPg{pity:30,ticket:20};
-//         pg.send_distrib(&gac, &data,843).await.unwrap();
-//         pg.close().await;
-//     }
-// }
+#[cfg(test)]
+mod testing{
+    use crate::reusable::config::Init;
+    use super::*;
+
+    #[tokio::test]
+    async fn test_bounty_send() {
+        let init = Init::new().await.unwrap();
+        let mut pg = PgConn::create(&init, init.discord.author_id.to_string()).await.unwrap();
+        let mut event = pg.get_event().await.unwrap();
+        println!("{event:?}");
+        event.bounty = 1000000;
+        pg.bounty_event(&event).await.unwrap();
+        let event2 = pg.get_event().await.unwrap();
+        println!("{event2:?}");
+        pg.close().await;
+    }
+    // #[tokio::test]
+    // async fn send_distrib() {
+    //     let init = get_config().unwrap();
+    //     let did = init.discord.author_id.to_string();
+    //     let mut pg = PgConn::create(&init, did).await.unwrap();
+    //     let data = ItemCode { key: "0700".to_owned(), count: 1, types: 7 };
+    //     pg.market(&data, 843, Some(1)).await.unwrap();
+    //     pg.close().await;
+    // }
+    // #[tokio::test]
+    // async fn single() {
+    //     let init = get_config().unwrap();
+    //     let did = init.discord.author_id.to_string();
+    //     let mut pg = PgConn::create(&init, did).await.unwrap();
+    //     let data = [ItemCode { key: "0700".to_owned(), count: 1, types: 7 }];
+    //     let gac = GachaPg{pity:30,ticket:20};
+    //     pg.send_distrib(&gac, &data,843).await.unwrap();
+    //     pg.close().await;
+    // }
+    // #[tokio::test]
+    // async fn multiple() {
+    //     let init = get_config().unwrap();
+    //     let did = init.discord.author_id.to_string();
+    //     let mut pg = PgConn::create(&init, did).await.unwrap();
+    //     let data = [ItemCode { key: "0700".to_owned(), count: 1, types: 7 },
+    //     ItemCode { key: "0700".to_owned(), count: 20, types: 7 }];
+    //     let gac = GachaPg{pity:30,ticket:20};
+    //     pg.send_distrib(&gac, &data,843).await.unwrap();
+    //     pg.close().await;
+    // }
+}

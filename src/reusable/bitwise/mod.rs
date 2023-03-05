@@ -12,7 +12,7 @@ pub struct ItemCode {
 }
 impl Default for ItemCode {
     fn default() -> Self {
-        ItemCode { key: "0000".to_string(), count: 1, types: 7 }
+        ItemCode { key: "0700".to_string(), count: 1, types: 7 }
     }
 }
 

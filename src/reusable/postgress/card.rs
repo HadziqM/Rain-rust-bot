@@ -30,7 +30,7 @@ impl Default for Card{
     }
 }
 
-#[derive(FromRow,Clone)]
+#[derive(FromRow,Clone,Debug)]
 pub struct Event {
     pub bounty:i32,
     pub gacha:i32,
