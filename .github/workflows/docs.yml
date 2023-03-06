@@ -1,9 +1,11 @@
-name: Documentation
 on:
   workflow_dispatch: {}
   push:
     branches:
       - senpai
+
+name: Documentation
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -14,22 +16,31 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: hover docs folder
+        run: cd ./vite-press
+
       - uses: actions/setup-node@v3
         with:
           node-version: 16
           cache: npm
-      - run: cd ./vite-press
-      - name: hover docs folder
+
+
       - run: npm install --frozen-lockfile
+
       - name: Build
         run: npm run docs:build
+
       - uses: actions/configure-pages@v2
+
       - uses: actions/upload-pages-artifact@v1
         with:
           path: docs/.vitepress/dist
+
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v1
