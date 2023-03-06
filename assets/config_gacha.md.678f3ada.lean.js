@@ -1,0 +1,1 @@
+import{_ as e,c as s,o as a,a as n}from"./app.e3ba1e82.js";const C=JSON.parse('{"title":"Gacha Config","description":"","frontmatter":{"title":"Gacha Config","lang":"en-US"},"headers":[],"relativePath":"config/gacha.md"}'),o={name:"config/gacha.md"},t=n("",7),l=[t];function c(p,r,i,d,h,u){return a(),s("div",null,l)}const D=e(o,[["render",c]]);export{C as __pageData,D as default};

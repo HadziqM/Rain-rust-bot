@@ -1,0 +1,1 @@
+import{_ as e,c as o,o as a,a as t}from"./app.e3ba1e82.js";const g=JSON.parse('{"title":"Tag Config","description":"","frontmatter":{"title":"Tag Config","lang":"en-US"},"headers":[],"relativePath":"config/tag.md"}'),s={name:"config/tag.md"},n=t("",8),i=[n];function c(l,p,r,d,u,h){return a(),o("div",null,i)}const m=e(s,[["render",c]]);export{g as __pageData,m as default};
