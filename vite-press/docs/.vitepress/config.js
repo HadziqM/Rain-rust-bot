@@ -28,8 +28,6 @@ export default {
         items:[
           {text:"Bounty",link:'/config/bounty'},
           {text:"Gacha",link:'/config/gacha'},
-          {text:"Market",link:'/config/market'},
-          {text:"Meals",link:'/config/meals'},
           {text:"Tag",link:'/config/tag'},
           {text:"Title",link:'/config/title'},
           {text:"Trading",link:'/config/trading'},
