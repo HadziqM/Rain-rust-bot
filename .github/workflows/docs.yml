@@ -28,7 +28,6 @@ jobs:
           cache: npm
           cache-dependency-path: vite-press/package-lock.json
 
-
       - run: cd ./vite-press && npm install --frozen-lockfile
 
       - name: Build
