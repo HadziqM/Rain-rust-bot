@@ -6,3 +6,5 @@ config.json
 test.jpg
 log.txt
 hertz/target
+vite-press/node_modules
+vite-press/docs/.vitepress/cache
