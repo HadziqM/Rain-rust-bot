@@ -1,0 +1,1104 @@
+{
+  "bounty": [
+    {
+      "bbq": 0,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 1,
+      "description": "this is bbq description",
+      "cooldown": 1,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 2,
+      "description": "this is bbq description",
+      "cooldown": 1,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 3,
+      "description": "this is bbq description",
+      "cooldown": 1,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 4,
+      "description": "this is bbq description",
+      "cooldown": 1,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 5,
+      "description": "this is bbq description",
+      "cooldown": 1,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 6,
+      "description": "this is bbq description",
+      "cooldown": 1,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 7,
+      "description": "this is bbq description",
+      "cooldown": 1,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 8,
+      "description": "this is bbq description",
+      "cooldown": 1,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 9,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 10,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 11,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 12,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 13,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 14,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 15,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 16,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 17,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 18,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 19,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 20,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 21,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 22,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 23,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    },
+    {
+      "bbq": 24,
+      "description": "this is bbq description",
+      "cooldown": 0,
+      "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+      "rules": [
+        "HR equipment only",
+        "no MS",
+        "naked"
+      ],
+      "solo": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      },
+      "multi": {
+        "coin": 1,
+        "ticket": 1,
+        "items": [
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          },
+          {
+            "key": "0700",
+            "count": 1,
+            "types": 7
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -429,11 +429,9 @@ impl BountySubmit{
             hunt.event.bounty += bounty as i32;
             hunt.event.gacha += self.reward.ticket as i32;
             self.category.change_rank(hunt, self.bbq.encode() + 1);
-            if self.category != Category::Event{
-                hunt.event.latest_bounty = BountyTitle::encrypt(self.category.clone(), self.bbq.clone());
-                if !bypass{
-                    hunt.event.latest_bounty_time = self.time;
-                }
+            hunt.event.latest_bounty = BountyTitle::encrypt(self.category.clone(), self.bbq.clone());
+            if !bypass{
+                hunt.event.latest_bounty_time = self.time;
             }
         }
         self.send_reward(pg).await?;
@@ -492,7 +490,7 @@ impl BountySubmit{
         let mut desc = Vec::new();
         for i in &self.hunter{
             desc.push("\n".to_owned());
-            desc.push(format!("```\nname : {}\ndiscord : {}\n```",&i.event.name,&i.member.user.name));
+            desc.push(format!("name : {} > {}",i.member.user.to_string(),&i.event.name));
         }
         let res = format!("Submitted At <t:{}:F>\n{}",self.time,desc[1..].concat());
         let author = &self.hunter[0].member;
@@ -518,15 +516,16 @@ impl BountySubmit{
     }
     fn reward_embed<'a>(&'a self,item:&ItemPedia)->HashMap<&'a User,CreateEmbed>{
         let mut out = HashMap::new();
-        let mut reward = Vec::new();
+        let mut reward = vec![">>> ".to_owned()];
         let ticket = format!("Ticket Reward: {} Ticket(s)"
             ,self.reward.ticket);
         for i in &self.reward.items{
-            reward.push("/n".to_owned());
             reward.push(i.text(item).unwrap());
+            reward.push("\n".to_owned());
         }
+        let lenre = reward.len()-1;
         for j in &self.hunter{
-            let bon = j.title.bonus()*100.0;
+            let bon = (j.title.bonus()-1.0)*100.0;
             let percent = format!("{}%",bon as u32);
             let bonus = self.reward.coin as f64 * j.title.bonus() as f64;
             let bounty =  format!("Bounty Reward: {}\nTitle Bonus: {}\nReward With Bonus: {}"
@@ -537,7 +536,7 @@ impl BountySubmit{
                 .fields(vec![
                         ("Bounty Coin",bounty,false),
                         ("Gacha Tickets",ticket.to_owned(),false),
-                        ("Items/Equipment",reward[1..].to_vec().concat(),false),
+                        ("Items/Equipment",reward[..lenre].to_vec().concat(),false),
                 ]).color(Color::Gold.throw())
                 .author(CreateEmbedAuthor::new(&j.member.user.name).icon_url(j.member.user.face()));
             out.insert(&j.member.user, embed);
@@ -866,7 +865,7 @@ impl BountyTitle{
         }
         out
     }
-    fn name(code:&str)->String{
+    pub fn name(code:&str)->String{
         match Self::decrypt(code){
             Some((x,y))=>format!("{} {}",x.name(),y.name()),
             None=>String::from(code)
