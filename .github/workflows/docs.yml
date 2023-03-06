@@ -21,9 +21,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: hover docs folder
-        run: cd ./vite-press
-
       - uses: actions/setup-node@v3
         with:
           node-version: 16
@@ -31,16 +28,16 @@ jobs:
           cache-dependency-path: vite-press/package-lock.json
 
 
-      - run: npm install --frozen-lockfile
+      - run: cd ./vite-press && npm install --frozen-lockfile
 
       - name: Build
-        run: npm run docs:build
+        run: cd ./vite-press && npm run docs:build
 
       - uses: actions/configure-pages@v2
 
       - uses: actions/upload-pages-artifact@v1
         with:
-          path: docs/.vitepress/dist
+          path: vite-press/docs/.vitepress/dist
 
       - name: Deploy
         id: deployment
