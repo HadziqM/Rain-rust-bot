@@ -33,12 +33,7 @@ jobs:
       - name: Build
         run: cd ./vite-press && npm run docs:build
 
-      - uses: actions/configure-pages@v2
-
-      - uses: actions/upload-pages-artifact@v1
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          path: vite-press/docs/.vitepress/dist
-
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v1
+          folder: vite-press/docs/.vitepress/dist 
