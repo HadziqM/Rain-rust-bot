@@ -9,7 +9,9 @@ async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{
     let mem = &bnd.cmd.member;
     let mut member = mem.clone().ok_or(MyErr::Custom("youare not our server member".to_owned()))?;
     let role = RoleId::new(bnd.init.server_role.member_role);
-    member.add_role(&bnd.ctx.http, role).await?;
+    if !member.roles.contains(&role){
+        member.add_role(&bnd.ctx.http, role).await?;
+    }
     Components::response(bnd, "you got the member role now", true).await?;
     Ok(())
 }

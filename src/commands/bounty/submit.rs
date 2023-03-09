@@ -201,6 +201,8 @@ async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{
     //accepted
     let title = BountyTitle::new().await?;
     submit.title(bnd, &title).await?;
+    ChannelId::new(bnd.init.bounty.receptionist_ch).send_message(&bnd.ctx.http,
+            CreateMessage::new().content(format!("{} submitted bounty accepted by {}",submit.hunter[0].member.user.to_string(),bnd.cmd.user.name))).await?;
     let mut pg = PgConn::create(bnd.init, user.to_owned()).await?;
     submit.reward(false, bnd, &mut pg).await?;
     ChannelId::new(bnd.init.bounty.conquered_ch)

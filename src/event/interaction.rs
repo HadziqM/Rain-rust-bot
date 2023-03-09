@@ -256,7 +256,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "monitor"=>commands::admin::monitor::discord_auto(&bnd).await,
                 "mod_pass"=>commands::admin::password::discord_slash(&bnd).await,
                 "add"=>commands::admin::add::discord_slash(&bnd).await,
-                "test"=>commands::admin::test::discord_slash(&bnd).await,
+                "title"=>commands::admin::test::discord_slash(&bnd).await,
                 _=> {return;}
             }
         }
@@ -283,7 +283,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
             let wth = cmd.data.custom_id.as_str();
             match wth{
                 "register_m"=>commands::register::create::discord_modal(&bnd).await,
-                "bind"=>commands::register::create::discord_modal(&bnd).await,
+                "bind_m"=>commands::register::create::discord_modal(&bnd).await,
                 "bar"=>commands::market::bar::discord_modal(&bnd).await,
                 _=>{return;}
             }
@@ -296,7 +296,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "trading"=>commands::market::trading::discord_auto(&bnd).await,
                 "guild"=>commands::guild::guild::discord_auto(&bnd).await,
                 "ferias"=>commands::misc::ferias::discord_auto(&bnd).await,
-                "test"=>commands::admin::test::discord_auto(&bnd).await,
+                "title"=>commands::admin::test::discord_auto(&bnd).await,
                 _=>{return;}
             }
         }

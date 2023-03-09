@@ -425,6 +425,10 @@ impl BountySubmit{
     }
     pub async fn reward<T:Mybundle>(&mut self,bypass:bool,bnd:&T,pg:&mut PgConn<'_>)->Result<(),MyErr>{
         for hunt in self.hunter.iter_mut(){
+            pg.did = hunt.member.user.id.to_string();
+            let eve = pg.get_event().await?;
+            hunt.event.bounty = eve.bounty;
+            hunt.event.gacha = eve.gacha;
             let bounty = self.reward.coin as f32 * hunt.title.bonus();
             hunt.event.bounty += bounty as i32;
             hunt.event.gacha += self.reward.ticket as i32;
@@ -447,24 +451,7 @@ impl BountySubmit{
     pub async fn title<T:Mybundle>(&mut self,bnd:&T,title:&BountyTitle)->Result<(),MyErr>{
         let code = BountyTitle::encrypt(self.category.clone(), self.bbq.clone());
         for hunt in self.hunter.iter_mut(){
-            for i in title.get_trigger(){
-                if code == i.trigger{
-                    if i.db_code != 0{
-                        if Title::matching(hunt.event.title as u8, i.db_code){
-                            hunt.event.title += i.db_code as i32;
-                            hunt.title = Title::new(hunt.event.title as u8);
-                        }else {
-                            return Ok(());
-                        }
-                    }else{
-                        if hunt.member.roles.contains(&RoleId::new(i.role_id)){
-                            return Ok(());
-                        }
-                    }
-                    hunt.member.add_role(&bnd.ctx().http, RoleId::new(i.role_id)).await?;
-                    i.send_title(bnd, &hunt.member.user).await?;
-                }
-            }
+            title.add_title(bnd, &mut hunt.event, &mut hunt.member, &code).await?;
         }
         Ok(())
     }
@@ -809,6 +796,7 @@ impl CustomTitle{
     pub fn embed(&self,user:&User)->CreateEmbed{
         let color = BountyTitle::decrypt(&self.trigger).unwrap().0.color().throw();
         CreateEmbed::new().title("Congratulation On Promotion").color(color)
+            .description(format!("You got Role <@&{}> after Clearing {}",self.role_id,BountyTitle::name(&self.trigger)))
             .image("attachment://title.jpg").author(CreateEmbedAuthor::new(&user.name).icon_url(user.face()))
     }
     pub async fn send_title<T:Mybundle>(&self,bnd:&T,user:&User)->Result<(),MyErr>{
@@ -840,6 +828,42 @@ impl BountyTitle{
             }
         }
         x.save().await?;
+        Ok(())
+    }
+    pub fn hash<'a>(&'a self)->HashMap<&'a str,&'a CustomTitle>{
+        let mut images:HashMap<&str,&CustomTitle> = HashMap::new();
+        for (i,_) in self.custom.iter().enumerate(){
+            images.insert(&self.custom[i].trigger,&self.custom[i]);
+        }
+        images.insert(&self.bronze_bounty.trigger,&self.bronze_bounty);
+        images.insert(&self.silver_bounty.trigger,&self.silver_bounty);
+        images.insert(&self.gold_bounty.trigger,&self.gold_bounty);
+        images.insert(&self.bronze_trading.trigger,&self.bronze_trading);
+        images.insert(&self.silver_trading.trigger,&self.silver_trading);
+        images.insert(&self.gold_trading.trigger,&self.gold_trading);
+        images
+    }
+    pub async fn add_title<T:Mybundle>(&self,bnd:&T,event:&mut Event,member:&mut Member,trigger:&str)->Result<(),MyErr>{
+        for i in self.get_trigger(){
+            let role = RoleId::new(i.role_id);
+            if i.trigger.as_str()==trigger{
+                if i.db_code!= 0{
+                    if !Title::matching(event.title as u8, i.db_code){
+                        event.title += i.db_code as i32;
+                    }else {
+                        return Ok(());
+                    }
+                }else{ 
+                    if member.roles.contains(&role){
+                        return Ok(());
+                    }
+                }
+                if !member.roles.contains(&role){
+                    member.add_role(&bnd.ctx().http, role).await?;
+                }
+                i.send_title(bnd, &member.user).await?;
+            } 
+        }
         Ok(())
     }
     fn decrypt(code:&str)->Option<(Category,BBQ)>{
