@@ -12,6 +12,8 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let mut reg = Reg::check_user(bnd, &user).await?;
     reg.pg.purge().await?;
     Components::response(bnd, "user already purged", true).await?;
+    let member = bnd.cmd.member.clone().unwrap();
+    Components::remove_role(*member, bnd, bnd.init.server_role.register_role).await?;
     reg.pg.close().await;
     Ok(())
 }

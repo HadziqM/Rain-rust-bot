@@ -1,5 +1,5 @@
 use crate::{MyErr,Mybundle,Mytrait,Components,SlashBundle,Reg,PgConn};
-use crate::reusable::component::bounty::{Bounty,BountyRefresh,BBQ, Category};
+use crate::reusable::component::bounty::{BountyRefresh,BBQ};
 
 #[hertz::hertz_slash_normal(0,false)]
 async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
@@ -18,13 +18,10 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     Ok(())
 }
 async fn refresh(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
-    let refresh =BountyRefresh::new().await?;
-    let category = Category::Free;
-    let mut bounty = Box::new(Bounty::new(&category).await?);
-    bounty.refresh(&refresh);
-    bounty.save(&category).await?;
+    let refresh =BountyRefresh::new(false).await?;
+    refresh.save(true).await?;
     Components::response(bnd, "success", true).await?;
-    bounty.cooldown(bnd).await?;
+    refresh.cooldown(bnd).await?;
     Ok(())
 }
 async fn bounty(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
@@ -38,10 +35,9 @@ async fn bounty(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
         }
     }
     let bbq = BBQ::new(bb.parse::<u8>().unwrap())?;
-    let category = Category::Free;
-    let mut bounty = Box::new(Bounty::new(&category).await?);
+    let mut bounty = Box::new(BountyRefresh::new(true).await?);
     bounty.set_cd(&bbq, cd as u32);
-    bounty.save(&category).await?;
+    bounty.save(true).await?;
     Components::response(bnd, "success", true).await?;
     bounty.cooldown(bnd).await?;
     Ok(())

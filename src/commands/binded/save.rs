@@ -48,9 +48,9 @@ async fn all<T:Mybundle>(bnd:&T,reg:&Reg<'_>)->Result<(),MyErr> {
     Components::response(bnd, "trying to Direct Message", true).await?;
     let user = bnd.user();
     let attachments = data.get_attachment();
-    user.direct_message(&bnd.ctx().http,CreateMessage::new()
-        .content("your save").add_files(attachments[..6].to_vec())).await?;
-    user.direct_message(&bnd.ctx().http,CreateMessage::new()
-        .add_files(attachments[6..].to_vec())).await?;
+    for i in attachments{
+        user.direct_message(&bnd.ctx().http,CreateMessage::new()
+            .content("your save").add_file(i)).await?;
+    }
     Ok(())
 }

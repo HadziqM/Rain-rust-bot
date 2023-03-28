@@ -13,6 +13,7 @@ pub struct Init {
     // pub(crate) gacha_channel: GachaChannel,
     // pub(crate) bounty_message_id:BountyMessageId,
     pub(crate) bounty:Bounty,
+    pub chat_gpt:ChatGpt,
     pub(crate) server_role:ServerRole,
     // pub(crate) server_channel_url:ServerChannelUrl,
     // pub(crate) server_channel:ServerChannel,
@@ -103,6 +104,11 @@ pub struct Bounty {
     pub(crate) cooldown_ch: u64,
     pub(crate) cooldown_msg: u64,
     pub(crate) judge_ch: u64,
+}
+#[derive(Debug,Deserialize,Clone,Serialize)]
+pub struct ChatGpt {
+    pub(crate) token:String,
+    pub(crate) timeout:u32
 }
 // #[derive(Debug,Deserialize,Clone)]
 // pub struct BountyMessageId {

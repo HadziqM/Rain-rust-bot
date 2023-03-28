@@ -57,8 +57,7 @@ impl<'a> SaveJudge<'a> {
         for data in &self.files{
             let name = format!("{}_{}",&self.cmd.user.id.to_string()
                 ,data.name.to_owned());
-            let mut file = File::create(&save.join(&name)).await?;
-            file.write_all(&data.bin.as_slice()).await?;
+            tokio::fs::write(save.join(&name), &data.bin).await?;
             leeway.push_str(&name);
             leeway.push(',');
         }

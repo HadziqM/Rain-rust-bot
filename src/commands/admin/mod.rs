@@ -25,10 +25,10 @@ pub fn reg(init: &Init) -> Vec<CreateCommand> {
             "the trigger listed on bounty_title.json",
         ).required(true).set_autocomplete(true);
     let tests = AppReg::admin_slash("title", "bounty title command").add_option(
-        AppReg::subcommand("give", "give title to someone registered")
+        AppReg::subcommand("test", "test bounty config image")
         .add_sub_option(title_str.to_owned())
     ).add_option(
-        AppReg::subcommand("test", "test bounty config image")
+        AppReg::subcommand("give", "give title to someone registered")
         .add_sub_option(title_str.to_owned())
         .add_sub_option(AppReg::user_option("user", "user to gift title").required(true))
     );
@@ -176,7 +176,7 @@ pub fn reg(init: &Init) -> Vec<CreateCommand> {
                 )
                 .add_sub_option(
                     CreateCommandOption::new(
-                        CommandOptionType::User,
+                        CommandOptionType::String,
                         "mention",
                         "mention the user",
                     )
@@ -221,7 +221,7 @@ pub fn reg(init: &Init) -> Vec<CreateCommand> {
                 )
                 .add_sub_option(
                     CreateCommandOption::new(
-                        CommandOptionType::User,
+                        CommandOptionType::String,
                         "mention",
                         "mention the user",
                     )

@@ -68,6 +68,12 @@ impl Methode{
             _ => Methode::Multi,
         }
     }
+    pub fn encode(&self)->u8{
+        match self {
+            Self::Solo => 0,
+            Self::Multi => 1,
+        }
+    }
     pub fn name(&self)->String{
         match self{
             Methode::Solo=>"Solo".to_owned(),
@@ -80,7 +86,7 @@ impl Methode{
             ("1".to_owned(),"Multi".to_owned()),
         ]
     }
-    fn get_reward<'a>(&self,bnt:&'a BountyDesc)->&'a BountyReward{
+    pub fn get_reward<'a>(&self,bnt:&'a BountyDesc)->&'a BountyReward{
         match self{
             Self::Solo=>&bnt.solo,
             Self::Multi=>&bnt.multi
@@ -108,7 +114,7 @@ impl Category{
             _=>Err(MyErr::Custom("cant get category".to_string()))
         }
     }
-    pub fn encode(self)->u8{
+    pub fn encode(&self)->u8{
         match self{
             Category::Bronze=>0,
             Category::Silver=>1,
@@ -334,7 +340,7 @@ impl BBQ{
             ("24".to_owned(),"BBQ25".to_owned()),
         ]
     }
-    fn get_bounty<'a>(&self,bbq:&'a Bounty)->Result<&'a BountyDesc,MyErr>{
+    pub fn get_bounty<'a>(&self,bbq:&'a Bounty)->Result<&'a BountyDesc,MyErr>{
         for i in &bbq.bounty{
             if i.bbq == self.encode(){
                 return Ok(i);
@@ -490,11 +496,11 @@ impl BountySubmit{
         let arow = CreateActionRow::Buttons(vec![accept,reject]);
         vec![arow]
     }
-    pub fn cooldown(&self,bnt:&mut Box<Bounty>,)->bool{
-        for i in bnt.bounty.iter_mut(){
-            if i.cooldown != 0 && i.bbq == self.bbq.encode() {
+    pub fn cooldown(&self,bnt:&mut Box<BountyRefresh>,)->bool{
+        for (bbq,cd) in bnt.hashmap(){
+            if cd != 0 && bbq == self.bbq {
                 if self.category == Category::Free{
-                    i.cooldown -= 1;
+                    bnt.set_cd(&bbq, cd-1);
                 }
                 return true;
             }
@@ -589,18 +595,77 @@ impl BountyRefresh{
     pub fn path()->PathBuf{
         Path::new(".").join("static").join("bounty_refresh.json")
     }
-    pub async fn new()->Result<Self,MyErr>{
-        let file = tokio::fs::read_to_string(BountyRefresh::path()).await?;
+    pub fn path2()->PathBuf{
+        Path::new(".").join("static").join("cooldown.json")
+    }
+    pub async fn new(coodown:bool)->Result<Self,MyErr>{
+        let path = || {if coodown{BountyRefresh::path2()}else{BountyRefresh::path()}};
+        let file = tokio::fs::read_to_string(path()).await?;
         Ok(serde_json::from_str(&file)?)
     }
-    pub async fn save(&self)->Result<(),Error>{
+    pub async fn save(&self,coodown:bool)->Result<(),MyErr>{
+        let path = || {if coodown{BountyRefresh::path2()}else{BountyRefresh::path()}};
         let string = serde_json::to_string_pretty(&self)?;
-        tokio::fs::write(BountyRefresh::path(), string.as_bytes()).await?;
+        tokio::fs::write(path(), string.as_bytes()).await?;
         Ok(())
     }
-    pub async fn check(data:&[u8])->Result<(),Error>{
+    pub async fn check(data:&[u8])->Result<(),MyErr>{
         let x = serde_json::from_slice::<Self>(&data)?;
-        Ok(x.save().await?)
+        Ok(x.save(false).await?)
+    }
+    pub async fn rejected<T:Mybundle>(bbq:&BBQ,bnd:&T)->Result<(),MyErr>{
+        let mut x = Self::new(true).await?;
+        for (qq,cd) in x.hashmap(){
+            if bbq == &qq{
+                x.set_cd(bbq, cd-1);
+            }
+        }
+        x.save(true).await?;
+        x.cooldown(bnd).await
+    }
+    pub async fn cooldown<T:Mybundle>(&self,bnd:&T)->Result<(),MyErr>{
+        let mut msg = ChannelId::new(bnd.init().bounty.cooldown_ch)
+            .message(&bnd.ctx().http, MessageId::new(bnd.init().bounty.cooldown_msg)).await?;
+        msg.edit(&bnd.ctx().http, EditMessage::new().embed(self.cooldown_embed())).await?;
+        Ok(())
+    }
+    pub fn set_cd(&mut self,bbq:&BBQ,cd:u32){
+        match bbq{
+            BBQ::BBQ01=>{self.bbq1=cd}
+            BBQ::BBQ02=>{self.bbq2=cd}
+            BBQ::BBQ03=>{self.bbq3=cd}
+            BBQ::BBQ04=>{self.bbq4=cd}
+            BBQ::BBQ05=>{self.bbq5=cd}
+            BBQ::BBQ06=>{self.bbq6=cd}
+            BBQ::BBQ07=>{self.bbq7=cd}
+            BBQ::BBQ08=>{self.bbq8=cd}
+            BBQ::BBQ09=>{self.bbq9=cd}
+            BBQ::BBQ10=>{self.bbq10=cd}
+            BBQ::BBQ11=>{self.bbq11=cd}
+            BBQ::BBQ12=>{self.bbq12=cd}
+            BBQ::BBQ13=>{self.bbq13=cd}
+            BBQ::BBQ14=>{self.bbq14=cd}
+            BBQ::BBQ15=>{self.bbq15=cd}
+            BBQ::BBQ16=>{self.bbq16=cd}
+            BBQ::BBQ17=>{self.bbq17=cd}
+            BBQ::BBQ18=>{self.bbq18=cd}
+            BBQ::BBQ19=>{self.bbq19=cd}
+            BBQ::BBQ20=>{self.bbq20=cd}
+            BBQ::BBQ21=>{self.bbq21=cd}
+            BBQ::BBQ22=>{self.bbq22=cd}
+            BBQ::BBQ23=>{self.bbq23=cd}
+            BBQ::BBQ24=>{self.bbq24=cd}
+            BBQ::BBQ25=>{self.bbq25=cd}
+        }
+    }
+    fn cooldown_embed(&self)->CreateEmbed{
+        let mut idk = "```".to_owned();
+        for (bbq,cd) in &self.hashmap(){
+            idk.push_str(&format!("\n{} ======= {} left",bbq.name(),cd));
+        }
+        idk.push_str("\n```");
+        CreateEmbed::new().title("Free Category Cooldown").description(idk)
+            .color(Color::Random.throw())
     }
     fn hashmap(&self)->[(BBQ,u32); 25]{
         [
@@ -691,37 +756,6 @@ impl Bounty{
         let string = serde_json::to_string_pretty(&self)?;
         tokio::fs::write(Bounty::path(category), string.as_bytes()).await?;
         Ok(())
-    }
-    pub fn refresh(&mut self,reff:&BountyRefresh){
-        for (k,v) in &reff.hashmap(){
-            for i in self.bounty.iter_mut(){
-                if i.bbq == k.encode(){
-                    i.cooldown = *v;
-                }
-            }
-        }
-    }
-    pub async fn cooldown(&self,bnd:&SlashBundle<'_>)->Result<(),MyErr>{
-        let mut msg = ChannelId::new(bnd.init.bounty.cooldown_ch)
-            .message(&bnd.ctx.http, MessageId::new(bnd.init.bounty.cooldown_msg)).await?;
-        msg.edit(&bnd.ctx.http, EditMessage::new().embed(self.cooldown_embed())).await?;
-        Ok(())
-    }
-    pub fn set_cd(&mut self,bbq:&BBQ,cd:u32){
-        for i in self.bounty.iter_mut(){
-            if i.bbq == bbq.encode(){
-                i.cooldown = cd
-            }
-        }
-    }
-    fn cooldown_embed(&self)->CreateEmbed{
-        let mut idk = "```".to_owned();
-        for i in &self.bounty{
-            idk.push_str(&format!("\nBBQ{} ======= {} left",add_0(i.bbq+1),i.cooldown));
-        }
-        idk.push_str("\n```");
-        CreateEmbed::new().title("Free Category Cooldown").description(idk)
-            .color(Color::Random.throw())
     }
 }
 fn add_0(num:u8)->String{
@@ -927,30 +961,27 @@ mod testing{
         let y = BountyRefresh::default();
         let z = BountyTitle::default();
         x.save(&Category::Free).await.unwrap();
-        y.save().await.unwrap();
+        y.save(false).await.unwrap();
         z.save().await.unwrap();
     }
-    #[tokio::test]
-    #[ignore = "already tested"]
-    async fn refresh() {
-        let mut x = Bounty::default();
-        let y = BountyRefresh::new().await.unwrap();
-        x.refresh(&y);
-        x.save(&Category::Free).await.unwrap();
-    }
-    #[tokio::test]
-    #[ignore = "already tested"]
-    async fn reset_cd() {
-        let mut x = Bounty::new(&Category::Free).await.unwrap();
-        x.set_cd(&BBQ::BBQ01, 100);
-        assert_eq!(x.bounty[0].cooldown,100);
-        x.save(&Category::Free).await.unwrap();
-    }
-    #[tokio::test]
-    async fn overflow() {
-        let refresh = BountyRefresh::new().await.unwrap();
-        let mut bounty = Bounty::new(&Category::Free).await.unwrap();
-        bounty.refresh(&refresh);
-        bounty.save(&Category::Free).await.unwrap();
-    }
+    // #[tokio::test]
+    // #[ignore = "already tested"]
+    // async fn refresh() {
+    //     let mut x = Bounty::default();
+    //     let y = BountyRefresh::new(false).await.unwrap();
+    //     x.save(&Category::Free).await.unwrap();
+    // }
+    // #[tokio::test]
+    // #[ignore = "already tested"]
+    // async fn reset_cd() {
+    //     let mut x = Bounty::new(&Category::Free).await.unwrap();
+    //     assert_eq!(x.bounty[0].cooldown,100);
+    //     x.save(&Category::Free).await.unwrap();
+    // }
+    // #[tokio::test]
+    // async fn overflow() {
+    //     let refresh = BountyRefresh::new(false).await.unwrap();
+    //     let mut bounty = Bounty::new(&Category::Free).await.unwrap();
+    //     bounty.save(&Category::Free).await.unwrap();
+    // }
 }

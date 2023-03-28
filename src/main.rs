@@ -18,15 +18,18 @@ use serenity::prelude::{*, Mutex};
 use event::Handler;
 use lazy_static::lazy_static;
 use reusable::component::bounty::BountySubmit;
+use reusable::gpt::chat::CompModel;
 
 lazy_static!{
     static ref COOLDOWN:Mutex<HashMap<String,i64>> = Mutex::new(HashMap::new());
+    static ref CHAT:Mutex<HashMap<String,CompModel>> = Mutex::new(HashMap::new());
     static ref MONITOR:Mutex<bool> = Mutex::new(true);
     static ref BOUNTY:Mutex<HashMap<String,BountySubmit>> = Mutex::new(HashMap::new());
 }
 
 #[tokio::main]
 async fn main(){
+    //run discord bot
     let intents = GatewayIntents::GUILDS | GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MEMBERS;
     match Init::new().await{
         Ok(conf)=> {

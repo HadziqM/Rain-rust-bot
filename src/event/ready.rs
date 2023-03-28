@@ -6,10 +6,24 @@ use serenity::model::prelude::Ready;
 use serenity::prelude::*;
 use crate::commands;
 use crate::Init;
+use crate::reusable::component::shutdown::Shutdown;
 
 
 pub async fn ready(ctx:&Context, ready:Ready, init:&Init){
     let user = UserId(NonZeroU64::new(init.discord.author_id).unwrap()).to_user(&ctx.http).await.unwrap();
+    //load cache if exist
+    if let Err(why) = Shutdown::load(ctx,init).await{
+        println!("cant load cahed file: {why}")
+    }
+    //init save cache to file if exit background process
+    tokio::spawn(async move {
+        tokio::signal::ctrl_c().await.unwrap();
+        println!("\nTrying to Shutdown Gracefully");
+        if let Err(why) = Shutdown::save().await{
+            println!("cant save cache object: {why}")
+        }
+        std::process::exit(0);
+    });
     println!("----------------------------------------------------------------");
     println!("-------------------------- START -------------------------------");
     println!("----------------------------------------------------------------");

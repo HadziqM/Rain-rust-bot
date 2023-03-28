@@ -2,7 +2,7 @@ use std::time::Duration;
 use serenity::all::*;
 use serenity::futures::StreamExt;
 use crate::{MyErr,SlashBundle,Mybundle,Mytrait,PgConn,Components,ComponentBundle};
-use crate::reusable::component::bounty::{Methode,BBQ,Category,BountySubmit,Bounty,BountyTitle};
+use crate::reusable::component::bounty::{Methode,BBQ,Category,BountySubmit,Bounty,BountyTitle, BountyRefresh};
 use crate::reusable::utils::MyTime;
 
 fn select_menu(id:&str,op:Vec<(String,String)>)->CreateSelectMenu{
@@ -16,22 +16,6 @@ async fn msg_edit(msg:&mut Message,arow:Vec<CreateActionRow>,ctx:&Context)->Resu
     msg.edit(&ctx.http, EditMessage::new().components(arow)).await?;
     Ok(())
 }
-fn mentions(ment:&str)->Vec<UserId>{
-    let mut out = Vec::new();
-    for i in ment.split(">"){
-        let val;
-        if i.contains("<!@"){
-            val = i.replace("<!@","").trim().to_owned();
-        }else {
-            val = i.replace("<@","").trim().to_owned();
-        }
-        if let Ok(id) = val.parse::<u64>(){
-            out.push(UserId::new(id))
-        }
-    }
-    out
-}
-
 #[hertz::hertz_slash_normal(60,false)]
 async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let msg = bnd.cmd.data.resolved.messages.values().next()
@@ -94,18 +78,19 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let mem = *bnd.cmd.member.clone().unwrap();
     let cat = Category::new(category.unwrap())?;
     let mut pg = PgConn::create(bnd.init,bnd.cmd.user.id.to_string()).await?;
-    let mut bounty = Box::new(Bounty::new(&cat).await?);
+    let bounty = Box::new(Bounty::new(&cat).await?);
+    let mut cooldown = Box::new(BountyRefresh::new(true).await?);
     let uid = msg.mentions.iter().map(|x|x.id).collect::<Vec<_>>();
     let submit = BountySubmit::new(bnd, false, mem,
     uid, &mut pg, &bounty, &link, Methode::new(methode.unwrap()), BBQ::new(bbq.unwrap())?, cat.clone()).await?;
-    if !submit.cooldown(&mut bounty){
+    if !submit.cooldown(&mut cooldown){
         return Err(MyErr::Custom("The Bounty You selected is on cooldown or disabled".to_owned()));
     }
     ChannelId::new(bnd.init.bounty.judge_ch).send_message(&bnd.ctx.http, CreateMessage::new().embed(submit.embed()).components(submit.button())).await?;
     msg.reply(&bnd.ctx.http, "Your bounty is already submitted to Judge").await?;
     submit.save(&bnd.user().id.to_string()).await;
-    bounty.cooldown(bnd).await?;
-    bounty.save(&cat).await?;
+    cooldown.cooldown(bnd).await?;
+    cooldown.save(true).await?;
     pg.close().await;
     Ok(())
 }
@@ -134,16 +119,17 @@ pub(super) async fn submit(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let met = Methode::new(methode.parse::<u8>().unwrap());
     let member = *bnd.cmd.member.clone().unwrap();
     let mut pg = PgConn::create(bnd.init, member.user.id.to_string()).await?;
-    let mut bounty = Box::new(Bounty::new(&cat).await?);
-    let submit = BountySubmit::new(bnd, false, member, mentions(mention),&mut pg, &bounty, &url, met, bb, cat.clone()).await?;
-    if !submit.cooldown(&mut bounty){
+    let bounty = Box::new(Bounty::new(&cat).await?);
+    let mut cooldown = Box::new(BountyRefresh::new(true).await?);
+    let submit = BountySubmit::new(bnd, false, member, Components::get_mentions(mention),&mut pg, &bounty, &url, met, bb, cat.clone()).await?;
+    if !submit.cooldown(&mut cooldown){
         return Err(MyErr::Custom("The Bounty You selected is on cooldown or disabled".to_owned()));
     }
     Components::response(bnd, "Your bounty is already submitted to Judge", false).await?;
     ChannelId::new(bnd.init.bounty.judge_ch).send_message(&bnd.ctx.http, CreateMessage::new().embed(submit.embed()).components(submit.button())).await?;
     submit.save(&bnd.user().id.to_string()).await;
-    bounty.cooldown(bnd).await?;
-    bounty.save(&cat).await?;
+    cooldown.cooldown(bnd).await?;
+    cooldown.save(true).await?;
     pg.close().await;
     Ok(())
 }
@@ -171,7 +157,8 @@ async fn distrib(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let member = *bnd.cmd.member.clone().unwrap();
     let mut pg = PgConn::create(bnd.init, member.user.id.to_string()).await?;
     let bounty = Box::new(Bounty::new(&cat).await?);
-    let mut submit = BountySubmit::new(bnd, true, member, mentions(mention),&mut pg, &bounty, "", met, bb, cat).await?;
+    let mut submit = BountySubmit::new(bnd, true, member, Components::get_mentions(mention),&mut pg, &bounty, "", met, bb, cat).await?;
+    submit.hunter.remove(0);
     Components::response(bnd, "trying to send all the distribution", true).await?;
     submit.reward(true, bnd, &mut pg).await?;
     pg.close().await;
@@ -196,6 +183,7 @@ async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{
             ,user,&bnd.cmd.user.name))).await?;
         msg.edit(&bnd.ctx.http, EditMessage::new().components(Vec::new())
                  .content(format!("rejected by {} at <t:{}:F>",&bnd.cmd.user.name,MyTime::now()))).await?;
+        BountyRefresh::rejected(&submit.bbq, bnd).await?;
         return Ok(());
     }
     //accepted

@@ -47,6 +47,26 @@ impl Color {
         }
     }
 }
+use serenity::all::Member;
+use serenity::all::RoleId;
+use serenity::prelude::Context;
+pub struct NewMember<'a>{
+    member: &'a mut Member
+}
+impl<'a> NewMember<'a>{
+    pub async fn ignore_add_role(&mut self,id:&RoleId,ctx:&Context)->Result<(),serenity::Error>{
+        if let Err(_why) = self.member.add_role(&ctx.http,id).await{
+            return Ok(());
+        }
+        Ok(())
+    }
+    pub async fn ignore_remove_role(&mut self,id:&RoleId,ctx:&Context)->Result<(),serenity::Error>{
+        if let Err(_why) = self.member.remove_role(&ctx.http, id).await{
+            return Ok(());
+        }
+        Ok(())
+    }
+}
 
 pub fn color(red:&str,green:&str,blue:&str)-> Colour{
     let some_u32 = u32::from_str_radix(&[red,green,blue].concat(), 16);

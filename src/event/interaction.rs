@@ -35,7 +35,8 @@ pub trait Mybundle {
     fn user(&self)->User;
     fn cmd<'a>(&'a self)->&'a Self::Cmd;
     fn name(&self)->String;
-    async fn cooldown(&self,cd:i64)->Result<(),MyErr>;
+    async fn cd_check(&self,cd:i64)->Result<(),MyErr>;
+    async fn cooldown(&self,cd:i64);
 }
 
 
@@ -60,7 +61,7 @@ impl Mybundle for SlashBundle<'_>{
     fn name(&self)->String {
         self.cmd.data.name.clone()
     }
-    async fn cooldown(&self,time:i64)->Result<(),MyErr> {
+    async fn cd_check(&self,time:i64)->Result<(),MyErr> {
         if time==0{
             return Ok(());
         }
@@ -72,13 +73,24 @@ impl Mybundle for SlashBundle<'_>{
                 if *x as i64 > now{
                     return Err(MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",x)));
                 }else{
-                    *x = now + time;
                     return Ok(());
                 }
             }
             None=>{
-                cd.insert(pat.to_owned(), now+time);
                 return Ok(());
+            }
+        }
+    }
+    async fn cooldown(&self,time:i64){
+        let pat = format!("{}-{}",self.name(),self.user().id.to_string());
+        let mut cd = COOLDOWN.lock().await;
+        let now = MyTime::now();
+        match cd.get_mut(&pat){
+            Some(x)=>{
+                *x = now + time;
+            }
+            None=>{
+                cd.insert(pat.to_owned(), now+time);
             }
         }
     }
@@ -104,7 +116,7 @@ impl Mybundle for ComponentBundle<'_>{
     fn name(&self)->String {
         self.cmd.data.custom_id.clone()
     }
-    async fn cooldown(&self,time:i64)->Result<(),MyErr> {
+    async fn cd_check(&self,time:i64)->Result<(),MyErr> {
         if time==0{
             return Ok(());
         }
@@ -116,13 +128,24 @@ impl Mybundle for ComponentBundle<'_>{
                 if *x as i64 > now{
                     return Err(MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",x)));
                 }else{
-                    *x = now + time;
                     return Ok(());
                 }
             }
             None=>{
-                cd.insert(pat.to_owned(), now+time);
                 return Ok(());
+            }
+        }
+    }
+    async fn cooldown(&self,time:i64){
+        let pat = format!("{}-{}",self.name(),self.user().id.to_string());
+        let mut cd = COOLDOWN.lock().await;
+        let now = MyTime::now();
+        match cd.get_mut(&pat){
+            Some(x)=>{
+                *x = now + time;
+            }
+            None=>{
+                cd.insert(pat.to_owned(), now+time);
             }
         }
     }
@@ -148,7 +171,7 @@ impl Mybundle for ModalBundle<'_>{
     fn name(&self)->String {
         self.cmd.data.custom_id.clone()
     }
-    async fn cooldown(&self,time:i64)->Result<(),MyErr> {
+    async fn cd_check(&self,time:i64)->Result<(),MyErr> {
         if time==0{
             return Ok(());
         }
@@ -160,13 +183,24 @@ impl Mybundle for ModalBundle<'_>{
                 if *x as i64 > now{
                     return Err(MyErr::Custom(format!("youare still on cooldown to use this command wait till <t:{}:R>",x)));
                 }else{
-                    *x = now + time;
                     return Ok(());
                 }
             }
             None=>{
-                cd.insert(pat.to_owned(), now+time);
                 return Ok(());
+            }
+        }
+    }
+    async fn cooldown(&self,time:i64){
+        let pat = format!("{}-{}",self.name(),self.user().id.to_string());
+        let mut cd = COOLDOWN.lock().await;
+        let now = MyTime::now();
+        match cd.get_mut(&pat){
+            Some(x)=>{
+                *x = now + time;
+            }
+            None=>{
+                cd.insert(pat.to_owned(), now+time);
             }
         }
     }
@@ -257,6 +291,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "mod_pass"=>commands::admin::password::discord_slash(&bnd).await,
                 "add"=>commands::admin::add::discord_slash(&bnd).await,
                 "title"=>commands::admin::test::discord_slash(&bnd).await,
+                "gpt"=>commands::misc::gpt::discord_slash(&bnd).await,
                 _=> {return;}
             }
         }
@@ -268,6 +303,9 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
             }
             if code.contains("bounty"){
                 return commands::bounty::submit::discord_button(&bnd).await;
+            }
+            if code.contains("chat"){
+                return commands::misc::gpt::discord_button(&bnd).await;
             }
             match code{
                 "register"=>commands::register::create::discord_all(&bnd).await,
@@ -308,11 +346,12 @@ async fn switch<T:Mybundle>(bnd:&T){
     let user = bnd.user();
     let cmd = bnd.cmd();
     let mut err = ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-    if let Err(why)=bnd.cooldown(60).await{
+    if let Err(why)=bnd.cd_check(60).await{
         return why.log(cmd, &on, true, &mut err).await;
     }
     match Reg::switch(bnd.ctx(), cmd, bnd.init(), true,true).await{
         Ok(x)=>{
+            bnd.cooldown(60).await;
             match x{
                 Some(y)=>y,
                 None=>{return;}

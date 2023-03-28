@@ -13,7 +13,7 @@ pub fn reg(init:&Init)->Vec<CreateCommand>{
     if !init.mhfz_config.account_creation{
         out.push(AppReg::normal_slash("bind", "bind your existing account to server"))
     }
-    let pass = AppReg::normal_slash("change_pasword", "change your account password")
+    let pass = AppReg::normal_slash("change_password", "change your account password")
         .add_option(CreateCommandOption::new(CommandOptionType::String, "password", "your new password"));
     out.push(pass);
     out

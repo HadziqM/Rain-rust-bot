@@ -88,6 +88,7 @@ mod testing{
     use super::*;
 
     #[tokio::test]
+    #[ignore = "dont have postgres"]
     async fn test_bounty_send() {
         let init = Init::new().await.unwrap();
         let mut pg = PgConn::create(&init, init.discord.author_id.to_string()).await.unwrap();

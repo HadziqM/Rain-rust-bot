@@ -53,17 +53,22 @@ pub fn hertz_slash_normal(args: TokenStream, input: TokenStream) -> TokenStream 
             let cd = #cooldown;
             let defer = #defer;
             let mut err = crate::ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-            if let Err(why)=bnd.cooldown(cd).await{
+            if let Err(why)=bnd.cd_check(cd).await{
                 return why.log(cmd, &on, false, &mut err).await;
             }
             if defer{
                 cmd.defer_res(&mut err, &on,false).await;
             }
-            if let Err(why) = #fname(bnd).await{
-                match !defer{
-                    true=>why.log(cmd, &on, false, &mut err).await,
-                    false=>why.log_defer(cmd, &on, &mut err).await,
-                };
+            match #fname(bnd).await{
+                Err(why)=>{
+                    match !defer{
+                        true=>why.log(cmd, &on, false, &mut err).await,
+                        false=>why.log_defer(cmd, &on, &mut err).await,
+                    };
+                }
+                Ok(_)=>{
+                    bnd.cooldown(cd).await
+                }
             }
         }
     };
@@ -115,17 +120,22 @@ pub fn hertz_modal_normal(args: TokenStream, input: TokenStream) -> TokenStream 
             let cd = #cooldown;
             let defer = #defer;
             let mut err = crate::ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-            if let Err(why)=bnd.cooldown(cd).await{
+            if let Err(why)=bnd.cd_check(cd).await{
                 return why.log(cmd, &on, true, &mut err).await;
             }
             if defer{
                 cmd.defer_res(&mut err, &on,true).await;
             }
-            if let Err(why) = #fname(bnd).await{
-                match !defer{
-                    true=>why.log(cmd, &on, true, &mut err).await,
-                    false=>why.log_defer(cmd, &on, &mut err).await,
-                };
+            match #fname(bnd).await{
+                Err(why)=>{
+                    match !defer{
+                        true=>why.log(cmd, &on, false, &mut err).await,
+                        false=>why.log_defer(cmd, &on, &mut err).await,
+                    };
+                }
+                Ok(_)=>{
+                    bnd.cooldown(cd).await
+                }
             }
         }
     };
@@ -149,17 +159,22 @@ pub fn hertz_button_normal(args: TokenStream, input: TokenStream) -> TokenStream
             let cd = #cooldown;
             let defer = #defer;
             let mut err = crate::ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-            if let Err(why)=bnd.cooldown(cd).await{
+            if let Err(why)=bnd.cd_check(cd).await{
                 return why.log(cmd, &on, true, &mut err).await;
             }
             if defer{
                 cmd.defer_res(&mut err, &on,true).await;
             }
-            if let Err(why) = #fname(bnd).await{
-                match !defer{
-                    true=>why.log(cmd, &on, true, &mut err).await,
-                    false=>why.log_defer(cmd, &on, &mut err).await,
-                };
+            match #fname(bnd).await{
+                Err(why)=>{
+                    match !defer{
+                        true=>why.log(cmd, &on, false, &mut err).await,
+                        false=>why.log_defer(cmd, &on, &mut err).await,
+                    };
+                }
+                Ok(_)=>{
+                    bnd.cooldown(cd).await
+                }
             }
         }
     };
@@ -183,7 +198,7 @@ pub fn hertz_slash_reg(args: TokenStream, input: TokenStream) -> TokenStream {
             let cd = #cooldown;
             let defer = #defer;
             let mut err = crate::ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-            if let Err(why)=bnd.cooldown(cd).await{
+            if let Err(why)=bnd.cd_check(cd).await{
                 return why.log(cmd, &on, false, &mut err).await;
             }
             let mut reg = match Reg::switch(bnd.ctx(), cmd, bnd.init(), false, false).await{
@@ -200,11 +215,16 @@ pub fn hertz_slash_reg(args: TokenStream, input: TokenStream) -> TokenStream {
             if defer{
                 cmd.defer_res(&mut err, &on,false).await;
             }
-            if let Err(why) = #fname(bnd,&reg).await{
-                match !defer{
-                    true=>why.log(cmd, &on,false, &mut err).await,
-                    false=>why.log_defer(cmd, &on, &mut err).await,
-                };
+            match #fname(bnd,&reg).await{
+                Err(why)=>{
+                    match !defer{
+                        true=>why.log(cmd, &on, false, &mut err).await,
+                        false=>why.log_defer(cmd, &on, &mut err).await,
+                    };
+                }
+                Ok(_)=>{
+                    bnd.cooldown(cd).await
+                }
             }
             reg.pg.close().await;
         }
@@ -229,17 +249,22 @@ pub fn hertz_combine_normal(args: TokenStream, input: TokenStream) -> TokenStrea
             let cd = #cooldown;
             let defer = #defer;
             let mut err = crate::ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-            if let Err(why)=bnd.cooldown(cd).await{
+            if let Err(why)=bnd.cd_check(cd).await{
                 return why.log(cmd, &on, true, &mut err).await;
             }
             if defer{
                 cmd.defer_res(&mut err, &on,true).await;
             }
-            if let Err(why) = #fname(bnd).await{
-                match !defer{
-                    true=>why.log(cmd, &on, true, &mut err).await,
-                    false=>why.log_defer(cmd, &on, &mut err).await,
-                };
+            match #fname(bnd).await{
+                Err(why)=>{
+                    match !defer{
+                        true=>why.log(cmd, &on, false, &mut err).await,
+                        false=>why.log_defer(cmd, &on, &mut err).await,
+                    };
+                }
+                Ok(_)=>{
+                    bnd.cooldown(cd).await
+                }
             }
         }
     };
@@ -263,7 +288,7 @@ pub fn hertz_combine_reg(args: TokenStream, input: TokenStream) -> TokenStream {
             let cd = #cooldown;
             let defer = #defer;
             let mut err = crate::ErrorLog::new(bnd.ctx(),bnd.init(),&user).await;
-            if let Err(why)=bnd.cooldown(cd).await{
+            if let Err(why)=bnd.cd_check(cd).await{
                 return why.log(cmd, &on, true, &mut err).await;
             }
             let mut reg = match Reg::switch(bnd.ctx(), cmd, bnd.init(), false, true).await{
@@ -280,11 +305,16 @@ pub fn hertz_combine_reg(args: TokenStream, input: TokenStream) -> TokenStream {
             if defer{
                 cmd.defer_res(&mut err, &on,true).await;
             }
-            if let Err(why) = #fname(bnd,&reg).await{
-                match !defer{
-                    true=>why.log(cmd, &on,true, &mut err).await,
-                    false=>why.log_defer(cmd, &on, &mut err).await,
-                };
+            match #fname(bnd,&reg).await{
+                Err(why)=>{
+                    match !defer{
+                        true=>why.log(cmd, &on, false, &mut err).await,
+                        false=>why.log_defer(cmd, &on, &mut err).await,
+                    };
+                }
+                Ok(_)=>{
+                    bnd.cooldown(cd).await
+                }
             }
             reg.pg.close().await;
         }

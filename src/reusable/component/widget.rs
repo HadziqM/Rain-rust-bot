@@ -1,4 +1,4 @@
-use serenity::all::{ButtonStyle, Message, CommandDataOptionValue, CommandDataOption};
+use serenity::all::*;
 use serenity::builder::{CreateButton, CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse, CreateMessage};
 use serenity::model::prelude::ReactionType;
 use super::{Components,Mytrait,MyErr};
@@ -62,5 +62,34 @@ impl Components{
             }
         }
         Err(MyErr::Custom("cant find subcommand".to_string()))
+    }
+    pub fn get_mentions(ment:&str)->Vec<UserId>{
+        let mut out = Vec::new();
+        for i in ment.split(">"){
+            let val;
+            if i.contains("<!@"){
+                val = i.replace("<!@","").trim().to_owned();
+            }else {
+                val = i.replace("<@","").trim().to_owned();
+            }
+            if let Ok(id) = val.parse::<u64>(){
+                out.push(UserId::new(id))
+            }
+        }
+        out
+    }
+    pub async fn add_role<T:Mybundle>(mut member:Member,bnd:&T,role:u64)->Result<(),MyErr>{
+        let role = RoleId::new(role);
+        if !member.roles.contains(&role){
+            let _= member.add_role(&bnd.ctx().http, role).await;
+        }
+        Ok(())
+    }
+    pub async fn remove_role<T:Mybundle>(mut member:Member,bnd:&T,role:u64)->Result<(),MyErr>{
+        let role = RoleId::new(role);
+        if member.roles.contains(&role){
+            let _= member.remove_role(&bnd.ctx().http, role).await;
+        }
+        Ok(())
     }
 }

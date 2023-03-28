@@ -7,7 +7,7 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let mut bounty = false;
     let mut all = false;
     let mut amount = 0;
-    let mut user = bnd.cmd.user.id.to_string();
+    let mut user = vec![bnd.cmd.user.id];
     for data in &bnd.cmd.data.options{
         if let CommandDataOptionValue::SubCommandGroup(x) = &data.value{
             if data.name.as_str() == "bounty"{
@@ -19,12 +19,12 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
                         all = true;
                     }
                     for data3 in y{
-                        match data3.value{
+                        match &data3.value{
                             CommandDataOptionValue::Integer(i)=>{
-                                amount = i;
+                                amount = *i;
                             }
-                            CommandDataOptionValue::User(u)=>{
-                                user = u.to_string()
+                            CommandDataOptionValue::String(u)=>{
+                                user = Components::get_mentions(u)
                             }
                             _ =>{continue;}
                         }
@@ -33,18 +33,21 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
             }
         }
     }
-    let mut pg = PgConn::create(bnd.init, user).await?;
-    if bounty{
-        if all{
-            pg.bounty_all(amount as i32).await?;
+    let mut pg = PgConn::create(bnd.init, "".to_owned()).await?;
+    for i in user{
+        pg.did = i.to_string();
+        if bounty{
+            if all{
+                pg.bounty_all(amount as i32).await?;
+            }else {
+                pg.bounty_transaction(-1 * amount as i32).await?;
+            }
         }else {
-            pg.bounty_transaction(-1 * amount as i32).await?;
-        }
-    }else {
-        if all{
-            pg.ticket_all(amount as i32).await?;
-        }else {
-            pg.buy_ticket(amount as i32).await?;
+            if all{
+                pg.ticket_all(amount as i32).await?;
+            }else {
+                pg.buy_ticket(amount as i32).await?;
+            }
         }
     }
     pg.close().await;

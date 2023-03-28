@@ -9,6 +9,7 @@ pub mod new_error;
 pub mod bounty;
 pub mod gacha;
 pub mod market;
+pub mod shutdown;
 
 pub struct Components;
 

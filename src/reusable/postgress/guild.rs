@@ -32,10 +32,11 @@ impl PgConn<'_>{
             .bind(ids).fetch_one(&self.pool).await?.try_get("count")?)
     }
     pub async fn guild_food(&self,cid:i32,ids:i32,level:i32,exp:i32)->Result<bool,BitwiseError>{
+        let x = chrono::NaiveDateTime::from_timestamp_millis(exp as i64 * 1000).unwrap();
         let gid = self.guild_id(cid).await?;
         if gid != 0{
             sqlx::query("insert into guild_meals (guild_id,meal_id,level,expires) values ($1,$2,$3,$4)")
-                .bind(gid as i32).bind(ids).bind(level).bind(exp).execute(&self.pool).await?;
+                .bind(gid as i32).bind(ids).bind(level).bind(x).execute(&self.pool).await?;
             return Ok(true)
         }
         Ok(false)
@@ -63,7 +64,7 @@ impl PgConn<'_>{
         if self.guild_id(cid).await? != 0{
             return Err(MyErr::Custom("you already have guild, leave your current guild to use this command".to_owned()));
         }
-        if self.guild_count(ids).await? > 60{
+        if self.guild_count(ids).await? > 59{
             return Err(MyErr::Custom("the guild you selected is already full".to_owned()));
         }
         if let Err(why) = sqlx::query("insert into guild_characters (guild_id,character_id,order_index) 

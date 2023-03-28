@@ -3,7 +3,7 @@
     {
       "bbq": 0,
       "description": "this is bbq description",
-      "cooldown": 0,
+      "cooldown": 1,
       "icon": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "thumbnail": "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
       "rules": [
