@@ -129,7 +129,7 @@ pub fn hertz_modal_normal(args: TokenStream, input: TokenStream) -> TokenStream 
             match #fname(bnd).await{
                 Err(why)=>{
                     match !defer{
-                        true=>why.log(cmd, &on, false, &mut err).await,
+                        true=>why.log(cmd, &on, true, &mut err).await,
                         false=>why.log_defer(cmd, &on, &mut err).await,
                     };
                 }
@@ -168,7 +168,7 @@ pub fn hertz_button_normal(args: TokenStream, input: TokenStream) -> TokenStream
             match #fname(bnd).await{
                 Err(why)=>{
                     match !defer{
-                        true=>why.log(cmd, &on, false, &mut err).await,
+                        true=>why.log(cmd, &on, true, &mut err).await,
                         false=>why.log_defer(cmd, &on, &mut err).await,
                     };
                 }
@@ -258,7 +258,7 @@ pub fn hertz_combine_normal(args: TokenStream, input: TokenStream) -> TokenStrea
             match #fname(bnd).await{
                 Err(why)=>{
                     match !defer{
-                        true=>why.log(cmd, &on, false, &mut err).await,
+                        true=>why.log(cmd, &on, true, &mut err).await,
                         false=>why.log_defer(cmd, &on, &mut err).await,
                     };
                 }

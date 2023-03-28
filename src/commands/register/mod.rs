@@ -7,7 +7,7 @@ pub mod change_pasword;
 
 pub fn reg(init:&Init)->Vec<CreateCommand>{
     let mut out = Vec::new();
-    out.push(AppReg::normal_slash("create", "create mhfz accont to this server"));
+    out.push(AppReg::normal_slash("create", "create mhfz account to this server"));
     out.push(AppReg::normal_slash("check", "check your user data in server"));
     out.push(AppReg::normal_slash("switch", "switch your character for discord event"));
     if !init.mhfz_config.account_creation{

@@ -3,23 +3,16 @@ use std::time::Duration;
 use serenity::all::User;
 use serenity::futures::StreamExt;
 use serenity::prelude::Context;
-use crate::{Init,MyErr,Mytrait,PgConn,Components,Mybundle};
+use crate::{Init,MyErr,Mytrait,PgConn,Components,Mybundle, reusable::postgress::card::UserData};
 
 pub struct Reg<'a>{
     pub pg:PgConn<'a>,
     pub cid:i32
 }
 impl<'a> Reg<'a>{
-    pub async fn switch<T:Mytrait>(ctx:&'a Context,cmd:&'a T,init:&'a Init,bypass:bool,ephemeral:bool)->Result<Option<Reg<'a>>,MyErr>{
+    async fn select_card<T:Mytrait>(&self,data:UserData,ctx:&'a Context,cmd:&'a T)->Result<(), MyErr>{
         let user = cmd.user();
-        let pg = PgConn::create(init, user.id.to_string()).await?;
-        let data = pg.get_user_data_long().await?;
-        if data.cid != 0 && !bypass{
-            return Ok(Some(Reg { pg, cid:data.cid }));
-        }else if data.rid == 0 && data.cid == 0{
-            return Err(MyErr::Custom("you doesnt have any account in this server, please create account with `/create` or bind existing one with `/bind`".to_string()));
-        }
-        let card = pg.many_card(data.rid).await?;
+        let card = self.pg.many_card(data.rid).await?;
         if card.len() == 0{
             return Err(MyErr::Custom("you doesnt have any charachter on your account, please make one on the game launcher and use it to enter town first before using this command again".to_string()));
         }
@@ -40,12 +33,25 @@ impl<'a> Reg<'a>{
                 cmd.edit(ctx,card[index].edit_bind(&user)).await?;
                 pat.defer(&ctx.http).await?;
             }else if id=="use"{
-                pg.switch(card[index].char_id).await?;
-                pat.create_response(&ctx.http,Components::interaction_response("successfully switch main character", ephemeral)).await?;
+                self.pg.switch(card[index].char_id).await?;
+                pat.create_response(&ctx.http,Components::interaction_response("successfully switch main character", true)).await?;
                 break;
             }
         }
         msg.delete(&ctx.http).await?;
+        Ok(())
+    }
+    pub async fn switch<T:Mytrait>(ctx:&'a Context,cmd:&'a T,init:&'a Init,bypass:bool,_ephemeral:bool)->Result<Option<Reg<'a>>,MyErr>{
+        let user = cmd.user();
+        let pg = PgConn::create(init, user.id.to_string()).await?;
+        let data = pg.get_user_data_long().await?;
+        if data.cid != 0 && !bypass{
+            return Ok(Some(Reg { pg, cid:data.cid }));
+        }else if data.rid == 0 && data.cid == 0{
+            return Err(MyErr::Custom("you doesnt have any account in this server, please create account with `/create` or bind existing one with `/bind`".to_string()));
+        }
+        let x = Self{pg,cid:data.cid};
+        x.select_card(data, ctx, cmd).await?;
         Ok(None)
     }
     pub async fn check<T:Mybundle>(bnd:&'a T,user:&'a User)->Result<Reg<'a>,MyErr>{
@@ -71,9 +77,19 @@ impl<'a> Reg<'a>{
     pub async fn reverse_check<T:Mybundle>(bnd:&'a T,user:&'a User)->Result<Reg<'a>,MyErr>{
         let pg = PgConn::create(bnd.init(), user.id.to_string()).await?;
         let data = pg.get_user_data_long().await?;
+        let x = Reg{pg,cid:data.cid};
         if data.rid != 0 {
-            return Err(MyErr::Custom(format!("{} already have account in this server,use `/check` or `/change_password` if you forgot your account name or password, or try use `/switch` command instead if you already have characters in game on that account and want to switch characters",user.to_string())));
+            x.select_card(data, bnd.ctx(), bnd.cmd()).await?;
         }
-        Ok(Reg{pg,cid:data.cid})
+        Ok(x)
+    }
+    pub async fn reverse_check_alter<T:Mybundle>(bnd:&'a T,user:&'a User)->Result<Reg<'a>,MyErr>{
+        let pg = PgConn::create(bnd.init(), user.id.to_string()).await?;
+        let data = pg.get_user_data_long().await?;
+        let x = Reg{pg,cid:data.rid};
+        if data.rid != 0 {
+            x.select_card(data, bnd.ctx(), bnd.cmd()).await?;
+        }
+        Ok(x)
     }
 }

@@ -49,8 +49,7 @@ async fn all<T:Mybundle>(bnd:&T,reg:&Reg<'_>)->Result<(),MyErr> {
     let user = bnd.user();
     let attachments = data.get_attachment();
     for i in attachments{
-        user.direct_message(&bnd.ctx().http,CreateMessage::new()
-            .content("your save").add_file(i)).await?;
+        user.direct_message(&bnd.ctx().http,CreateMessage::new().add_file(i)).await?;
     }
     Ok(())
 }

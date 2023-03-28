@@ -22,10 +22,11 @@ impl<'a,'b> RegisterAcknowledged<'a,'b>{
     async fn log_to_user(&self,reg:bool)->Result<(),MyErr>{
         let word = || {if reg{return "Created";}"binded"};
         let user = self.bnd.user();
-        let server = self.bnd.cmd.guild_id.unwrap_or_default().to_partial_guild(&self.bnd.ctx.http).await?;
         let ch = ChannelId(NonZeroU64::new(self.bnd.init.log_channel.account_channel).unwrap());
-        ch.send_message(&self.bnd.ctx.http,CreateMessage::new().embed(CreateEmbed::new().title(format!("Account Succesfully {} on Server",word()))
-                .description(&format!("{} {} an account on server, by creating account here you already aggree to follow our rules to as stated on rules channel, as a member of {} comunity we welcome you to enjoy the game together",user.to_string(),word(),server.name)).fields(vec![
+        ch.send_message(&self.bnd.ctx.http,CreateMessage::new()
+            .content(format!("{}",user.to_string()))
+            .embed(CreateEmbed::new().title(format!("Account Succesfully {} on Server",word()))
+                .description(&format!("{} {} an account on server, remember that you still need to have a character in game to fully use our discord features so hurry up and create one if you havent",user.to_string(),word())).fields(vec![
                     ("👤 Username",&format!("`{}`",self.name),false),
                     ("🆔 User Id",&format!("`{}`",self.uid),false)
                 ]).author(CreateEmbedAuthor::new(&user.name).icon_url(user.face()))

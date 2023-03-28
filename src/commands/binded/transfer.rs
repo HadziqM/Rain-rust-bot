@@ -127,11 +127,12 @@ async fn slash(bnd:&SlashBundle<'_>,_reg:&Reg<'_>)->Result<(),MyErr>{
     let msg = ch.send_message(&bnd.ctx.http,CreateMessage::new()
         .content(format!("<@&{}>",bnd.init.server_role.judge_role))
         .embed(data.make_embed()).components(vec![data.make_button()])).await?;
-    tokio::time::sleep(Duration::new(5*60, 0)).await;
-    auto_accept(msg, SaveAcknowladge { uid: "".to_owned(), accept: true }, bnd, _reg).await?;
+    tokio::time::sleep(Duration::from_secs(10)).await;
+    auto_accept(msg, SaveAcknowladge { uid:bnd.cmd.user.id.to_string() , accept: true }, bnd, _reg).await?;
     Ok(())
 }
-async fn auto_accept(mut msg:Message,ack:SaveAcknowladge,bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
+async fn auto_accept(msg:Message,ack:SaveAcknowladge,bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
+    let mut msg = msg.channel_id.message(&bnd.ctx.http, msg.id).await?;
     if msg.components.len() != 0{
         let files = ack.get_files().await?;
         let user = bnd.user();

@@ -3,7 +3,6 @@ use serenity::all::*;
 use serenity::futures::StreamExt;
 use crate::{MyErr,SlashBundle,Mybundle,Mytrait,PgConn,Components,ComponentBundle};
 use crate::reusable::component::bounty::{Methode,BBQ,Category,BountySubmit,Bounty,BountyTitle, BountyRefresh};
-use crate::reusable::utils::MyTime;
 
 fn select_menu(id:&str,op:Vec<(String,String)>)->CreateSelectMenu{
     let options:Vec<_> = op.iter().map(|x|CreateSelectMenuOption::new(&x.1,&x.0)).collect();
@@ -174,15 +173,14 @@ async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{
     let mut submit = BountySubmit::open(user).await
         .ok_or(MyErr::Custom("submit data doesnt exist on cache".to_owned()))?;
     Components::response(bnd, "being processed please wait a little", true).await?;
-    let mut msg = bnd.cmd.message.clone();
+    let msg = bnd.cmd.message.clone();
     if state == "r"{
         //rejected
         let ch = ChannelId::new(bnd.init.bounty.receptionist_ch);
         submit.delete().await;
         ch.send_message(&bnd.ctx.http, CreateMessage::new().content(format!("<@{}> bounty is rejected by {}"
             ,user,&bnd.cmd.user.name))).await?;
-        msg.edit(&bnd.ctx.http, EditMessage::new().components(Vec::new())
-                 .content(format!("rejected by {} at <t:{}:F>",&bnd.cmd.user.name,MyTime::now()))).await?;
+    msg.delete(&bnd.ctx.http).await?;
         BountyRefresh::rejected(&submit.bbq, bnd).await?;
         return Ok(());
     }
@@ -196,8 +194,7 @@ async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{
     ChannelId::new(bnd.init.bounty.conquered_ch)
         .send_message(&bnd.ctx.http, CreateMessage::new().embed(submit.embed())).await?;
     submit.delete().await;
-    msg.edit(&bnd.ctx.http, EditMessage::new().components(Vec::new())
-             .content(format!("accepted by {} at <t:{}:F>",&bnd.cmd.user.name,MyTime::now()))).await?;
+    msg.delete(&bnd.ctx.http).await?;
     pg.close().await;
     Ok(())
 }
