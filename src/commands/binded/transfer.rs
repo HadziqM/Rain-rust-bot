@@ -127,7 +127,7 @@ async fn slash(bnd:&SlashBundle<'_>,_reg:&Reg<'_>)->Result<(),MyErr>{
     let msg = ch.send_message(&bnd.ctx.http,CreateMessage::new()
         .content(format!("<@&{}>",bnd.init.server_role.judge_role))
         .embed(data.make_embed()).components(vec![data.make_button()])).await?;
-    tokio::time::sleep(Duration::from_secs(10)).await;
+    tokio::time::sleep(Duration::from_secs(10*60)).await;
     auto_accept(msg, SaveAcknowladge { uid:bnd.cmd.user.id.to_string() , accept: true }, bnd, _reg).await?;
     Ok(())
 }
