@@ -11,6 +11,10 @@
     "port":5432,
     "database":"erupe"
    },
+    "chat_gpt":{
+     "token":"your gpt token",
+     "timeout":600
+  },
   "mhfz_config": {   
     "account_creation":true,
     "sending_log":false
