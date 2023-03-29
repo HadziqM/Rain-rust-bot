@@ -66,9 +66,10 @@ async fn all<T:Mybundle>(bnd:&T)->Result<(),MyErr>{
         _=>true
     };
     let user = bnd.user();
-    let mut reg = Reg::reverse_check(bnd,&user).await?;
-    Components::response_adv(bnd, modal_response(regist)).await?;
-    reg.pg.close().await;
+    if let Some(mut reg) = Reg::reverse_check(bnd,&user).await?{
+        Components::response_adv(bnd, modal_response(regist)).await?;
+        reg.pg.close().await;
+    };
     Ok(())
 }
 
@@ -79,7 +80,7 @@ async fn modal(bnd:&ModalBundle<'_>)->Result<(),MyErr>{
         _=>true
     };
     let user = bnd.user();
-    let reg = Reg::reverse_check(bnd, &user).await?;
+    let reg = Reg::no_check(bnd, &user).await?;
     let mut name = String::new();
     let mut password = String::new();
     for comp in &bnd.cmd.data.components{

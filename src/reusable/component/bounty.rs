@@ -225,61 +225,67 @@ pub enum BBQ{
 impl BBQ{
     pub fn new(code:u8)->Result<BBQ,MyErr>{
         match code{
-            0=>Ok(BBQ::BBQ01),
-            1=>Ok(BBQ::BBQ02),
-            2=>Ok(BBQ::BBQ03),
-            3=>Ok(BBQ::BBQ04),
-            4=>Ok(BBQ::BBQ05),
-            5=>Ok(BBQ::BBQ06),
-            6=>Ok(BBQ::BBQ07),
-            7=>Ok(BBQ::BBQ08),
-            8=>Ok(BBQ::BBQ09),
-            9=>Ok(BBQ::BBQ10),
-            10=>Ok(BBQ::BBQ11),
-            11=>Ok(BBQ::BBQ12),
-            12=>Ok(BBQ::BBQ13),
-            13=>Ok(BBQ::BBQ14),
-            14=>Ok(BBQ::BBQ15),
-            15=>Ok(BBQ::BBQ16),
-            16=>Ok(BBQ::BBQ17),
-            17=>Ok(BBQ::BBQ18),
-            18=>Ok(BBQ::BBQ19),
-            19=>Ok(BBQ::BBQ20),
-            20=>Ok(BBQ::BBQ21),
-            21=>Ok(BBQ::BBQ22),
-            22=>Ok(BBQ::BBQ23),
-            23=>Ok(BBQ::BBQ24),
-            24=>Ok(BBQ::BBQ25),
+            1=>Ok(BBQ::BBQ01),
+            2=>Ok(BBQ::BBQ02),
+            3=>Ok(BBQ::BBQ03),
+            4=>Ok(BBQ::BBQ04),
+            5=>Ok(BBQ::BBQ05),
+            6=>Ok(BBQ::BBQ06),
+            7=>Ok(BBQ::BBQ07),
+            8=>Ok(BBQ::BBQ08),
+            9=>Ok(BBQ::BBQ09),
+            10=>Ok(BBQ::BBQ10),
+            11=>Ok(BBQ::BBQ11),
+            12=>Ok(BBQ::BBQ12),
+            13=>Ok(BBQ::BBQ13),
+            14=>Ok(BBQ::BBQ14),
+            15=>Ok(BBQ::BBQ15),
+            16=>Ok(BBQ::BBQ16),
+            17=>Ok(BBQ::BBQ17),
+            18=>Ok(BBQ::BBQ18),
+            19=>Ok(BBQ::BBQ19),
+            20=>Ok(BBQ::BBQ20),
+            21=>Ok(BBQ::BBQ21),
+            22=>Ok(BBQ::BBQ22),
+            23=>Ok(BBQ::BBQ23),
+            24=>Ok(BBQ::BBQ24),
+            25=>Ok(BBQ::BBQ25),
             _=>Err(MyErr::Custom("cant get bbq".to_string()))
+        }
+    }
+    pub fn name_encode(code:u8)->String{
+        match Self::new(code){
+            Ok(x)=>x.name(),
+            Err(_)=>"Not Progressed Yet".to_owned()
         }
     }
     pub fn encode(&self)->u8{
         match self{
-            BBQ::BBQ01=>0,
-            BBQ::BBQ02=>1,
-            BBQ::BBQ03=>2,
-            BBQ::BBQ04=>3,
-            BBQ::BBQ05=>4,
-            BBQ::BBQ06=>5,
-            BBQ::BBQ07=>6,
-            BBQ::BBQ08=>7,
-            BBQ::BBQ09=>8,
-            BBQ::BBQ10=>9,
-            BBQ::BBQ11=>10,
-            BBQ::BBQ12=>11,
-            BBQ::BBQ13=>12,
-            BBQ::BBQ14=>13,
-            BBQ::BBQ15=>14,
-            BBQ::BBQ16=>15,
-            BBQ::BBQ17=>16,
-            BBQ::BBQ18=>17,
-            BBQ::BBQ19=>18,
-            BBQ::BBQ20=>19,
-            BBQ::BBQ21=>20,
-            BBQ::BBQ22=>21,
-            BBQ::BBQ23=>22,
-            BBQ::BBQ24=>23,
-            BBQ::BBQ25=>24,
+            BBQ::BBQ01=>1,
+            BBQ::BBQ02=>2,
+            BBQ::BBQ03=>3,
+            BBQ::BBQ04=>4,
+            BBQ::BBQ05=>5,
+            BBQ::BBQ06=>6,
+            BBQ::BBQ07=>7,
+            BBQ::BBQ08=>8,
+            BBQ::BBQ09=>9,
+            BBQ::BBQ10=>10,
+            BBQ::BBQ11=>11,
+            BBQ::BBQ12=>12,
+            BBQ::BBQ13=>13,
+            BBQ::BBQ14=>14,
+            BBQ::BBQ15=>15,
+            BBQ::BBQ16=>16,
+            BBQ::BBQ17=>17,
+            BBQ::BBQ18=>18,
+            BBQ::BBQ19=>19,
+            BBQ::BBQ20=>20,
+            BBQ::BBQ21=>21,
+            BBQ::BBQ22=>22,
+            BBQ::BBQ23=>23,
+            BBQ::BBQ24=>24,
+            BBQ::BBQ25=>25,
         }
     }
     pub fn name(&self)->String{
@@ -313,31 +319,31 @@ impl BBQ{
     }
     pub fn option_str()->Vec<(String,String)>{
         vec![
-            ("0".to_owned(),"BBQ01".to_owned()),
-            ("1".to_owned(),"BBQ02".to_owned()),
-            ("2".to_owned(),"BBQ03".to_owned()),
-            ("3".to_owned(),"BBQ04".to_owned()),
-            ("4".to_owned(),"BBQ05".to_owned()),
-            ("5".to_owned(),"BBQ06".to_owned()),
-            ("6".to_owned(),"BBQ07".to_owned()),
-            ("7".to_owned(),"BBQ08".to_owned()),
-            ("8".to_owned(),"BBQ09".to_owned()),
-            ("9".to_owned(),"BBQ10".to_owned()),
-            ("10".to_owned(),"BBQ11".to_owned()),
-            ("11".to_owned(),"BBQ12".to_owned()),
-            ("12".to_owned(),"BBQ13".to_owned()),
-            ("13".to_owned(),"BBQ14".to_owned()),
-            ("14".to_owned(),"BBQ15".to_owned()),
-            ("15".to_owned(),"BBQ16".to_owned()),
-            ("16".to_owned(),"BBQ17".to_owned()),
-            ("17".to_owned(),"BBQ18".to_owned()),
-            ("18".to_owned(),"BBQ19".to_owned()),
-            ("19".to_owned(),"BBQ20".to_owned()),
-            ("20".to_owned(),"BBQ21".to_owned()),
-            ("21".to_owned(),"BBQ22".to_owned()),
-            ("22".to_owned(),"BBQ23".to_owned()),
-            ("23".to_owned(),"BBQ24".to_owned()),
-            ("24".to_owned(),"BBQ25".to_owned()),
+            ("1".to_owned(),"BBQ01".to_owned()),
+            ("2".to_owned(),"BBQ02".to_owned()),
+            ("3".to_owned(),"BBQ03".to_owned()),
+            ("4".to_owned(),"BBQ04".to_owned()),
+            ("5".to_owned(),"BBQ05".to_owned()),
+            ("6".to_owned(),"BBQ06".to_owned()),
+            ("7".to_owned(),"BBQ07".to_owned()),
+            ("8".to_owned(),"BBQ08".to_owned()),
+            ("9".to_owned(),"BBQ09".to_owned()),
+            ("10".to_owned(),"BBQ10".to_owned()),
+            ("11".to_owned(),"BBQ11".to_owned()),
+            ("12".to_owned(),"BBQ12".to_owned()),
+            ("13".to_owned(),"BBQ13".to_owned()),
+            ("14".to_owned(),"BBQ14".to_owned()),
+            ("15".to_owned(),"BBQ15".to_owned()),
+            ("16".to_owned(),"BBQ16".to_owned()),
+            ("17".to_owned(),"BBQ17".to_owned()),
+            ("18".to_owned(),"BBQ18".to_owned()),
+            ("19".to_owned(),"BBQ19".to_owned()),
+            ("20".to_owned(),"BBQ20".to_owned()),
+            ("21".to_owned(),"BBQ21".to_owned()),
+            ("22".to_owned(),"BBQ22".to_owned()),
+            ("23".to_owned(),"BBQ23".to_owned()),
+            ("24".to_owned(),"BBQ24".to_owned()),
+            ("25".to_owned(),"BBQ25".to_owned()),
         ]
     }
     pub fn get_bounty<'a>(&self,bbq:&'a Bounty)->Result<&'a BountyDesc,MyErr>{
@@ -396,10 +402,10 @@ impl Hunter {
                         return Err(MyErr::Custom(format!("{} still on cooldown till <t:{time}:R>",us.to_string())));
                     }
                 }
-                let tresh = bbq.encode() +1;
-                if !category.check_rank(&event,tresh){
+                let sub = bbq.encode();
+                if !category.check_rank(&event,sub){
                     return Err(MyErr::Custom(format!("{} cant take BBQ higher than {} for category {}"
-                        ,us.to_string(),BBQ::new(tresh)?.name(),category.name())));
+                        ,us.to_string(),BBQ::new(category.rank(&event) as u8)?.name(),category.name())));
                 }
 
             }
@@ -438,7 +444,7 @@ impl BountySubmit{
             let bounty = self.reward.coin as f32 * hunt.title.bonus();
             hunt.event.bounty += bounty as i32;
             hunt.event.gacha += self.reward.ticket as i32;
-            self.category.change_rank(hunt, self.bbq.encode() + 1);
+            self.category.change_rank(hunt, self.bbq.encode());
             hunt.event.latest_bounty = BountyTitle::encrypt(self.category.clone(), self.bbq.clone());
             if !bypass{
                 hunt.event.latest_bounty_time = self.time;
@@ -617,7 +623,7 @@ impl BountyRefresh{
         let mut x = Self::new(true).await?;
         for (qq,cd) in x.hashmap(){
             if bbq == &qq{
-                x.set_cd(bbq, cd-1);
+                x.set_cd(bbq, cd+1);
             }
         }
         x.save(true).await?;

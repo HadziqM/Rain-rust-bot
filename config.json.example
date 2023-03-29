@@ -20,8 +20,12 @@
     "sending_log":false
    },
   "bot_config": {
+    "member_join":true,
+    "member_leave":true,
     "gacha":true,
-    "server_market":true
+    "bounty":true,
+    "server_market":true,
+    "transfer_timeout":7200
    },
   "log_channel": {
     "err_channel":1031774270512169070,

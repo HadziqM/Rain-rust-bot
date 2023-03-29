@@ -53,6 +53,7 @@ pub struct BotConfig {
     // pub(crate) transmog_contest: bool,
     // pub(crate) mezfes_contest: bool,
     pub(crate) server_market: bool,
+    pub(crate) transfer_timeout:u64
     // pub(crate) pvp_contest: bool,
     // pub(crate) speedrun_contest: bool,
 }

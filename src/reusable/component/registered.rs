@@ -74,22 +74,29 @@ impl<'a> Reg<'a>{
         }
         Ok(Reg{pg,cid:data.cid})
     }
-    pub async fn reverse_check<T:Mybundle>(bnd:&'a T,user:&'a User)->Result<Reg<'a>,MyErr>{
+    pub async fn reverse_check<T:Mybundle>(bnd:&'a T,user:&'a User)->Result<Option<Reg<'a>>,MyErr>{
         let pg = PgConn::create(bnd.init(), user.id.to_string()).await?;
         let data = pg.get_user_data_long().await?;
         let x = Reg{pg,cid:data.cid};
         if data.rid != 0 {
             x.select_card(data, bnd.ctx(), bnd.cmd()).await?;
+            return Ok(None);
         }
-        Ok(x)
+        Ok(Some(x))
     }
-    pub async fn reverse_check_alter<T:Mybundle>(bnd:&'a T,user:&'a User)->Result<Reg<'a>,MyErr>{
+    pub async fn reverse_check_alter<T:Mybundle>(bnd:&'a T,user:&'a User)->Result<Option<Reg<'a>>,MyErr>{
         let pg = PgConn::create(bnd.init(), user.id.to_string()).await?;
         let data = pg.get_user_data_long().await?;
         let x = Reg{pg,cid:data.rid};
         if data.rid != 0 {
             x.select_card(data, bnd.ctx(), bnd.cmd()).await?;
+            return Ok(None);
         }
+        Ok(Some(x))
+    }
+    pub async fn no_check<T:Mybundle>(bnd:&'a T,user:&'a User)->Result<Reg<'a>,MyErr>{
+        let pg = PgConn::create(bnd.init(), user.id.to_string()).await?;
+        let x = Reg{pg,cid:0};
         Ok(x)
     }
 }
