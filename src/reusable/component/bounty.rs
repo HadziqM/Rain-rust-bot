@@ -514,8 +514,8 @@ impl BountySubmit{
         }else{
             let desc = Box::new(Bounty::new(&self.category).await?);
             for x in desc.bounty{
-                if x.cooldown == 0 && x.bbq == self.bbq.encode(){
-                    return Ok(false);
+                if x.cooldown != 0 && x.bbq == self.bbq.encode(){
+                    return Ok(true);
                 }
             }
             return Ok(false);
