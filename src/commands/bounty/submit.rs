@@ -82,7 +82,7 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let uid = msg.mentions.iter().map(|x|x.id).collect::<Vec<_>>();
     let submit = BountySubmit::new(bnd, false, mem,
     uid, &mut pg, &bounty, &link, Methode::new(methode.unwrap()), BBQ::new(bbq.unwrap())?, cat.clone()).await?;
-    if !submit.cooldown(&mut cooldown){
+    if !submit.cooldown(&mut cooldown).await?{
         return Err(MyErr::Custom("The Bounty You selected is on cooldown or disabled".to_owned()));
     }
     ChannelId::new(bnd.init.bounty.judge_ch).send_message(&bnd.ctx.http, CreateMessage::new().embed(submit.embed()).components(submit.button())).await?;
@@ -121,7 +121,7 @@ pub(super) async fn submit(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     let bounty = Box::new(Bounty::new(&cat).await?);
     let mut cooldown = Box::new(BountyRefresh::new(true).await?);
     let submit = BountySubmit::new(bnd, false, member, Components::get_mentions(mention),&mut pg, &bounty, &url, met, bb, cat.clone()).await?;
-    if !submit.cooldown(&mut cooldown){
+    if !submit.cooldown(&mut cooldown).await?{
         return Err(MyErr::Custom("The Bounty You selected is on cooldown or disabled".to_owned()));
     }
     Components::response(bnd, "Your bounty is already submitted to Judge", false).await?;
@@ -180,8 +180,10 @@ async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{
         submit.delete().await;
         ch.send_message(&bnd.ctx.http, CreateMessage::new().content(format!("<@{}> bounty is rejected by {}"
             ,user,&bnd.cmd.user.name))).await?;
-    msg.delete(&bnd.ctx.http).await?;
-        BountyRefresh::rejected(&submit.bbq, bnd).await?;
+        msg.delete(&bnd.ctx.http).await?;
+        if submit.category == Category::Free{
+            BountyRefresh::rejected(&submit.bbq, bnd).await?;
+        }
         return Ok(());
     }
     //accepted

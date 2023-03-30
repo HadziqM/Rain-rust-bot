@@ -61,7 +61,13 @@ impl<'a> PgConn<'a> {
     }
     pub async fn bounty_all(&self,gift:i32)->Result<(),BitwiseError>{
         sqlx::query("UPDATE discord set bounty=bounty+$1 where bounty is not null").bind(gift)
-        .bind(&self.did).execute(&self.pool).await?;
+        .execute(&self.pool).await?;
+        Ok(())
+    }
+    pub async fn jelewelry(&self,bought:i32)->Result<(),BitwiseError>{
+        let user = self.get_user_data().await?;
+        sqlx::query("UPDATE users set gacha_premium=gacha_premium+$1 where id=$2").bind(bought)
+            .bind(user.rid).execute(&self.pool).await?;
         Ok(())
     }
     pub async fn market(&self,data:&ItemCode,cid:i32,price:Option<i32>,pedia:&ItemPedia)->Result<(),BitwiseError>{

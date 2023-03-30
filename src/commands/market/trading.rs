@@ -67,7 +67,11 @@ async fn trading(bnd:&SlashBundle<'_>,reg:&Reg<'_>,unit:String)->Result<(),MyErr
             name = "Guild RP".to_string();
         }
         _ => {
-            return Err(MyErr::Custom("jewelry is currently closed".to_string()));
+            if !trade.jewelry.enabled{
+                return Err(MyErr::Custom("jewelry is currently closed".to_string()));
+            }
+            item = trade.jewelry.clone();
+            name = "Gacha Premium".to_string();
         }
     }
     let mut bought = 0;
@@ -96,9 +100,7 @@ async fn trading(bnd:&SlashBundle<'_>,reg:&Reg<'_>,unit:String)->Result<(),MyErr
                     return Err(MyErr::Custom("You dont have any guild to use this command (dont worry your bounty is refounded)".to_owned()))
                 }
             }
-            _ => {
-                return Err(MyErr::Custom("jewelry rp is currently disabled".to_string()));
-            }
+            _ => reg.pg.jelewelry(bought as i32).await?,
         };
         reg.pg.bounty_transaction(total as i32).await?;
     }

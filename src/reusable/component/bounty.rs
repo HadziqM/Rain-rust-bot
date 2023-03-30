@@ -348,7 +348,7 @@ impl BBQ{
     }
     pub fn get_bounty<'a>(&self,bbq:&'a Bounty)->Result<&'a BountyDesc,MyErr>{
         for i in &bbq.bounty{
-            if i.bbq == self.encode(){
+            if i.bbq + 1 == self.encode(){
                 return Ok(i);
             }
         }
@@ -502,16 +502,20 @@ impl BountySubmit{
         let arow = CreateActionRow::Buttons(vec![accept,reject]);
         vec![arow]
     }
-    pub fn cooldown(&self,bnt:&mut Box<BountyRefresh>,)->bool{
-        for (bbq,cd) in bnt.hashmap(){
-            if cd != 0 && bbq == self.bbq {
-                if self.category == Category::Free{
-                    bnt.set_cd(&bbq, cd-1);
-                }
-                return true;
+    pub async fn cooldown(&self,bnt:&mut Box<BountyRefresh>)->Result<bool,MyErr>{
+        let desc = Box::new(Bounty::new(&self.category).await?);
+        for x in desc.bounty{
+            if x.cooldown == 0 && x.bbq == self.bbq.encode(){
+                return Ok(false);
             }
         }
-        false
+        if self.category == Category::Free{
+            for (bbq,cd) in bnt.hashmap(){
+                bnt.set_cd(&bbq, cd-1);
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
     fn reward_embed<'a>(&'a self,item:&ItemPedia)->HashMap<&'a User,CreateEmbed>{
         let mut out = HashMap::new();

@@ -14,7 +14,7 @@ pub struct Guild{
     pub name:String,
     pub rank_rp:i32,
     pub leader_id:i32,
-    pub created:chrono::NaiveDateTime,
+    pub created:chrono::DateTime<chrono::Utc>,
     pub lead_name:String,
     pub discord_id:Option<String>,
 
@@ -33,10 +33,11 @@ impl PgConn<'_>{
     }
     pub async fn guild_food(&self,cid:i32,ids:i32,level:i32,exp:i32)->Result<bool,BitwiseError>{
         let x = chrono::NaiveDateTime::from_timestamp_millis(exp as i64 * 1000).unwrap();
+        let z:chrono::DateTime<chrono::Utc> = chrono::DateTime::from_utc(x, chrono::Utc);
         let gid = self.guild_id(cid).await?;
         if gid != 0{
-            sqlx::query("insert into guild_meals (guild_id,meal_id,level,expires) values ($1,$2,$3,$4)")
-                .bind(gid as i32).bind(ids).bind(level).bind(x).execute(&self.pool).await?;
+            sqlx::query("insert into guild_meals (guild_id,meal_id,level,created_at) values ($1,$2,$3,$4)")
+                .bind(gid as i32).bind(ids).bind(level).bind(z).execute(&self.pool).await?;
             return Ok(true)
         }
         Ok(false)
