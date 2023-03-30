@@ -503,19 +503,23 @@ impl BountySubmit{
         vec![arow]
     }
     pub async fn cooldown(&self,bnt:&mut Box<BountyRefresh>)->Result<bool,MyErr>{
-        let desc = Box::new(Bounty::new(&self.category).await?);
-        for x in desc.bounty{
-            if x.cooldown == 0 && x.bbq == self.bbq.encode(){
-                return Ok(false);
-            }
-        }
         if self.category == Category::Free{
             for (bbq,cd) in bnt.hashmap(){
-                bnt.set_cd(&bbq, cd-1);
-                return Ok(true);
+                if bbq==self.bbq && cd != 0{
+                    bnt.set_cd(&bbq, cd-1);
+                    return Ok(true);
+                }
             }
+            return Ok(false);
+        }else{
+            let desc = Box::new(Bounty::new(&self.category).await?);
+            for x in desc.bounty{
+                if x.cooldown == 0 && x.bbq == self.bbq.encode(){
+                    return Ok(false);
+                }
+            }
+            return Ok(false);
         }
-        Ok(false)
     }
     fn reward_embed<'a>(&'a self,item:&ItemPedia)->HashMap<&'a User,CreateEmbed>{
         let mut out = HashMap::new();
