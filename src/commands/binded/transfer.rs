@@ -1,8 +1,9 @@
 use serenity::all::*;
 use tokio::io::AsyncWriteExt;
 use tokio::fs::File;
+use crate::reusable::config::Init;
 use crate::{Components,Reg,SlashBundle,ComponentBundle,MyErr,Mytrait,Mybundle};
-use crate::reusable::utils::Color;
+use crate::reusable::utils::{Color, MyTime};
 use std::num::NonZeroU64;
 use std::path::Path;
 use std::time::{SystemTime, Duration};
@@ -39,7 +40,7 @@ impl<'a> SaveJudge<'a> {
         }
         SaveJudge{cmd,files:container}
     }
-    fn make_embed(&self)->CreateEmbed{
+    fn make_embed(&self,init:&Init)->CreateEmbed{
         let mut x= "```\n".to_owned();
         for i in &self.files{
             x.push_str(i.name.as_str());
@@ -47,7 +48,7 @@ impl<'a> SaveJudge<'a> {
         }
         x.push_str("```");
         CreateEmbed::new()
-        .title("Save Result").description("The savefile result that already filtered by bot and will be judged by admin later, bot will dm you if savefile is approved by admin.\n**NOTES**\n```dont login into the game untill admin approve or disaprove it then bot dm you, while transfer process run and youare on game, the save file will take no effect, also allow dm permission to let bot dm you```").author(CreateEmbedAuthor::new(&self.cmd.user.name).icon_url(self.cmd.user.face())).field("Filtered File(s)",x.as_str(), true).color(Color::Blue.throw())
+        .title("Save Result").description(format!("The savefile result that already filtered.\n**NOTES PLEASE READ**\n>>> dont login into the game until admin approve your file, but dont worry if it takes them more than <t:{}:R> , it will be automatically accepted,",MyTime::elapsed(init.bot_config.transfer_timeout as i64))).author(CreateEmbedAuthor::new(&self.cmd.user.name).icon_url(self.cmd.user.face())).field("Filtered File(s)",x.as_str(), true).color(Color::Blue.throw())
     }
     async fn save_to_file(&self)->Result<(),MyErr>{
         let save = Path::new(".").join("save");
@@ -121,12 +122,12 @@ async fn slash(bnd:&SlashBundle<'_>,_reg:&Reg<'_>)->Result<(),MyErr>{
         return Err(MyErr::Custom("no matched file detected, please rename your save file properly and dont send any large file".to_string()));
     }
     data.save_to_file().await?;
-    let content = EditInteractionResponse::new().embed(data.make_embed());
+    let content = EditInteractionResponse::new().embed(data.make_embed(bnd.init));
     let ch = ChannelId(NonZeroU64::new(bnd.init.log_channel.transfer_channel).unwrap());
     Components::edit_adv(bnd, content).await?;
     let msg = ch.send_message(&bnd.ctx.http,CreateMessage::new()
         .content(format!("<@&{}>",bnd.init.server_role.judge_role))
-        .embed(data.make_embed()).components(vec![data.make_button()])).await?;
+        .embed(data.make_embed(bnd.init)).components(vec![data.make_button()])).await?;
     tokio::time::sleep(Duration::from_secs(bnd.init.bot_config.transfer_timeout)).await;
     auto_accept(msg, SaveAcknowladge { uid:bnd.cmd.user.id.to_string() , accept: true }, bnd, _reg).await?;
     Ok(())
