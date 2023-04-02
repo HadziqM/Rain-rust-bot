@@ -1,3 +1,4 @@
+use crate::reusable::component::bounty::Title;
 use crate::{MyErr,Reg,Components,SlashBundle};
 use crate::reusable::component::market::{Meal,Trading,Market};
 use serenity::all::*;
@@ -26,16 +27,21 @@ pub(super) async fn slash(bnd:&SlashBundle<'_>,reg:&Reg<'_>)->Result<(),MyErr>{
     }
     let meals = meal.meals.iter().find(|&x|x.id == ids as i32)
         .ok_or(MyErr::Custom("unidentified input, make sure you properly select food options".to_owned()))?;
-    let coin = reg.pg.get_coin().await?;
+    let (co,event) = tokio::join!(reg.pg.get_coin(),reg.pg.get_event());
+    let (coin,event) = (co?,event?);
+    let title = Title::new(event.title as u8).discount();
+    let bon = (1.0-title)*100.0;
+    let disc = format!("{}%",bon as u32);
     let total = bought * trade.restourant.price as i64;
-    let change  = coin as i64 - total;
+    let discounted = (total as f32 * title) as i64;
+    let change  = coin as i64 - discounted;
     if change < 0 {
         return Err(MyErr::Custom(format!("you only have {} bounty coin, and you need {} for this transaction",
             Market::currency(coin as i64),Market::currency(total))));
     }
     let exp = crate::reusable::utils::MyTime::elapsed(bought * 360);
     let receipt = Bought::new(meals.name.to_string(), bought, total, change, coin,
-        trade.restourant.price, "Hour(s)".to_owned());
+        trade.restourant.price, "Hour(s)".to_owned(),discounted,disc);
     if receipt.confirmation(bnd).await?{
         if !reg.pg.guild_food(reg.cid, ids as i32, meals.level , exp as i32).await?{
             return Err(MyErr::Custom("You dont have any guild to use this command (dont worry your bounty is refounded)".to_owned()));

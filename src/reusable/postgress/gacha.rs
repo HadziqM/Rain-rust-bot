@@ -66,7 +66,7 @@ impl<'a> PgConn<'a> {
     }
     pub async fn jelewelry(&self,bought:i32)->Result<(),BitwiseError>{
         let user = self.get_user_data().await?;
-        sqlx::query("UPDATE users set gacha_premium=gacha_premium+$1 where id=$2").bind(bought)
+        sqlx::query("UPDATE users set gacha_premium=coalesce(gacha_premium,0)+$1 where id=$2").bind(bought)
             .bind(user.rid).execute(&self.pool).await?;
         Ok(())
     }

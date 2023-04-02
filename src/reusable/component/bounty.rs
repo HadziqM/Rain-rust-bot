@@ -390,7 +390,7 @@ impl Hunter {
             let event = pg.get_event().await
                 .ok().ok_or(MyErr::Custom(format!("{} most likely isnt binded yet please check",us.to_string())))?;
             let title = Title::new(u8::try_from(event.title).unwrap());
-            if !bypass{
+            if !bypass || category!=&Category::Event{
                 if let Some((x,y))=BountyTitle::decrypt(&event.latest_bounty){
                     let time;
                     if &x==category && &y==bbq{

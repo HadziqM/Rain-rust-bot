@@ -10,6 +10,16 @@ pub fn reg() -> Vec<CreateCommand> {
     let mut methode = AppReg::str_option("methode", "methode used to clear bounty").required(true);
     let mut category = AppReg::str_option("category", "category you pick for bounty").required(true);
     let mut bbq = AppReg::str_option("bbq", "stage you pick for bounty").required(true);
+    for i in Methode::option_str(){
+        methode = methode.add_string_choice(i.1, i.0);
+    }
+    for i in Category::option_str(){
+        category = category.add_string_choice(i.1, i.0);
+    }
+    for i in BBQ::option_str(){
+        bbq = bbq.add_string_choice(i.1, i.0);
+    }
+
     let cooldown = AppReg::admin_slash("cooldown", "cooldown")
         .add_option(AppReg::subcommand(
             "refresh",
@@ -28,15 +38,6 @@ pub fn reg() -> Vec<CreateCommand> {
                     AppReg::int_option("cooldown", "set to match input").required(true),
                 ),
         );
-    for i in Methode::option_str(){
-        methode = methode.add_string_choice(i.1, i.0);
-    }
-    for i in Category::option_str(){
-        category = category.add_string_choice(i.1, i.0);
-    }
-    for i in BBQ::option_str(){
-        bbq = bbq.add_string_choice(i.1, i.0);
-    }
     let dist =AppReg::admin_slash("distribution", "distribute bounty reward to player")
         .add_option(methode.to_owned())
         .add_option(category.to_owned())

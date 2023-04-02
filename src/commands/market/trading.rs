@@ -1,3 +1,4 @@
+use crate::reusable::component::bounty::Title;
 use crate::{MyErr,SlashBundle,Mybundle,Mytrait,Reg,Components};
 use crate::reusable::component::market::{Market,Trading};
 use serenity::all::*;
@@ -83,15 +84,20 @@ async fn trading(bnd:&SlashBundle<'_>,reg:&Reg<'_>,unit:String)->Result<(),MyErr
             bought = x.to_owned();
         }
     }
-    let coin = reg.pg.get_coin().await?;
+    let (co,event) = tokio::join!(reg.pg.get_coin(),reg.pg.get_event());
+    let (coin,event) = (co?,event?);
+    let title = Title::new(event.title as u8).discount();
+    let bon = (1.0-title)*100.0;
+    let disc = format!("{}%",bon as u32);
     let total = bought * item.price as i64;
-    let change  = coin as i64 - total;
+    let discounted = (total as f32 * title) as i64;
+    let change  = coin as i64 - discounted;
     if change < 0 {
         return Err(MyErr::Custom(format!("you only have {} bounty coin, and you need {} for this transaction",
-            Market::currency(coin as i64),Market::currency(total))));
+            Market::currency(coin as i64),Market::currency(discounted))));
     }
     let receipt = Bought::new(name, bought, total, change, coin,
-        item.price, unit.to_owned());
+        item.price, unit.to_owned(),discounted,disc);
     if receipt.confirmation(bnd).await?{
         match unit.as_str() {
             "Ticket" => reg.pg.buy_ticket(bought as i32).await?,
@@ -102,7 +108,7 @@ async fn trading(bnd:&SlashBundle<'_>,reg:&Reg<'_>,unit:String)->Result<(),MyErr
             }
             _ => reg.pg.jelewelry(bought as i32).await?,
         };
-        reg.pg.bounty_transaction(total as i32).await?;
+        reg.pg.bounty_transaction(discounted as i32).await?;
     }
     Ok(())
 }
