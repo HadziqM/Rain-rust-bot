@@ -1,4 +1,4 @@
-use crate::{MyErr,SlashBundle,Mytrait,Mybundle,Components};
+use crate::{MyErr,SlashBundle,Mytrait,Mybundle,Components, material::ItemPedia};
 use super::super::admin::market::SubCommand;
 use serenity::all::*;
 
@@ -20,7 +20,8 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
             let data:Vec<_> = x.chars().collect();
             let reverse = [data[2],data[3],data[0],data[1]].iter().collect::<String>();
             let auto = format!("https://xl3lackout.github.io/MHFZ-Ferias-English-Project/sozai/sozai.htm?{}",&reverse);
-            Components::response(bnd, &auto, false).await?
+            let y = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().components(vec![CreateActionRow::Buttons(vec![CreateButton::new_link(&auto).label(ItemPedia::search(7, x).unwrap())])]));
+            Components::response_adv(bnd, y).await?
         }
     }
     Ok(())
