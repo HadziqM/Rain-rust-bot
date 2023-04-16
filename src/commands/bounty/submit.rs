@@ -3,6 +3,7 @@ use serenity::all::*;
 use serenity::futures::StreamExt;
 use crate::{MyErr,SlashBundle,Mybundle,Mytrait,PgConn,Components,ComponentBundle};
 use crate::reusable::component::bounty::{Methode,BBQ,Category,BountySubmit,Bounty,BountyTitle, BountyRefresh};
+use crate::reusable::component::shutdown::Shutdown;
 
 fn select_menu(id:&str,op:Vec<(String,String)>)->CreateSelectMenu{
     let options:Vec<_> = op.iter().map(|x|CreateSelectMenuOption::new(&x.1,&x.0)).collect();
@@ -90,6 +91,7 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     submit.save(&bnd.user().id.to_string()).await;
     cooldown.cooldown(bnd).await?;
     cooldown.save(true).await?;
+    Shutdown::save().await?;
     pg.close().await;
     Ok(())
 }
@@ -124,11 +126,12 @@ pub(super) async fn submit(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
     if !submit.cooldown(&mut cooldown).await?{
         return Err(MyErr::Custom("The Bounty You selected is on cooldown or disabled".to_owned()));
     }
-    Components::response(bnd, "Your bounty is already submitted to Judge", false).await?;
+    Components::response(bnd, &format!("your bounty is submited\n{}",&url), false).await?;
     ChannelId::new(bnd.init.bounty.judge_ch).send_message(&bnd.ctx.http, CreateMessage::new().embed(submit.embed()).components(submit.button())).await?;
     submit.save(&bnd.user().id.to_string()).await;
     cooldown.cooldown(bnd).await?;
     cooldown.save(true).await?;
+    Shutdown::save().await?;
     pg.close().await;
     Ok(())
 }

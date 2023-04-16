@@ -14,7 +14,10 @@ pub fn reg(init:&Init)->Vec<CreateCommand>{
         out.push(AppReg::normal_slash("bind", "bind your existing account to server"))
     }
     let pass = AppReg::normal_slash("change_password", "change your account password")
-        .add_option(CreateCommandOption::new(CommandOptionType::String, "password", "your new password"));
+        .add_option(CreateCommandOption::new(CommandOptionType::String, "password", "your new password").required(true));
+    let psn = AppReg::normal_slash("add_psn", "update your psn id to your registered account")
+        .add_option(CreateCommandOption::new(CommandOptionType::String, "psn_id", "your psn id").required(true));
     out.push(pass);
+    out.push(psn);
     out
 }

@@ -45,6 +45,8 @@ fn get_value(row:PgRow)->Result<String,BitwiseError>{
                 val = <&str as Decode<Postgres>>::decode(value).unwrap().to_string();
             }else if name==boolclust{
                 val = <bool as Decode<Postgres>>::decode(value).unwrap().to_string();
+            }else if name=="BYTEA"{
+                val = "[bytea]".to_owned();
             }else{
                 let raw = <&[u8] as Decode<Postgres>>::decode(value).unwrap();
                 val = format!("{:?}",raw);

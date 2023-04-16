@@ -17,4 +17,8 @@ impl<'a> PgConn<'a> {
 world_name as name
 ,world_description as description from servers").fetch_all(&self.pool).await?)
     }
+    pub async fn psn(&self,psn:&str,id:i32)->Result<(),BitwiseError>{
+        sqlx::query("update users set psn_id=$1 where id=$2").bind(psn).bind(id).execute(&self.pool).await?;
+        Ok(())
+    }
 }

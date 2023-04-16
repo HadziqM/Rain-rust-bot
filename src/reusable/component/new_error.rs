@@ -51,18 +51,10 @@ impl MyErr {
     }
     pub async fn log_defer<T:Mytrait>(&self,cmd:&T,on:&str,err:&mut ErrorLog<'_>){
         err.change_error(self.get(), on.to_owned(), self.advice());
-        if let MyErr::Serenity(_) = self{
-            err.log_error_channel(self.severity()).await
-        }else{
-            cmd.err_defer(err).await;
-        }
+        cmd.err_defer(err).await;
     }
     pub async fn log<T:Mytrait>(&self,cmd:&T,on:&str,ephemeral:bool,err:&mut ErrorLog<'_>){
         err.change_error(self.get(), on.to_owned(), self.advice());
-        if let MyErr::Serenity(_) = self{
-            err.log_error_channel(self.severity()).await
-        }else{
-            cmd.err_response(err, ephemeral).await;
-        }
+        cmd.err_response(err, ephemeral).await;
     }
 }

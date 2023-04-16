@@ -292,6 +292,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "add"=>commands::admin::add::discord_slash(&bnd).await,
                 "title"=>commands::admin::test::discord_slash(&bnd).await,
                 "gpt"=>commands::misc::gpt::discord_slash(&bnd).await,
+                "add_psn"=>commands::register::change_pasword::discord_psn(&bnd).await,
                 _=> {return;}
             }
         }
