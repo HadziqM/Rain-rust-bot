@@ -75,6 +75,8 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
             _ =>{continue;}
         }
     }
+    //check stacked data first
+    BountySubmit::check(&bnd.user().id.to_string()).await?;
     let mem = *bnd.cmd.member.clone().unwrap();
     let cat = Category::new(category.unwrap())?;
     let mut pg = PgConn::create(bnd.init,bnd.cmd.user.id.to_string()).await?;
@@ -97,6 +99,8 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
 }
 
 pub(super) async fn submit(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+    //check stacked data first
+    BountySubmit::check(&bnd.user().id.to_string()).await?;
     let url = &bnd.cmd.data.resolved.attachments.values()
         .next().ok_or(MyErr::Custom("Cant get attachment".to_owned()))?.url;
     let mut mention = "";
@@ -175,10 +179,10 @@ async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{
     let state = code.next().ok_or(MyErr::Custom("cant get the button state in custom id".to_owned()))?;
     let mut submit = BountySubmit::open(user).await
         .ok_or(MyErr::Custom("submit data doesnt exist on cache".to_owned()))?;
-    Components::response(bnd, "being processed please wait a little", true).await?;
     let msg = bnd.cmd.message.clone();
     if state == "r"{
         //rejected
+        Components::response(bnd, "being processed please wait a little", true).await?;
         let ch = ChannelId::new(bnd.init.bounty.receptionist_ch);
         submit.delete().await;
         ch.send_message(&bnd.ctx.http, CreateMessage::new().content(format!("<@{}> bounty is rejected by {}"
@@ -188,8 +192,15 @@ async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{
             BountyRefresh::rejected(&submit.bbq, bnd).await?;
         }
         return Ok(());
+    }else if state == "c"{
+        //check bounty
+        let embed = submit.desc(bnd).await?;
+        Components::response_adv(bnd,CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
+            .embed(embed).ephemeral(true))).await?;
+
     }
     //accepted
+    Components::response(bnd, "being processed please wait a little", true).await?;
     let title = BountyTitle::new().await?;
     submit.title(bnd, &title).await?;
     ChannelId::new(bnd.init.bounty.receptionist_ch).send_message(&bnd.ctx.http,

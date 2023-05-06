@@ -56,7 +56,10 @@ fn modal_response(reg:bool)->CreateInteractionResponse{
         title="Bind Command";
     }
     CreateInteractionResponse::Modal(CreateModal::new(name, title)
-        .components(vec![modal_register_row("username", false),modal_register_row("password", true)]))
+        .components(vec![modal_register_row("username", false),
+            modal_register_row("password", true),
+            CreateActionRow::InputText(CreateInputText::new(InputTextStyle::Short, "PSN_ID", "psn_id")
+                .required(false).placeholder("For console player (You can Leave it Empty)"))]))
 }
 
 #[hertz::hertz_combine_normal(60,false)]
@@ -83,16 +86,18 @@ async fn modal(bnd:&ModalBundle<'_>)->Result<(),MyErr>{
     let reg = Reg::no_check(bnd, &user).await?;
     let mut name = String::new();
     let mut password = String::new();
+    let mut psn = String::new();
     for comp in &bnd.cmd.data.components{
         let arow = comp.components.first().unwrap();
         if let ActionRowComponent::InputText(input) = arow{
             match input.custom_id.as_str() {
                 "username" => name = input.value.to_owned(),
-                 _=> password = input.value.to_owned(),
+                "password"=> password = input.value.to_owned(),
+                _ => psn = input.value.to_owned(),
             }
         }
     }
-    let uid = reg.pg.create_account(&name, &password, regist).await?;
+    let uid = reg.pg.create_account(&name, &password, &psn, regist).await?;
     let resp = RegisterAcknowledged::new(&name, uid.id, bnd);
     resp.log_to_user(regist).await?;
     resp.add_roles().await?;

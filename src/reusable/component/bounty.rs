@@ -481,6 +481,12 @@ impl BountySubmit{
     pub async fn open(did:&str)->Option<Self>{
         BOUNTY.lock().await.get(did).cloned()
     }
+    pub async fn check(did:&str)->Result<(),MyErr>{
+        if BOUNTY.lock().await.get(did).is_some(){
+            return Err(MyErr::Custom("You still have your old submission data, if you want to override it, make the bounty judge reject your previous one".into()));
+        }
+        Ok(())
+    }
     pub async fn delete(&self){
         BOUNTY.lock().await.remove(&self.hunter[0].member.user.id.to_string());
     }
@@ -499,8 +505,13 @@ impl BountySubmit{
     pub fn button(&self)->Vec<CreateActionRow>{
         let accept = Components::normal_button("Approve", &format!("bounty_{}_a",self.hunter[0].member.user.id.to_string()), ButtonStyle::Primary, "👌");
         let reject = Components::normal_button("Reject", &format!("bounty_{}_r",self.hunter[0].member.user.id.to_string()), ButtonStyle::Danger, "👎");
-        let arow = CreateActionRow::Buttons(vec![accept,reject]);
+        let check = Components::normal_button("Reject", &format!("bounty_{}_c",self.hunter[0].member.user.id.to_string()), ButtonStyle::Success, "🔍");
+        let arow = CreateActionRow::Buttons(vec![accept,reject,check]);
         vec![arow]
+    }
+    pub async fn desc<T:Mybundle>(&self,bnd:&T)->Result<CreateEmbed,MyErr>{
+        let bounty = Box::new(Bounty::new(&self.category).await?);
+        Ok(bounty.desc(bnd, &self.bbq,&self.category)?)
     }
     pub async fn cooldown(&self,bnt:&mut Box<BountyRefresh>)->Result<bool,MyErr>{
         if self.category == Category::Free{

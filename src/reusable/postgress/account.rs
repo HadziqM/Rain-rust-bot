@@ -4,6 +4,7 @@ use std::{time::SystemTime, fs::File};
 use std::io::prelude::*;
 use chrono::NaiveDateTime;
 use crate::commands::binded::transfer::FileSave;
+use crate::reusable::component::MyErr;
 
 use super::{PgConn,BitwiseError};
 
@@ -46,14 +47,34 @@ impl<'a> PgConn<'a>{
         sqlx::query("UPDATE users SET password=$1 where username=$2").bind(hased).bind(username).execute(&self.pool).await?;
         Ok(())
     }
-    pub async fn create_account(&self,user:&str,pass:&str,reg:bool)->Result<AccountData,BitwiseError>{
+    pub async fn create_account(&self,user:&str,pass:&str,psn:&str,reg:bool)->Result<AccountData,MyErr>{
         let uid;
         if reg{
-            uid = create_account(&self.pool, user, pass).await?;
+            if sqlx::query("Select username from users where username=$1").bind(user).fetch_one(&self.pool).await.is_err(){
+                return Err(MyErr::Custom("The username already used by someone, please use another username".into()));
+            }
+            let hash = hash(pass, 10).unwrap_or_default();
+            let time = get_naive().unwrap_or_default();
+            uid = sqlx::query_as::<_,AccountData>("INSERT INTO users (username,password,return_expires) VALUES ($1,$2,$3) RETURNING id,username").bind(user).bind(&hash).bind(time).fetch_one(&self.pool).await?;
+            sqlx::query("INSERT INTO characters 
+                        (user_id, is_female, is_new_character, name,unk_desc_string,
+                         hrp, gr, weapon_type, last_login) VALUES($1, False, True, '', '', 0, 0, 0, $2)").bind(uid.id)
+                        .bind(MyTime::now() as i32).execute(&self.pool).await?;
         }else {
-            uid = sqlx::query_as::<_,AccountData>("SELECT id,username from users where username=$1").bind(user).fetch_one(&self.pool).await?;
+            let data = sqlx::query("SELECT id,username,password from users where username=$1").bind(user).fetch_one(&self.pool).await?;
+            if !verify(pass,&data.try_get::<String,_>("password")?).unwrap_or(true){
+                return Err(MyErr::Custom("Password doesnt match the account".into()));
+            }
+            uid = AccountData {
+                username:data.try_get("username")?,
+                id:data.try_get("id")?
+            };
         }
-        use_history(&self.pool, &self.did, uid.id as i64).await?;
+        sqlx::query(&format!("INSERT INTO discord_register (discord_id,user_id) VALUES ($1,$2)"))
+            .bind(&self.did).bind(uid.id).execute(&self.pool).await?;
+        if psn != ""{
+            self.psn(psn, uid.id).await?;
+        }
         Ok(uid)
     }
     pub async fn switch(&self,cid:i32)->Result<(),BitwiseError>{
@@ -103,16 +124,6 @@ use crate::reusable::utils::MyTime;
 fn get_naive()->Option<NaiveDateTime>{
     let amonth = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs()+30*24*60*60;
     NaiveDateTime::from_timestamp_opt(amonth as i64,0)
-}
-async fn create_account(pool:&Pool<Postgres>,user:&str,pass:&str)->Result<AccountData,sqlx::Error>{
-    let hash = hash(pass, 10).unwrap_or_default();
-    let time = get_naive().unwrap_or_default();
-    let idk = sqlx::query_as::<_,AccountData>("INSERT INTO users (username,password,return_expires) VALUES ($1,$2,$3) RETURNING id,username").bind(user).bind(&hash).bind(time).fetch_one(pool).await?;
-    sqlx::query("INSERT INTO characters 
-                (user_id, is_female, is_new_character, name,unk_desc_string,
-                 hrp, gr, weapon_type, last_login) VALUES($1, False, True, '', '', 0, 0, 0, $2)").bind(idk.id)
-                .bind(MyTime::now() as i32).execute(pool).await?;
-    Ok(idk)
 }
 async fn use_history(pool:&Pool<Postgres>,did:&str,uid:i64)->Result<(),sqlx::Error>{
     sqlx::query(&format!("INSERT INTO discord_register (discord_id,user_id) VALUES ('{did}',{uid})")).execute(pool).await?;

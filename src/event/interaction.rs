@@ -292,7 +292,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "add"=>commands::admin::add::discord_slash(&bnd).await,
                 "title"=>commands::admin::test::discord_slash(&bnd).await,
                 "gpt"=>commands::misc::gpt::discord_slash(&bnd).await,
-                "add_psn"=>commands::register::change_pasword::discord_psn(&bnd).await,
+                "add_psn"=>commands::register::change_pasword::discord_all(&bnd).await,
                 _=> {return;}
             }
         }
@@ -314,6 +314,9 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "dms"=>commands::binded::save::discord_all(&bnd).await,
                 "switch"=>switch(&bnd).await,
                 "join"=>super::join::discord_button(&bnd).await,
+                "link_psn"=>commands::register::change_pasword::discord_all(&bnd).await,
+                "claim_role"=>commands::admin::interface::discord_claim(&bnd).await,
+                "assistance"=>commands::admin::interface::discord_request(&bnd).await,
                 _=>{return ;}
             }
         }
@@ -324,6 +327,7 @@ pub async fn handled(ctx:&Context,int:&Interaction,pedia:&ItemPedia,init:&Init,i
                 "register_m"=>commands::register::create::discord_modal(&bnd).await,
                 "bind_m"=>commands::register::create::discord_modal(&bnd).await,
                 "bar"=>commands::market::bar::discord_modal(&bnd).await,
+                "add_psn"=>commands::register::change_pasword::discord_psn(&bnd).await,
                 _=>{return;}
             }
         }

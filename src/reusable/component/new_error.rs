@@ -49,12 +49,26 @@ impl MyErr {
             MyErr::from(why).log_channel(err).await
         }
     }
+    fn allowed(&self)->bool{
+        //ignore some error
+        if let MyErr::Serenity(x) = &self{
+            let ignored = ["Unknown Message","Unknown interaction"];
+            if ignored.contains(&x.to_owned().to_string().as_str()) {
+                return false;
+            }
+        }
+        true
+    }
     pub async fn log_defer<T:Mytrait>(&self,cmd:&T,on:&str,err:&mut ErrorLog<'_>){
-        err.change_error(self.get(), on.to_owned(), self.advice());
-        cmd.err_defer(err).await;
+        if self.allowed(){
+            err.change_error(self.get(), on.to_owned(), self.advice());
+            cmd.err_defer(err).await;
+        }
     }
     pub async fn log<T:Mytrait>(&self,cmd:&T,on:&str,ephemeral:bool,err:&mut ErrorLog<'_>){
-        err.change_error(self.get(), on.to_owned(), self.advice());
-        cmd.err_response(err, ephemeral).await;
+        if self.allowed(){
+            err.change_error(self.get(), on.to_owned(), self.advice());
+            cmd.err_response(err, ephemeral).await;
+        }
     }
 }

@@ -1,5 +1,5 @@
 use serenity::all::*;
-use crate::{MyErr,Components,Reg,SlashBundle,Mytrait,Mybundle};
+use crate::{MyErr,Components,Reg,SlashBundle,Mytrait,Mybundle,ModalBundle};
 
 #[hertz::hertz_slash_normal(60,false)]
 async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr> {
@@ -11,12 +11,27 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr> {
     reg.pg.close().await;
     Ok(())
 }
-#[hertz::hertz_slash_normal(60,false)]
-async fn psn(bnd:&SlashBundle<'_>)->Result<(),MyErr> {
+
+//psn_id
+#[hertz::hertz_combine_normal(60,false)]
+async fn all<T:Mybundle>(bnd:&T)->Result<(),MyErr>{
+    let res = CreateInteractionResponse::Modal(CreateModal::new("add_psn", "Register/Override PSN ID")
+        .components(vec![CreateActionRow::InputText(CreateInputText::new(InputTextStyle::Short, "PSN_ID", "psn_id")
+            .required(true).placeholder("For console player (You can Leave it Empty)"))]));
+    Components::response_adv(bnd, res).await?;
+    Ok(())
+}
+
+
+#[hertz::hertz_modal_normal(60,false)]
+async fn psn(bnd:&ModalBundle<'_>)->Result<(),MyErr> {
     let mut reg = Reg::only_check_alter(bnd, &bnd.cmd.user).await?;
-    if let CommandDataOptionValue::String(psn) = &bnd.cmd.data.options.first().unwrap().value {
-        reg.pg.psn(psn, reg.cid).await?;
-        bnd.cmd.create_response(&bnd.ctx.http,Components::interaction_response("your psn id is changed", true)).await?;
+        for comp in &bnd.cmd.data.components{
+        let arow = comp.components.first().unwrap();
+        if let ActionRowComponent::InputText(input) = arow{
+            reg.pg.psn(input.value.as_str(), reg.cid).await?;
+            bnd.cmd.create_response(&bnd.ctx.http,Components::interaction_response("your psn id is succesfully registered in your game account", true)).await?;
+        }
     }
     reg.pg.close().await;
     Ok(())

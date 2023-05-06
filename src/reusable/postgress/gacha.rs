@@ -20,11 +20,11 @@ impl<'a> PgConn<'a> {
         .bind(&self.did).fetch_one(&self.pool).await?)
     }
     pub async fn buy_ticket(&self,ticket:i32)->Result<(),BitwiseError>{
-        sqlx::query("update discord set gacha=gacha+$1 where discord_id=$2").bind(ticket).bind(&self.did).execute(&self.pool).await?;
+        sqlx::query("update discord set ticket=ticket+$1 where discord_id=$2").bind(ticket).bind(&self.did).execute(&self.pool).await?;
         Ok(())
     }
     pub async fn ticket_all(&self,ticket:i32)->Result<(),BitwiseError>{
-        sqlx::query("update discord set gacha=gacha+$1 where ticket is not null").bind(ticket).bind(&self.did).execute(&self.pool).await?;
+        sqlx::query("update discord set ticket=ticket+$1 where ticket is not null").bind(ticket).bind(&self.did).execute(&self.pool).await?;
         Ok(())
     }
     pub async fn send_item(&self,data:&[ItemCode],cid:i32,name:&str,desc:&str)->Result<(),BitwiseError>{

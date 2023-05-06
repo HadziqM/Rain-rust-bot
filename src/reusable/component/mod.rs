@@ -72,6 +72,12 @@ impl From<super::image_edit::CustomImageError> for MyErr {
     }
 }
 
+impl From<sqlx::Error> for MyErr {
+    fn from(value: sqlx::Error) -> Self {
+        MyErr::ByteWise(value.into())
+    }
+}
+
 #[async_trait]
 pub trait Mytrait{
     async fn err_response(&self,err:&ErrorLog<'_>,ephemeral:bool);
