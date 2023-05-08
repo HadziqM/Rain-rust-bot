@@ -197,7 +197,7 @@ async fn button(bnd:&ComponentBundle<'_>)->Result<(),MyErr>{
         let embed = submit.desc(bnd).await?;
         Components::response_adv(bnd,CreateInteractionResponse::Message(CreateInteractionResponseMessage::new()
             .embed(embed).ephemeral(true))).await?;
-
+        return Ok(());
     }
     //accepted
     Components::response(bnd, "being processed please wait a little", true).await?;

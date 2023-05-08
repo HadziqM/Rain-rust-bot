@@ -505,7 +505,7 @@ impl BountySubmit{
     pub fn button(&self)->Vec<CreateActionRow>{
         let accept = Components::normal_button("Approve", &format!("bounty_{}_a",self.hunter[0].member.user.id.to_string()), ButtonStyle::Primary, "👌");
         let reject = Components::normal_button("Reject", &format!("bounty_{}_r",self.hunter[0].member.user.id.to_string()), ButtonStyle::Danger, "👎");
-        let check = Components::normal_button("Reject", &format!("bounty_{}_c",self.hunter[0].member.user.id.to_string()), ButtonStyle::Success, "🔍");
+        let check = Components::normal_button("Check", &format!("bounty_{}_c",self.hunter[0].member.user.id.to_string()), ButtonStyle::Success, "🔍");
         let arow = CreateActionRow::Buttons(vec![accept,reject,check]);
         vec![arow]
     }

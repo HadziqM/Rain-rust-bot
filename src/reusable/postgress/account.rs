@@ -50,7 +50,7 @@ impl<'a> PgConn<'a>{
     pub async fn create_account(&self,user:&str,pass:&str,psn:&str,reg:bool)->Result<AccountData,MyErr>{
         let uid;
         if reg{
-            if sqlx::query("Select username from users where username=$1").bind(user).fetch_one(&self.pool).await.is_err(){
+            if sqlx::query("Select username from users where username=$1").bind(user).fetch_one(&self.pool).await.is_ok(){
                 return Err(MyErr::Custom("The username already used by someone, please use another username".into()));
             }
             let hash = hash(pass, 10).unwrap_or_default();
