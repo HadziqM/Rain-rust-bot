@@ -9,7 +9,7 @@ create table if not exists discord_register(
 CREATE TABLE IF NOT EXISTS discord(
 	id SERIAL,
 	char_id INT NOT NULL,
-	discord_id VARCHAR(32) NOT NULL,
+	discord_id VARCHAR(32) unique,
 	bounty INT,
   newbie BOOLEAN DEFAULT true,
   gacha INT DEFAULT 0,
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS discord(
   latest_bounty_time BIGINT DEFAULT 0,
   boostcd BIGINT DEFAULT 0,
   transfercd BIGINT DEFAULT 0,
-	PRIMARY KEY(id)
+	PRIMARY KEY(id),
       CONSTRAINT fk_discord
       FOREIGN KEY(discord_id) 
 	  REFERENCES discord_register(discord_id)
