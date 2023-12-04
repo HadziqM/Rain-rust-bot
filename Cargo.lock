@@ -177,9 +177,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "bcrypt"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28d1c9c15093eb224f0baa400f38fcd713fc1391a6f1c389d886beef146d60a3"
+dependencies = [
+ "base64 0.21.5",
+ "blowfish",
+ "getrandom 0.2.11",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
 name = "binding"
 version = "0.1.0"
 dependencies = [
+ "bcrypt 0.15.0",
  "chrono",
  "material",
  "serde",
@@ -1694,7 +1708,7 @@ dependencies = [
 name = "rain-bot"
 version = "0.1.0"
 dependencies = [
- "bcrypt",
+ "bcrypt 0.13.0",
  "chrono",
  "hertz",
  "image",
