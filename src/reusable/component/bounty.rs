@@ -907,7 +907,7 @@ impl BountyTitle{
             let role = RoleId::new(i.role_id);
             if i.trigger.as_str()==trigger{
                 if i.db_code!= 0{
-                    if !Title::matching(event.title as u8, i.db_code){
+                    if /* !Title::matching(event.title as u8, i.db_code) */ member.roles.contains(&role){
                         event.title += i.db_code as i32;
                     }else {
                         return Ok(());

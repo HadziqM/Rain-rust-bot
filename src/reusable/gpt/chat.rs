@@ -43,6 +43,9 @@ impl Message{
     fn assistant(content:&str)->Self{
         Message { content:content.to_owned(), role: "assistant".to_owned() }
     }
+    fn system(content:&str)->Self{
+        Message { content: content.to_owned(), role: "system".to_owned() }
+    }
 }
 
 impl CompModel{
@@ -183,7 +186,11 @@ impl Gpt{
         Ok(comp)
     }
     pub async fn completition(&self,ask:&str)->Result<CompModel,MyErr>{
-        let data = CompletitionData::new(vec![Message::user(ask)]);
+        let data = CompletitionData::new(vec![
+            Message::system("Youare Self important assistant, if you ever dont know or understand the question asked by user,
+                never reveal yourself as AI or use any `as an AI model` word, just make up the answer or feign ignorance,
+                also please reply with sarcasm if you asked by narcistic person"),
+            Message::user(ask)]);
         let comp = self.comp(&data).await?;
         Ok(CompModel { data, comp })
     }
