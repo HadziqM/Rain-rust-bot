@@ -5,7 +5,7 @@ use crate::utils::MyTime;
 use super::{Db,PgCustomError};
 use bcrypt::{hash, verify};
 use chrono::NaiveDateTime;
-use sqlx::{Pool, Postgres,Row, FromRow};
+use sqlx::{Row, FromRow};
 
 #[derive(Debug,FromRow)]
 pub struct AccountData {
@@ -27,17 +27,9 @@ pub struct SaveData {
     pub savemercenary: Option<Vec<u8>>,
 }
 
-pub enum FileSave{
-    Savedata(Vec<u8>),
-    Decomyset(Vec<u8>),
-    Hunternavi(Vec<u8>),
-    Otomoairou(Vec<u8>),
-    Partner(Vec<u8>),
-    Platedata(Vec<u8>),
-    Platebox(Vec<u8>),
-    Platemyset(Vec<u8>),
-    Eengokudata(Vec<u8>),
-    Savemercenary(Vec<u8>),
+pub struct FileSave{
+    pub name:String,
+    pub bin: Vec<u8>
 }
 
 
@@ -108,23 +100,13 @@ impl Db {
     pub async fn send_save(&self,cid:i32)->Result<SaveData,PgCustomError>{
         Ok(sqlx::query_as("SELECT * FROM characters WHERE id=$1").bind(cid).fetch_one(&**self).await?)
     }
-    pub async fn transfer_cd(&self)->Result<(bool,i64),PgCustomError>{
-        let cd:i64 = sqlx::query("SELECT transfercd from discord where discord_id=$1").bind(&self.did).fetch_one(&self.pool).await?.try_get("transfercd")?;
-        let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
-        if now > cd as u64{
-            let week = now + 24*60*60;
-            sqlx::query("UPDATE discord SET transfercd=$2 where discord_id=$1").bind(&self.did).bind(week as i64).execute(&self.pool).await?;
-            return Ok((true,week as i64));
-        }
-        Ok((false,cd))
-    }
-    pub async fn transfer_file(&self,file:&FileSave,cid:i32)->Result<(),BitwiseError>{
-        sqlx::query(&format!("UPDATE characters SET {}=$1 WHERE id=$2",&file.name)).bind(file.bin.as_slice()).bind(cid).execute(&self.pool).await?;
+    pub async fn transfer_file(&self,file:&FileSave,cid:i32)->Result<(),PgCustomError>{
+        sqlx::query(&format!("UPDATE characters SET {}=$1 WHERE id=$2",&file.name)).bind(file.bin.as_slice()).bind(cid).execute(&**self).await?;
         Ok(())
     }
-    pub async fn purge(&self)->Result<(),BitwiseError>{
-        sqlx::query("DELETE from discord_register WHERE discord_id=$1").bind(&self.did).execute(&self.pool).await?;
-        sqlx::query("DELETE from discord WHERE discord_id=$1").bind(&self.did).execute(&self.pool).await?;
+    pub async fn purge(&self,did:&str)->Result<(),PgCustomError>{
+        sqlx::query("DELETE from discord_register WHERE discord_id=$1").bind(did).execute(&**self).await?;
+        sqlx::query("DELETE from discord WHERE discord_id=$1").bind(did).execute(&**self).await?;
         Ok(())
     }
 
