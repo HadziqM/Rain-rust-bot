@@ -1,8 +1,13 @@
 use serde::{Serialize,Deserialize};
-use crate::bitwise::ItemCode;
+use crate::{bitwise::ItemCode, postgres::card::Event};
+
+use title::Progresion;
+
+pub mod title;
 
 
-#[derive(PartialEq, Eq,Clone,Hash)]  
+#[derive(PartialEq, Eq,Clone,Hash,Serialize,Deserialize)]  
+#[serde(rename_all="snake_case")]
 pub enum Category{
     Bronze,
     Silver,
@@ -19,15 +24,6 @@ pub enum Methode{
     Multi
 }
 
-#[derive(Clone)]
-pub struct Title{
-    pub bounty_bronze:bool,
-    pub bounty_silver:bool,
-    pub bounty_gold:bool,
-    pub trade_bronze:bool,
-    pub trade_silver:bool,
-    pub trade_gold:bool,
-}
 
 #[derive(PartialEq, Eq,Clone,Hash,Serialize,Deserialize)]
 pub enum BBQ{
@@ -68,7 +64,7 @@ pub struct BountyReward{
 #[derive(Clone)]
 pub struct Hunter{
     pub member:String,
-    pub title:Title,
+    pub title:Progresion,
     pub event:Event,
 }
 #[derive(Clone)]
