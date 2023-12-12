@@ -1,5 +1,6 @@
 use sqlx::{Row, FromRow,Result};
 use super::{Db,PgCustomError};
+use serde::{Serialize,Deserialize};
 
 #[derive(Debug,FromRow)]
 pub struct Card {
@@ -30,7 +31,7 @@ impl Default for Card{
     }
 }
 
-#[derive(FromRow,Clone,Debug)]
+#[derive(FromRow,Clone,Debug,Serialize,Deserialize)]
 pub struct Event {
     pub bounty:i32,
     pub gacha:i32,
