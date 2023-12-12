@@ -1,7 +1,9 @@
 #![allow(unused)]
+use std::collections::HashMap;
+
 use dotenv::{dotenv,var};
-use poise::{serenity_prelude as serenity, CreateReply};
-use ::serenity::futures::future::ok;
+use poise::{serenity_prelude as seren, CreateReply};
+use ::serenity::futures::{future::ok, lock::Mutex};
 
 struct Data;
 
@@ -24,7 +26,7 @@ async fn on_error(err:poise::FrameworkError<'_,Data,Error>) {
         poise::FrameworkError::Setup { error, .. } => {
             panic!("failed to setup with err messages {error:?}")
         }
-        poise::FrameworkError::Command { error, ctx } => {
+        poise::FrameworkError::Command { error, ctx, .. } => {
             ctx.say("this can be error").await;
         }
         error => {
@@ -40,10 +42,24 @@ async fn main() {
     dotenv();
     let token  = var("TOKEN")
         .expect("cant find token in .env");
+    let intents = seren::GatewayIntents::non_privileged() | seren::GatewayIntents::MESSAGE_CONTENT;
 
     let opt = poise::FrameworkOptions {
         commands:vec![ping(),error()],
         on_error: |err| Box::pin(on_error(err)),
         ..Default::default()
     };
+    let framework = poise::Framework::builder()
+        .setup(move |ctx, _ready, framework| {
+            Box::pin(async move {
+                println!("Logged in as {}", _ready.user.name);
+                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                Ok(Data {})
+            })
+        })
+        .options(opt)
+        .build();
+
+    let client = seren::client::ClientBuilder::new(token, intents).framework(framework).await;
+    client.unwrap().start().await.unwrap();
 }
