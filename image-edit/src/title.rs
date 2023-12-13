@@ -1,8 +1,15 @@
 use std::io::Cursor;
 use image::DynamicImage;
-use super::super::component::bounty::TitleImage;
 use super::CustomImageError;
 use super::gacha::Rectangle;
+
+#[derive(PartialEq, Eq,Clone)]
+pub struct TitleImage{
+    pub url:String,
+    pub diameter:u32,
+    pub x_start:u32,
+    pub y_start:u32,
+}
 
 impl TitleImage {
     async fn load_image(&self)->Result<DynamicImage,CustomImageError>{

@@ -1891,6 +1891,24 @@ name = "rain-bot"
 version = "0.1.0"
 dependencies = [
  "bcrypt",
+ "binding",
+ "chrono",
+ "dotenv",
+ "image-edit",
+ "material",
+ "poise 0.6.1-rc1",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "serenity 0.12.0",
+ "tokio",
+]
+
+[[package]]
+name = "rain-bot-old"
+version = "0.1.0"
+dependencies = [
+ "bcrypt",
  "chrono",
  "image",
  "imageproc",

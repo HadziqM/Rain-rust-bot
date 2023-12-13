@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, io::Cursor};
+use std::{path::Path, io::Cursor};
 use image::{Rgb, ImageBuffer, RgbImage};
 use rusttype::Font;
 use image::imageops::{FilterType,resize};
@@ -31,15 +31,6 @@ pub(crate) struct Rectangle{
     pub img:ImageBuffer<Rgb<u8>,Vec<u8>>
 }
 impl GachaR{
-    fn path(&self)->PathBuf{
-        let path = Path::new(".").join("image");
-        match self{
-            GachaR::R=>path.join("r.jpg"),
-            GachaR::SR=>path.join("sr.jpg"),
-            GachaR::SSR=>path.join("ssr.jpg"),
-            GachaR::UR=>path.join("ur.jpg")
-        }
-    }
     pub(super) fn url(&self)->String{
         let dim = (772,615);
         match self{

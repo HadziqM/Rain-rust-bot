@@ -1,6 +1,5 @@
 use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 use serde::{Serialize,Deserialize};
-use sqlx::Result;
 
 pub mod card;
 pub mod account;
@@ -62,7 +61,7 @@ impl std::ops::Deref for Db {
 }
 
 impl Db {
-    pub async fn connect(conf:&DbConf)->Result<Self> {
+    pub async fn connect(conf:&DbConf)->Result<Self,PgCustomError> {
         let url = format!("postgres://{}:{}@{}:{}/{}",
             conf.user,
             conf.password,
