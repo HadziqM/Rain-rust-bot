@@ -1895,6 +1895,7 @@ dependencies = [
  "chrono",
  "dotenv",
  "image-edit",
+ "lazy_static",
  "material",
  "poise 0.6.1-rc1",
  "rand 0.8.5",

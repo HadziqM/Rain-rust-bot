@@ -1,5 +1,6 @@
 pub mod config;
 pub mod error;
+pub mod utils;
 
 use std::sync::Arc;
 use error::MyErr;
@@ -15,6 +16,9 @@ pub struct AppData {
     pub bounty: Arc<BountyGlobal>,
     pub pedia: ItemPedia
 }
+
+
+pub type Context<'a> = poise::Context<'a,AppData,MyErr>;
 
 
 #[tokio::main]

@@ -11,6 +11,7 @@ binding = { version = "0.1.0", path = "../binding" }
 chrono = "0.4.31"
 dotenv = "0.15.0"
 image-edit = { version = "0.1.0", path = "../image-edit" }
+lazy_static = "1.4.0"
 material = { version = "0.1.0", path = "../material" }
 poise = { git = "https://github.com/serenity-rs/poise", branch = "current", features = [ "collector"] }
 rand = "0.8.5"
