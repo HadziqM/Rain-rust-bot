@@ -1,6 +1,8 @@
 #![allow(unused)]
 
 use std::{collections::HashMap, path::Path, sync::Arc};
+use tokio::sync::Mutex;
+
 use crate::postgres::custom;
 use super::*;
 
@@ -57,8 +59,19 @@ impl From<HashMap<BBQ,BBQConfig>> for Cooldown {
 
 
 impl BountyGlobal {
-    pub fn create() -> Arc<Self> {
-        Arc::new(Self { cooldown: Mutex::new(HashMap::new()), submision: Mutex::new(HashMap::new()) })
+    async fn load_cache() -> Result<Self,BountyErr> {
+        let path = Path::new(".").join("CACHE");
+        let path2 = Path::new(".").join("CACHE2");
+        let cache = serde_json::from_slice::<HashMap<String,BountySubmit>>(&tokio::fs::read(path).await?)?;
+        let cache2 = serde_json::from_slice::<HashMap<BBQ,u32>>(&tokio::fs::read(path2).await?)?;
+        println!("Succesfully Load all data (Cache) from Previous Session");
+        Ok(Self { cooldown: Mutex::new(cache2), submision: Mutex::new(cache) })
+    }
+    pub async fn create() -> Arc<Self> {
+        Arc::new(Self::load_cache().await.unwrap_or(Self { 
+            cooldown: Mutex::new(HashMap::new()),
+            submision: Mutex::new(HashMap::new()) 
+        }))
     }
     pub async fn refresh(&self) -> Result<(),BountyErr> {
         let free = Category::Free.load().await?;
@@ -69,7 +82,10 @@ impl BountyGlobal {
     pub async fn caching(&self) -> Result<(),BountyErr> {
         let data = self.submision.lock().await;
         let path = Path::new(".").join("CACHE");
+        let data2 = self.cooldown.lock().await;
+        let path2 = Path::new(".").join("CACHE2");
         tokio::fs::write(path, serde_json::to_string(&*data)?.as_bytes()).await?;
+        tokio::fs::write(path2, serde_json::to_string(&*data)?.as_bytes()).await?;
         Ok(())
     }
 }

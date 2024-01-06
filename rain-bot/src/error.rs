@@ -71,20 +71,21 @@ impl From<binding::postgres::PgCustomError> for MyErr {
         }
     }
 }
-
-impl MyErr {
-    pub fn get(&self)->String{
-        match self {
-            MyErr::Custom(x)=>x.to_string(),
-            MyErr::ByteWise(x)=>x.to_string(),
-            MyErr::Utf8(x)=>x.to_string(),
-            MyErr::Tokio(x)=>x.to_string(),
-            MyErr::Serde(x)=>x.to_string(),
-            MyErr::Serenity(x)=>x.to_string(),
-            MyErr::Image(x)=>x.to_string()
+impl From<binding::bounty::BountyErr> for MyErr {
+    fn from(value: binding::bounty::BountyErr) -> Self {
+        match value{
+            binding::bounty::BountyErr::Tokio(x) => MyErr::Tokio(x),
+            binding::bounty::BountyErr::Serde(x) => MyErr::Serde(x),
+            binding::bounty::BountyErr::Custom(x) => MyErr::Custom(x)
         }
     }
-    pub fn severity(&self)->bool{
+}
+
+impl MyErr {
+    fn get(&self)->String{
+        self.to_string()
+    }
+    fn severity(&self)->bool{
         match self {
             MyErr::Custom(_)=>false,
             MyErr::ByteWise(_)=>true,
@@ -95,7 +96,7 @@ impl MyErr {
             MyErr::Image(_)=>true
         }
     }
-    pub fn advice(&self)->String{
+    fn advice(&self)->String{
         match self {
             MyErr::Custom(_)=>"Error message is writen by author themself, please read the message carefully or consult".to_string(),
             MyErr::ByteWise(_)=>"postgres connection (server database) error or data format error, you can report this or try again".to_string(),
@@ -124,12 +125,12 @@ impl MyErr {
             .color(color)
             .thumbnail("https://media.discordapp.net/attachments/1009291538733482055/1185000150104543314/panics.png?ex=658e0464&is=657b8f64&hm=28866be3c84841d0391a59ce797257cd661c5dff6e72d3f01b0f4f11ba4eac10&=&format=webp&quality=lossless&width=709&height=468")
     }
-    pub fn reply(&self,ctx:Context<'_>) -> poise::CreateReply {
+    fn reply(&self,ctx:Context<'_>) -> poise::CreateReply {
         poise::CreateReply { 
             embeds: vec![self.embed(ctx)], 
             ..Default::default() }
     }
-    pub async fn log_channel(&self,ctx:Context<'_>) -> Result<(),MyErr> {
+    async fn log_channel(&self,ctx:Context<'_>) -> Result<(),MyErr> {
         let ch_id = ChannelId::new(
             ctx.data().init.log_channel.err_channel
         );
@@ -157,5 +158,3 @@ impl MyErr {
         }
     }
 }
-
-
