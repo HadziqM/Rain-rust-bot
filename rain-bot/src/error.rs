@@ -28,6 +28,19 @@ impl std::fmt::Display for MyErr {
         }
     }
 }
+impl From<&MyErr> for MyErr {
+    fn from(value: &MyErr) -> Self {
+        match value {
+            MyErr::Utf8(x) => MyErr::Utf8(*x),
+            MyErr::Tokio(x) => MyErr::Tokio(*x),
+            MyErr::Serde(x) => MyErr::Serde(*x),
+            MyErr::Image(x) => MyErr::Image(*x),
+            MyErr::Custom(x) => MyErr::Custom(*x),
+            MyErr::ByteWise(x) => MyErr::ByteWise(*x),
+            MyErr::Serenity(x) => MyErr::Serenity(*x)
+        }
+    }
+}
 impl From<binding::bitwise::BitwiseError> for MyErr {
     fn from(value: binding::bitwise::BitwiseError) -> Self {
         MyErr::ByteWise(value)
@@ -132,7 +145,7 @@ impl MyErr {
     }
     async fn log_channel(&self,ctx:Context<'_>) -> Result<(),MyErr> {
         let ch_id = ChannelId::new(
-            ctx.data().init.log_channel.err_channel
+            ctx.data().init.read().await.log_channel.err_channel
         );
         ch_id.send_message(ctx.serenity_context(), CreateMessage::new()
             .content(format!("for {}",ctx.author().to_string()))

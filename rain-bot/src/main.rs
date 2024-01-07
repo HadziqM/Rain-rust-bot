@@ -3,6 +3,7 @@ pub mod error;
 pub mod utils;
 pub mod setup;
 pub mod command;
+pub mod model;
 
 use error::MyErr;
 use config::Init;

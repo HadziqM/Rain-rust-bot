@@ -51,6 +51,60 @@ pub struct UserData {
     pub rid:i32
 }
 
+
+impl Card{
+    pub fn get_path(&self)->String{
+        let iconlist = vec![
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440322977312868/GS.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440324617281626/HS.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440323501596792/H.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440324931862599/L.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440373548044348/SS.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440325309345822/LB.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440322260086794/DS.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440372474302464/LS.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440324088807466/HH.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440322633383946/GL.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440321907761162/B.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440373757743154/T.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
+        "https://media.discordapp.net/attachments/1068440173479739393/1068440372709167174/MS.png"
+        ];
+        iconlist[self.weapon_type as usize].to_string()
+    }
+    pub fn g_name(&self)->String{
+        match &self.guild_name {
+            Some(x) => x.to_owned(),
+            None => "No guild".to_string(),
+        }
+    }
+    pub fn g_id(&self)->String{
+        match self.guild_id {
+            Some(x) => x.to_string(),
+            None => "No id".to_string(),
+        }
+    }
+    pub fn hrp(&self)->u8{
+    if self.hrp==999{
+            return 7;
+        }else if self.hrp>299{
+            return 6;
+        }else if self.hrp>99{
+            return 5;
+        }else if self.hrp>50{
+            return 4;
+        }else if self.hrp>30{
+            return 3;
+        }else if self.hrp>1{
+            return 2;
+        }
+        1
+    }
+    pub fn last_login(&self)->String{
+        format!("<t:{}:R>",self.login)
+    }
+}
+
 impl Db{
     pub async fn get_event(&self,did:&str)->Result<Event,PgCustomError>{
         Ok(sqlx::query_as::<_,Event>("Select characters.name as name,char_id,bounty,gacha,pity,latest_bounty,latest_bounty_time,title,bronze,silver,gold from discord inner join characters on discord.char_id=characters.id  where discord_id=$1").bind(did).fetch_one(&**self).await?)
@@ -60,7 +114,7 @@ impl Db{
             .fetch_all(&**self).await?;
         match row.first(){
             Some(d)=>Ok((d.get("user_id"),d.get("username"))),
-            None=>Err(PgCustomError::from("user isn't registered yet try use register methode in guide"))
+            None=>Err(PgCustomError::from("<@{did}> isn't registered yet try use register methode in guide"))
         }
     }
     pub async fn get_char_id(&self,did:&str)-> Result<i32,PgCustomError>{
@@ -86,7 +140,7 @@ impl Db{
         let cid = self.get_char_id(did).await?;
         Ok(UserData{cid,rid})
     }
-    pub async fn many_card(&self,user:i32)->Result<Vec<Card>,PgCustomError>{
+    pub async fn get_all_card(&self,user:i32)->Result<Vec<Card>,PgCustomError>{
         let cid = self.get_all_cid(user).await?;
         let mut card = Vec::new();
         for i in cid{

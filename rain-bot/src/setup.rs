@@ -6,11 +6,11 @@ use tokio::task::JoinHandle;
 use crate::{MyErr,Init};
 use poise::serenity_prelude as serenity;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 
 #[derive(Clone)]
 pub struct AppData {
-    pub init: Arc<Mutex<Init>>,
+    pub init: Arc<RwLock<Init>>,
     pub db: Db,
     pub bounty: Arc<BountyGlobal>,
     pub pedia: ItemPedia
@@ -26,10 +26,10 @@ pub struct Setup{
 
 impl AppData{
     async fn new() -> Result<Self,MyErr> {
-        let init = Arc::new(Mutex::new(Init::new().await?));
+        let init = Arc::new(RwLock::new(Init::new().await?));
         let mine = Self {
             init: init.clone(),
-            db : Db::connect(&init.postgress).await?,
+            db : Db::connect(&init.read().await.postgress).await?,
             pedia: ItemPedia::default(),
             bounty : BountyGlobal::create().await,
         };
@@ -60,12 +60,12 @@ impl Setup {
     }
     pub async fn new(commands:Vec<Command<AppData,MyErr>>) -> Result<Self,MyErr> {
         let data = AppData::new().await?;
-        let token = data.init.discord.token.to_owned();
+        let token = data.init.read().await.discord.token.to_owned();
         Ok(Setup{
             framework: Framework::builder()
             .setup(move |ctx,ready,framework|{
                 Box::pin(async move {
-                    let user = UserId::new(data.init.discord.author_id)
+                    let user = UserId::new(data.init.read().await.discord.author_id)
                             .to_user(&ctx.http).await?;
                     println!("----------------------------------------------------------------");
                     println!("-------------------------- START -------------------------------");
