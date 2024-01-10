@@ -1,3 +1,4 @@
+use crate::model::user::UserReg;
 use crate::setup::AppData;
 use crate::utils::MyColor;
 use crate::{Context,MyErr};
@@ -76,6 +77,7 @@ async fn card(
 ) -> Result<(),MyErr> {
     MyContext::from(ctx).card_command(None).await
 }
+
 /// show other user bounty status info
 /// use this to check your friend status
 #[poise::command(context_menu_command = "User information",rename="🎀 Event")]
@@ -86,6 +88,40 @@ async fn event_context(
     MyContext::from(ctx).self_reg_model().await.complete_only()?;
     let event = ctx.data().db.get_event(&user.id.to_string()).await?;
     ctx.send(CreateReply::default().embed(event_embed(&event, &user)?)).await?;
+    Ok(())
+}
+
+/// check user register status
+#[poise::command(context_menu_command = "User information",rename = "👤 Status")]
+async fn status_context(
+    ctx:Context<'_>,
+    user:serenity::all::User
+) -> Result<(),MyErr> {
+    match ctx.data().user_reg(&user.id.to_string()).await {
+        UserReg::Unregistered { err:_ } => {
+            ctx.say("User are unregistered").await?;
+        }
+        UserReg::NoCharacter { uid, uname, err:_ } => {
+            ctx.send(CreateReply::default()
+                .embed(CreateEmbed::new()
+                    .title("Partially Registered")
+                    .description("using any command or `/switch` will make it complete")
+                    .fields(vec![("Username",&uname,false),("User_ID",&uid.to_string(),false)])
+                )).await?;
+        }
+        UserReg::Complete { uid, uname, cid } => {
+            ctx.send(CreateReply::default()
+                .embed(CreateEmbed::new()
+                    .title("Fully Registered")
+                    .description("user can use all discord features")
+                    .fields(vec![
+                        ("Username",&uname,false),
+                        ("User_ID",&uid.to_string(),false),
+                        ("Character_ID",&cid.to_string(),false)
+                    ])
+                )).await?;
+        }
+    }
     Ok(())
 }
 
@@ -103,5 +139,5 @@ async fn event(
 
 
 pub fn reg() -> Vec<poise::Command<AppData,MyErr>> {
-    vec![event(),event_context(),card(),card_context()]
+    vec![event(),event_context(),card(),card_context(),status_context()]
 }
