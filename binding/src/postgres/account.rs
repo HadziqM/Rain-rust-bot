@@ -47,7 +47,7 @@ impl Db {
         sqlx::query(&format!("UPDATE users SET password='{hased}' where id={uid}")).execute(&**self).await?;
         Ok(())
     }
-        pub async fn create_account(&self,user:&str,pass:&str,psn:&str,reg:bool,did:&str)->Result<AccountData,PgCustomError>{
+        pub async fn create_account(&self,user:&str,pass:&str,psn:Option<String>,reg:bool,did:&str)->Result<AccountData,PgCustomError>{
         let uid;
         if reg{
             if sqlx::query("Select username from users where username=$1").bind(user).fetch_one(&**self).await.is_ok(){
@@ -73,8 +73,8 @@ impl Db {
         }
         sqlx::query(&format!("INSERT INTO discord_register (discord_id,user_id) VALUES ($1,$2)"))
             .bind(did).bind(uid.id).execute(&**self).await?;
-        if psn != ""{
-            self.add_psn(psn, uid.id).await?;
+        if let Some(psn) = psn {
+            self.add_psn(&psn, uid.id).await?;
         }
         Ok(uid)
     }

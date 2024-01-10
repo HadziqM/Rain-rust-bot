@@ -18,6 +18,7 @@ pub struct AppData {
 
 
 pub type Context<'a> = poise::Context<'a,AppData,MyErr>;
+pub type ApplicationContext<'a> = poise::ApplicationContext<'a,AppData,MyErr>;
 
 pub struct Setup{
     framework:Framework<AppData,MyErr>,
