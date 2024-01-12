@@ -1,0 +1,17 @@
+[package]
+name = "rainlab"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.7.3"
+futures = "0.3.30"
+futures-util = { version = "0.3.30", features = ["sink", "std"] }
+serde = { version = "1.0.195", features = ["derive"] }
+serde_json = "1.0.111"
+shuttle-axum = "0.36.0"
+shuttle-runtime = "0.36.0"
+tera = { version = "1.19.1", features = ["chrono", "urlencode", "slug"] }
+tokio = "1.28.2"
+tokio-tungstenite = "0.21.0"
+tracing = "0.1.40"

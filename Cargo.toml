@@ -1,3 +1,3 @@
 [workspace]
-members = ["rain-bot","material","image-edit","binding", "test-bot", "rain-bot-old"]
+members = ["rain-bot","material","image-edit","binding", "test-bot", "rain-bot-old","rain-lab"]
 resolver = "2"
