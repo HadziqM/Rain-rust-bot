@@ -1,43 +1,30 @@
+use crate::utils::MyColor;
+use crate::{AppData, Context};
 use binding::postgres::PgCustomError;
 use serenity::all::ChannelId;
 use serenity::builder::{CreateEmbed, CreateEmbedAuthor, CreateEmbedFooter, CreateMessage};
-use crate::{Context, AppData};
-use crate::utils::MyColor;
 
 #[derive(Debug)]
-pub enum MyErr{
+pub enum MyErr {
     Serenity(serenity::Error),
     Tokio(tokio::io::Error),
     Utf8(std::str::Utf8Error),
     Serde(serde_json::Error),
     ByteWise(binding::bitwise::BitwiseError),
     Image(image_edit::CustomImageError),
-    Custom(String)
+    Custom(String),
 }
-impl std::error::Error for MyErr{}
+impl std::error::Error for MyErr {}
 impl std::fmt::Display for MyErr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self{
-            MyErr::Tokio(x)=>x.fmt(f),
-            MyErr::Serenity(x)=>x.fmt(f),
-            MyErr::Utf8(x)=>x.fmt(f),
-            MyErr::Serde(x)=>x.fmt(f),
-            MyErr::Custom(x)=>x.fmt(f),
-            MyErr::ByteWise(x)=>x.fmt(f),
-            MyErr::Image(x)=>x.fmt(f)
-        }
-    }
-}
-impl From<&MyErr> for MyErr {
-    fn from(value: &MyErr) -> Self {
-        match value {
-            MyErr::Utf8(x) => MyErr::Utf8(*x),
-            MyErr::Tokio(x) => MyErr::Tokio(*x),
-            MyErr::Serde(x) => MyErr::Serde(*x),
-            MyErr::Image(x) => MyErr::Image(*x),
-            MyErr::Custom(x) => MyErr::Custom(*x),
-            MyErr::ByteWise(x) => MyErr::ByteWise(*x),
-            MyErr::Serenity(x) => MyErr::Serenity(*x)
+        match self {
+            MyErr::Tokio(x) => x.fmt(f),
+            MyErr::Serenity(x) => x.fmt(f),
+            MyErr::Utf8(x) => x.fmt(f),
+            MyErr::Serde(x) => x.fmt(f),
+            MyErr::Custom(x) => x.fmt(f),
+            MyErr::ByteWise(x) => x.fmt(f),
+            MyErr::Image(x) => x.fmt(f),
         }
     }
 }
@@ -46,7 +33,7 @@ impl From<binding::bitwise::BitwiseError> for MyErr {
         MyErr::ByteWise(value)
     }
 }
-impl From<tokio::io::Error> for MyErr{
+impl From<tokio::io::Error> for MyErr {
     fn from(value: tokio::io::Error) -> Self {
         MyErr::Tokio(value)
     }
@@ -56,7 +43,7 @@ impl From<serenity::Error> for MyErr {
         MyErr::Serenity(value)
     }
 }
-impl From<std::str::Utf8Error> for MyErr{
+impl From<std::str::Utf8Error> for MyErr {
     fn from(value: std::str::Utf8Error) -> Self {
         MyErr::Utf8(value)
     }
@@ -80,36 +67,33 @@ impl From<binding::postgres::PgCustomError> for MyErr {
     fn from(value: binding::postgres::PgCustomError) -> Self {
         match value {
             PgCustomError::Sqlx(x) => MyErr::ByteWise(x.into()),
-            PgCustomError::Custom(x) => MyErr::Custom(x)
+            PgCustomError::Custom(x) => MyErr::Custom(x),
         }
     }
 }
 impl From<binding::bounty::BountyErr> for MyErr {
     fn from(value: binding::bounty::BountyErr) -> Self {
-        match value{
+        match value {
             binding::bounty::BountyErr::Tokio(x) => MyErr::Tokio(x),
             binding::bounty::BountyErr::Serde(x) => MyErr::Serde(x),
-            binding::bounty::BountyErr::Custom(x) => MyErr::Custom(x)
+            binding::bounty::BountyErr::Custom(x) => MyErr::Custom(x),
         }
     }
 }
 
 impl MyErr {
-    fn get(&self)->String{
-        self.to_string()
-    }
-    fn severity(&self)->bool{
+    fn severity(&self) -> bool {
         match self {
-            MyErr::Custom(_)=>false,
-            MyErr::ByteWise(_)=>true,
-            MyErr::Utf8(_)=>false,
-            MyErr::Tokio(_)=>true,
-            MyErr::Serde(_)=>false,
-            MyErr::Serenity(_)=>false,
-            MyErr::Image(_)=>true
+            MyErr::Custom(_) => false,
+            MyErr::ByteWise(_) => true,
+            MyErr::Utf8(_) => false,
+            MyErr::Tokio(_) => true,
+            MyErr::Serde(_) => false,
+            MyErr::Serenity(_) => false,
+            MyErr::Image(_) => true,
         }
     }
-    fn advice(&self)->String{
+    fn advice(&self) -> String {
         match self {
             MyErr::Custom(_)=>"Error message is writen by author themself, please read the message carefully or consult".to_string(),
             MyErr::ByteWise(_)=>"postgres connection (server database) error or data format error, you can report this or try again".to_string(),
@@ -120,16 +104,18 @@ impl MyErr {
             MyErr::Image(_)=>"error on loading image or at image processing, you can report this to be investigated".to_owned()
         }
     }
-    fn embed(&self,ctx:Context<'_>) -> CreateEmbed {
+    fn embed(&self, ctx: Context<'_>) -> CreateEmbed {
         let user = ctx.author();
-        let color = self.severity().then_some(MyColor::RED)
+        let color = self
+            .severity()
+            .then_some(MyColor::RED)
             .unwrap_or(MyColor::YELLOW);
         CreateEmbed::new()
             .title("🛑 Error Occured 🛑")
             .description("some cant be handled error occured")
             .fields(vec![
-                ("🚧 occured on",format!("**{}**",ctx.prefix()),false),
-                ("📜 error message",format!("> {}",self.get()),false),
+                ("🚧 occured on",format!("**{}**",ctx.invoked_command_name().to_uppercase()),false),
+                ("📜 error message",format!("> {}",self.to_string()),false),
                 ("⛑  author advice",format!("```\n{}\n```",self.advice()),false)
             ])
             .author(CreateEmbedAuthor::new(&user.name).icon_url(&user.face()))
@@ -138,28 +124,31 @@ impl MyErr {
             .color(color)
             .thumbnail("https://media.discordapp.net/attachments/1009291538733482055/1185000150104543314/panics.png?ex=658e0464&is=657b8f64&hm=28866be3c84841d0391a59ce797257cd661c5dff6e72d3f01b0f4f11ba4eac10&=&format=webp&quality=lossless&width=709&height=468")
     }
-    fn reply(&self,ctx:Context<'_>) -> poise::CreateReply {
-        poise::CreateReply { 
-            embeds: vec![self.embed(ctx)], 
-            ..Default::default() }
+    fn reply(&self, ctx: Context<'_>) -> poise::CreateReply {
+        poise::CreateReply {
+            embeds: vec![self.embed(ctx)],
+            ..Default::default()
+        }
     }
-    async fn log_channel(&self,ctx:Context<'_>) -> Result<(),MyErr> {
-        let ch_id = ChannelId::new(
-            ctx.data().init.read().await.log_channel.err_channel
-        );
-        ch_id.send_message(ctx.serenity_context(), CreateMessage::new()
-            .content(format!("for {}",ctx.author().to_string()))
-            .embed(self.embed(ctx))
-        ).await?;
+    async fn log_channel(&self, ctx: Context<'_>) -> Result<(), MyErr> {
+        let ch_id = ChannelId::new(ctx.data().init.read().await.log_channel.err_channel);
+        ch_id
+            .send_message(
+                ctx.serenity_context(),
+                CreateMessage::new()
+                    .content(format!("for {}", ctx.author().to_string()))
+                    .embed(self.embed(ctx)),
+            )
+            .await?;
         Ok(())
     }
-    pub async fn on_error(err:poise::FrameworkError<'_,AppData,Self>) {
+    pub async fn on_error(err: poise::FrameworkError<'_, AppData, Self>) {
         match err {
             poise::FrameworkError::Setup { error, .. } => {
                 panic!("failed to setup with err messages {error:?}")
             }
             poise::FrameworkError::Command { error, ctx, .. } => {
-                if ctx.send(error.reply(ctx)).await.is_err(){
+                if ctx.send(error.reply(ctx)).await.is_err() {
                     let _ = error.log_channel(ctx).await;
                 }
             }

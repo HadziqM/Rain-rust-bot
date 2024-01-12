@@ -1,18 +1,17 @@
-use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
-use serde::{Serialize,Deserialize};
+use serde::{Deserialize, Serialize};
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 
-pub mod card;
 pub mod account;
-pub mod server;
-pub mod gacha;
+pub mod card;
 pub mod custom;
+pub mod gacha;
 pub mod guild;
-
+pub mod server;
 
 #[derive(Debug)]
-pub enum PgCustomError{
+pub enum PgCustomError {
     Sqlx(sqlx::error::Error),
-    Custom(String)
+    Custom(String),
 }
 
 impl std::error::Error for PgCustomError {}
@@ -21,7 +20,7 @@ impl std::fmt::Display for PgCustomError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Sqlx(x) => x.fmt(f),
-            Self::Custom(x) => x.fmt(f)
+            Self::Custom(x) => x.fmt(f),
         }
     }
 }
@@ -38,19 +37,16 @@ impl From<&str> for PgCustomError {
     }
 }
 
-
-
-#[derive(Serialize,Deserialize,Clone,Debug)]
-pub struct DbConf{
-    user:String,
-    password:String,
-    host:String,
-    port:u16,
-    database:String
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct DbConf {
+    user: String,
+    password: String,
+    host: String,
+    port: u16,
+    database: String,
 }
 
-
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub struct Db(Pool<Postgres>);
 
 impl std::ops::Deref for Db {
@@ -61,16 +57,15 @@ impl std::ops::Deref for Db {
 }
 
 impl Db {
-    pub async fn connect(conf:&DbConf)->Result<Self,PgCustomError> {
-        let url = format!("postgres://{}:{}@{}:{}/{}",
-            conf.user,
-            conf.password,
-            conf.host,
-            conf.port,
-            conf.database);
+    pub async fn connect(conf: &DbConf) -> Result<Self, PgCustomError> {
+        let url = format!(
+            "postgres://{}:{}@{}:{}/{}",
+            conf.user, conf.password, conf.host, conf.port, conf.database
+        );
         let pool = PgPoolOptions::new()
             .max_connections(100)
-            .connect(url.as_str()).await?;
+            .connect(url.as_str())
+            .await?;
         Ok(Self(pool))
     }
 }

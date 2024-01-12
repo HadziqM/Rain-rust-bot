@@ -1,21 +1,21 @@
-use super::{Gpt,MyErr};
-use serde::{Serialize,Deserialize};
+use super::{Gpt, MyErr};
+use crate::{Components, Mybundle};
+use serde::{Deserialize, Serialize};
 use serenity::builder::{CreateAttachment, EditInteractionResponse};
-use crate::{Mybundle,Components};
 
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize, Deserialize)]
 struct ImageIn {
     prompt: String,
-    n:u8,
-    size:String,
+    n: u8,
+    size: String,
 }
-#[derive(Serialize,Deserialize,Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Imgs {
-    url:String
+    url: String,
 }
-#[derive(Serialize,Deserialize,Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ImageOut {
-    data: Vec<Imgs>
+    data: Vec<Imgs>,
 }
 
 impl From<tokio::task::JoinError> for MyErr {
@@ -23,43 +23,55 @@ impl From<tokio::task::JoinError> for MyErr {
         MyErr::Custom(format!("failed on joining task with code:\n {value:?}"))
     }
 }
-async fn download(url:String)->Result<Vec<u8>,MyErr>{
+async fn download(url: String) -> Result<Vec<u8>, MyErr> {
     Ok(reqwest::get(url).await?.bytes().await?.to_vec())
 }
 impl ImageOut {
-    pub async fn send<T:Mybundle>(&self,bnd:&T)->Result<(),MyErr>{
+    pub async fn send<T: Mybundle>(&self, bnd: &T) -> Result<(), MyErr> {
         let mut y = EditInteractionResponse::new();
         let mut set = tokio::task::JoinSet::new();
-        for i in &self.data{
+        for i in &self.data {
             set.spawn(download(i.url.to_owned()));
         }
         loop {
-            match set.join_next().await{
-                Some(x)=>{
+            match set.join_next().await {
+                Some(x) => {
                     y = y.new_attachment(CreateAttachment::bytes(x??, "image.png"));
                 }
-                None=>{break;}
+                None => {
+                    break;
+                }
             }
         }
         Components::edit_adv(bnd, y).await
     }
 }
 
-impl Gpt{
-    async fn image(&self,data:&ImageIn)->Result<ImageOut,MyErr>{
+impl Gpt {
+    async fn image(&self, data: &ImageIn) -> Result<ImageOut, MyErr> {
         let url = "https://api.openai.com/v1/images/generations";
-        let client =  reqwest::Client::new();
-        let resp = client.post(url).headers(self.head.to_owned()).json(&data).send().await?.text().await?;
-        let comp =match serde_json::from_str::<ImageOut>(&resp){
-            Ok(x)=>x,
-            Err(_)=>{
-                return Err(MyErr::Custom(format!("getting invalid response with the parsed data:\n\n{}",&resp)));
+        let client = reqwest::Client::new();
+        let resp = client
+            .post(url)
+            .headers(self.head.to_owned())
+            .json(&data)
+            .send()
+            .await?
+            .text()
+            .await?;
+        let comp = match serde_json::from_str::<ImageOut>(&resp) {
+            Ok(x) => x,
+            Err(_) => {
+                return Err(MyErr::Custom(format!(
+                    "getting invalid response with the parsed data:\n\n{}",
+                    &resp
+                )));
             }
         };
         Ok(comp)
     }
-    pub async fn get_image(&self,prompt:String,n:u8,size:String)->Result<ImageOut,MyErr>{
-        let x = ImageIn{prompt,n,size};
+    pub async fn get_image(&self, prompt: String, n: u8, size: String) -> Result<ImageOut, MyErr> {
+        let x = ImageIn { prompt, n, size };
         self.image(&x).await
     }
 }

@@ -1,32 +1,31 @@
+use crate::{Components, MyErr, Mybundle, Mytrait, PgConn, SlashBundle};
 use serenity::all::*;
-use crate::{MyErr,Mytrait,Mybundle,SlashBundle,Components,PgConn};
 
-
-#[hertz::hertz_slash_normal(0,false)]
-async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+#[hertz::hertz_slash_normal(0, false)]
+async fn slash(bnd: &SlashBundle<'_>) -> Result<(), MyErr> {
     let mut bounty = false;
     let mut all = false;
     let mut amount = 0;
     let mut user = vec![bnd.cmd.user.id];
-    for data in &bnd.cmd.data.options{
-        if let CommandDataOptionValue::SubCommandGroup(x) = &data.value{
-            if data.name.as_str() == "bounty"{
+    for data in &bnd.cmd.data.options {
+        if let CommandDataOptionValue::SubCommandGroup(x) = &data.value {
+            if data.name.as_str() == "bounty" {
                 bounty = true;
             }
-            for data2 in x{
-                if let CommandDataOptionValue::SubCommand(y) = &data2.value{
-                    if data2.name.as_str() == "all"{
+            for data2 in x {
+                if let CommandDataOptionValue::SubCommand(y) = &data2.value {
+                    if data2.name.as_str() == "all" {
                         all = true;
                     }
-                    for data3 in y{
-                        match &data3.value{
-                            CommandDataOptionValue::Integer(i)=>{
+                    for data3 in y {
+                        match &data3.value {
+                            CommandDataOptionValue::Integer(i) => {
                                 amount = *i;
                             }
-                            CommandDataOptionValue::String(u)=>{
-                                user = Components::get_mentions(u)
+                            CommandDataOptionValue::String(u) => user = Components::get_mentions(u),
+                            _ => {
+                                continue;
                             }
-                            _ =>{continue;}
                         }
                     }
                 }
@@ -34,18 +33,18 @@ async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
         }
     }
     let mut pg = PgConn::create(bnd.init, "".to_owned()).await?;
-    for i in user{
+    for i in user {
         pg.did = i.to_string();
-        if bounty{
-            if all{
+        if bounty {
+            if all {
                 pg.bounty_all(amount as i32).await?;
-            }else {
+            } else {
                 pg.bounty_transaction(-1 * amount as i32).await?;
             }
-        }else {
-            if all{
+        } else {
+            if all {
                 pg.ticket_all(amount as i32).await?;
-            }else {
+            } else {
                 pg.buy_ticket(amount as i32).await?;
             }
         }

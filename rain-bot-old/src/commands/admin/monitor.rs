@@ -1,12 +1,12 @@
-use crate::{MyErr,Components,SlashBundle, MONITOR};
+use crate::{Components, MyErr, SlashBundle, MONITOR};
 
 #[hertz::hertz_auto]
-async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+async fn slash(bnd: &SlashBundle<'_>) -> Result<(), MyErr> {
     let mut mon = MONITOR.lock().await;
     let res;
     if *mon {
         res = "monitor is disabled"
-    }else{
+    } else {
         res = "monitor is enabled"
     }
     *mon = !*mon;

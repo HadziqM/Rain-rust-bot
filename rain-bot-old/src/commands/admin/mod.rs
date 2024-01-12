@@ -13,25 +13,29 @@ pub mod purge;
 pub mod query;
 pub mod test;
 
-
 pub fn reg(init: &Init) -> Vec<CreateCommand> {
-    let mut category = AppReg::str_option("category", "category you pick for bounty").required(true);
-    for i in Category::option_str(){
+    let mut category =
+        AppReg::str_option("category", "category you pick for bounty").required(true);
+    for i in Category::option_str() {
         category = category.add_string_choice(i.1, i.0);
     }
     let title_str = CreateCommandOption::new(
-            CommandOptionType::String,
-            "trigger",
-            "the trigger listed on bounty_title.json",
-        ).required(true).set_autocomplete(true);
-    let tests = AppReg::admin_slash("title", "bounty title command").add_option(
-        AppReg::subcommand("test", "test bounty config image")
-        .add_sub_option(title_str.to_owned())
-    ).add_option(
-        AppReg::subcommand("give", "give title to someone registered")
-        .add_sub_option(title_str.to_owned())
-        .add_sub_option(AppReg::user_option("user", "user to gift title").required(true))
-    );
+        CommandOptionType::String,
+        "trigger",
+        "the trigger listed on bounty_title.json",
+    )
+    .required(true)
+    .set_autocomplete(true);
+    let tests = AppReg::admin_slash("title", "bounty title command")
+        .add_option(
+            AppReg::subcommand("test", "test bounty config image")
+                .add_sub_option(title_str.to_owned()),
+        )
+        .add_option(
+            AppReg::subcommand("give", "give title to someone registered")
+                .add_sub_option(title_str.to_owned())
+                .add_sub_option(AppReg::user_option("user", "user to gift title").required(true)),
+        );
     let save = AppReg::admin_slash("mod_pass", "reset someone password given username")
         .add_option(
             CreateCommandOption::new(
@@ -341,6 +345,6 @@ pub fn reg(init: &Init) -> Vec<CreateCommand> {
         config,
         monitor,
         add,
-        tests
+        tests,
     ]
 }

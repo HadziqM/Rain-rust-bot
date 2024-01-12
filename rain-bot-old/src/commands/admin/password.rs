@@ -1,16 +1,15 @@
+use crate::{Components, MyErr, Mybundle, Mytrait, PgConn, SlashBundle};
 use serenity::all::*;
-use crate::{MyErr,Mytrait,Mybundle,Components,PgConn,SlashBundle};
 
-
-#[hertz::hertz_slash_normal(0,false)]
-async fn slash(bnd:&SlashBundle<'_>)->Result<(),MyErr>{
+#[hertz::hertz_slash_normal(0, false)]
+async fn slash(bnd: &SlashBundle<'_>) -> Result<(), MyErr> {
     let mut username = "";
     let mut pass = "";
-    for i in &bnd.cmd.data.options{
-        if let CommandDataOptionValue::String(s) = &i.value{
-            if i.name.as_str() == "username"{
+    for i in &bnd.cmd.data.options {
+        if let CommandDataOptionValue::String(s) = &i.value {
+            if i.name.as_str() == "username" {
                 username = s.as_str();
-            }else {
+            } else {
                 pass = s.as_str();
             }
         }

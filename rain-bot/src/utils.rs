@@ -1,5 +1,5 @@
 use poise::serenity_prelude::Colour;
-use rand::{self,seq::SliceRandom};
+use rand::{self, seq::SliceRandom};
 
 pub struct MyColor;
 
@@ -7,7 +7,7 @@ impl MyColor {
     pub fn random() -> Colour {
         let mut channel = (0..0xFE01).collect::<Vec<_>>();
         channel.shuffle(&mut rand::thread_rng());
-        Colour::new(channel[0]*0xFF)
+        Colour::new(channel[0] * 0xFF)
     }
     pub const RED: Colour = Colour::new(0xFF0000); // 16711680 in decimal
     pub const BLUE: Colour = Colour::new(0x0000FF); // 255 in decimal

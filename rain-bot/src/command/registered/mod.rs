@@ -1,11 +1,10 @@
-use crate::{setup::AppData, error::MyErr};
+use crate::{error::MyErr, setup::AppData};
 
-mod user_info;
 mod account;
 mod register;
+mod user_info;
 
-
-pub fn reg() -> Vec<poise::Command<AppData,MyErr>> {
+pub fn reg() -> Vec<poise::Command<AppData, MyErr>> {
     let mut out = vec![];
     out.append(&mut user_info::reg());
     out.append(&mut register::reg());

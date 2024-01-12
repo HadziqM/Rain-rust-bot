@@ -1,27 +1,24 @@
+use crate::{bitwise::ItemCode, postgres::card::Event};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::sync::Mutex;
-use serde::{Serialize,Deserialize};
-use crate::{bitwise::ItemCode, postgres::card::Event};
 
 use title::Progresion;
 
-pub mod title;
 pub mod config;
 pub mod submit;
+pub mod title;
 
-
-pub struct  BountyGlobal {
-    pub cooldown: Mutex<HashMap<BBQ,u32>>,
-    pub submision: Mutex<HashMap<String,BountySubmit>> 
+pub struct BountyGlobal {
+    pub cooldown: Mutex<HashMap<BBQ, u32>>,
+    pub submision: Mutex<HashMap<String, BountySubmit>>,
 }
-
-
 
 #[derive(Debug)]
 pub enum BountyErr {
     Custom(String),
     Tokio(tokio::io::Error),
-    Serde(serde_json::Error)
+    Serde(serde_json::Error),
 }
 
 impl std::error::Error for BountyErr {}
@@ -31,7 +28,7 @@ impl std::fmt::Display for BountyErr {
         match self {
             Self::Custom(x) => x.fmt(f),
             Self::Tokio(x) => x.fmt(f),
-            Self::Serde(x) => x.fmt(f)
+            Self::Serde(x) => x.fmt(f),
         }
     }
 }
@@ -53,28 +50,26 @@ impl From<&str> for BountyErr {
     }
 }
 
-
-#[derive(PartialEq, Eq,Clone,Hash,Serialize,Deserialize)]  
-#[serde(rename_all="snake_case")]
-pub enum Category{
+#[derive(PartialEq, Eq, Clone, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Category {
     Bronze,
     Silver,
     Gold,
     Free,
     Event,
-    Custom
+    Custom,
 }
 
-#[derive(Clone,Serialize,Deserialize)]
-#[serde(rename_all="snake_case")]
-pub enum Methode{
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Methode {
     Solo,
-    Multi
+    Multi,
 }
 
-
-#[derive(PartialEq, Eq,Clone,Hash,Serialize,Deserialize)]
-pub enum BBQ{
+#[derive(PartialEq, Eq, Clone, Hash, Serialize, Deserialize)]
+pub enum BBQ {
     BBQ01,
     BBQ02,
     BBQ03,
@@ -102,27 +97,27 @@ pub enum BBQ{
     BBQ25,
 }
 
-#[derive(Serialize,Deserialize,PartialEq, Eq,Clone,Debug,Default)]
-pub struct BountyReward{
-    coin:u32,
-    ticket:u32,
-    items:Vec<ItemCode>
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug, Default)]
+pub struct BountyReward {
+    coin: u32,
+    ticket: u32,
+    items: Vec<ItemCode>,
 }
 
-#[derive(Clone,Serialize,Deserialize)]
-pub struct Hunter{
-    pub member:String,
-    pub title:Progresion,
-    pub event:Event,
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Hunter {
+    pub member: String,
+    pub title: Progresion,
+    pub event: Event,
 }
-#[derive(Clone,Serialize,Deserialize)]
-pub struct BountySubmit{
-    pub method:Methode,
-    pub category:Category,
-    pub bbq:BBQ,
-    pub hunter:Vec<Hunter>,
-    pub url:String,
-    pub thumb:String,
-    pub time:i64,
-    pub reward:BountyReward
+#[derive(Clone, Serialize, Deserialize)]
+pub struct BountySubmit {
+    pub method: Methode,
+    pub category: Category,
+    pub bbq: BBQ,
+    pub hunter: Vec<Hunter>,
+    pub url: String,
+    pub thumb: String,
+    pub time: i64,
+    pub reward: BountyReward,
 }

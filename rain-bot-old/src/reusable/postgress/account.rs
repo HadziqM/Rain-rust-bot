@@ -1,19 +1,19 @@
-use sqlx::{Pool, Postgres,Row, FromRow};
-use bcrypt::{verify,hash};
-use std::{time::SystemTime, fs::File};
-use std::io::prelude::*;
-use chrono::NaiveDateTime;
 use crate::commands::binded::transfer::FileSave;
 use crate::reusable::component::MyErr;
+use bcrypt::{hash, verify};
+use chrono::NaiveDateTime;
+use sqlx::{FromRow, Pool, Postgres, Row};
+use std::io::prelude::*;
+use std::{fs::File, time::SystemTime};
 
-use super::{PgConn,BitwiseError};
+use super::{BitwiseError, PgConn};
 
-#[derive(Debug,FromRow)]
+#[derive(Debug, FromRow)]
 pub struct AccountData {
     pub id: i32,
-    pub username:String
+    pub username: String,
 }
-#[derive(Debug,FromRow)]
+#[derive(Debug, FromRow)]
 pub struct SaveData {
     pub savedata: Option<Vec<u8>>,
     pub decomyset: Option<Vec<u8>>,
@@ -27,31 +27,63 @@ pub struct SaveData {
     pub savemercenary: Option<Vec<u8>>,
     pub skin_hist: Option<Vec<u8>>,
 }
-impl<'a> PgConn<'a>{
-    pub async fn check_user_password(&self,cid:i32,pass:&str)->Result<bool,BitwiseError>{
-        let uid:i64 = sqlx::query(&format!("SELECT user_id FROM characters where id={cid}"))
-            .fetch_one(&self.pool).await?.try_get("user_id")?;
-        let hash:String = sqlx::query(&format!("SELECT password FROM users where id={uid}"))
-            .fetch_one(&self.pool).await?.try_get("password")?;
-        Ok(verify(pass,&hash).unwrap_or_default())
+impl<'a> PgConn<'a> {
+    pub async fn check_user_password(&self, cid: i32, pass: &str) -> Result<bool, BitwiseError> {
+        let uid: i64 = sqlx::query(&format!("SELECT user_id FROM characters where id={cid}"))
+            .fetch_one(&self.pool)
+            .await?
+            .try_get("user_id")?;
+        let hash: String = sqlx::query(&format!("SELECT password FROM users where id={uid}"))
+            .fetch_one(&self.pool)
+            .await?
+            .try_get("password")?;
+        Ok(verify(pass, &hash).unwrap_or_default())
     }
-    pub async fn change_user_password(&self,pass:&str,cid:i32)->Result<(),BitwiseError>{
-        let uid:i64 = sqlx::query("SELECT user_id FROM characters where id=$1").bind(cid)
-            .fetch_one(&self.pool).await?.try_get("user_id")?;
+    pub async fn change_user_password(&self, pass: &str, cid: i32) -> Result<(), BitwiseError> {
+        let uid: i64 = sqlx::query("SELECT user_id FROM characters where id=$1")
+            .bind(cid)
+            .fetch_one(&self.pool)
+            .await?
+            .try_get("user_id")?;
         let hased = bcrypt::hash(pass, 10).unwrap_or_default();
-        sqlx::query(&format!("UPDATE users SET password='{hased}' where id={uid}")).execute(&self.pool).await?;
+        sqlx::query(&format!(
+            "UPDATE users SET password='{hased}' where id={uid}"
+        ))
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
-    pub async fn change_password_with_username(&self,pass:&str,username:&str)->Result<(),BitwiseError>{
+    pub async fn change_password_with_username(
+        &self,
+        pass: &str,
+        username: &str,
+    ) -> Result<(), BitwiseError> {
         let hased = bcrypt::hash(pass, 10).unwrap_or_default();
-        sqlx::query("UPDATE users SET password=$1 where username=$2").bind(hased).bind(username).execute(&self.pool).await?;
+        sqlx::query("UPDATE users SET password=$1 where username=$2")
+            .bind(hased)
+            .bind(username)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
-    pub async fn create_account(&self,user:&str,pass:&str,psn:&str,reg:bool)->Result<AccountData,MyErr>{
+    pub async fn create_account(
+        &self,
+        user: &str,
+        pass: &str,
+        psn: &str,
+        reg: bool,
+    ) -> Result<AccountData, MyErr> {
         let uid;
-        if reg{
-            if sqlx::query("Select username from users where username=$1").bind(user).fetch_one(&self.pool).await.is_ok(){
-                return Err(MyErr::Custom("The username already used by someone, please use another username".into()));
+        if reg {
+            if sqlx::query("Select username from users where username=$1")
+                .bind(user)
+                .fetch_one(&self.pool)
+                .await
+                .is_ok()
+            {
+                return Err(MyErr::Custom(
+                    "The username already used by someone, please use another username".into(),
+                ));
             }
             let hash = hash(pass, 10).unwrap_or_default();
             let time = get_naive().unwrap_or_default();
@@ -60,57 +92,95 @@ impl<'a> PgConn<'a>{
                         (user_id, is_female, is_new_character, name,unk_desc_string,
                          hrp, gr, weapon_type, last_login) VALUES($1, False, True, '', '', 0, 0, 0, $2)").bind(uid.id)
                         .bind(MyTime::now() as i32).execute(&self.pool).await?;
-        }else {
-            let data = sqlx::query("SELECT id,username,password from users where username=$1").bind(user).fetch_one(&self.pool).await?;
-            if !verify(pass,&data.try_get::<String,_>("password")?).unwrap_or(true){
+        } else {
+            let data = sqlx::query("SELECT id,username,password from users where username=$1")
+                .bind(user)
+                .fetch_one(&self.pool)
+                .await?;
+            if !verify(pass, &data.try_get::<String, _>("password")?).unwrap_or(true) {
                 return Err(MyErr::Custom("Password doesnt match the account".into()));
             }
             uid = AccountData {
-                username:data.try_get("username")?,
-                id:data.try_get("id")?
+                username: data.try_get("username")?,
+                id: data.try_get("id")?,
             };
         }
-        sqlx::query(&format!("INSERT INTO discord_register (discord_id,user_id) VALUES ($1,$2)"))
-            .bind(&self.did).bind(uid.id).execute(&self.pool).await?;
-        if psn != ""{
+        sqlx::query(&format!(
+            "INSERT INTO discord_register (discord_id,user_id) VALUES ($1,$2)"
+        ))
+        .bind(&self.did)
+        .bind(uid.id)
+        .execute(&self.pool)
+        .await?;
+        if psn != "" {
             self.psn(psn, uid.id).await?;
         }
         Ok(uid)
     }
-    pub async fn switch(&self,cid:i32)->Result<(),BitwiseError>{
+    pub async fn switch(&self, cid: i32) -> Result<(), BitwiseError> {
         sqlx::query("INSERT INTO discord (discord_id,char_id,gacha) VALUES ($1,$2,100) ON CONFLICT (discord_id) DO UPDATE SET char_id=$2").bind(&self.did).bind(cid).execute(&self.pool).await?;
         Ok(())
     }
-    pub async fn reset_cd(&self)->Result<(),sqlx::Error>{
-        sqlx::query("UPDATE discord SET transfercd=0 WHERE discord_id=$1").bind(&self.did).execute(&self.pool).await?;
+    pub async fn reset_cd(&self) -> Result<(), sqlx::Error> {
+        sqlx::query("UPDATE discord SET transfercd=0 WHERE discord_id=$1")
+            .bind(&self.did)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
-    pub async fn send_save(&self,cid:i32)->Result<SaveData,BitwiseError>{
-        Ok(sqlx::query_as("SELECT * FROM characters WHERE id=$1").bind(cid).fetch_one(&self.pool).await?)
+    pub async fn send_save(&self, cid: i32) -> Result<SaveData, BitwiseError> {
+        Ok(sqlx::query_as("SELECT * FROM characters WHERE id=$1")
+            .bind(cid)
+            .fetch_one(&self.pool)
+            .await?)
     }
-    pub async fn transfer_cd(&self)->Result<(bool,i64),sqlx::Error>{
-        let cd:i64 = sqlx::query("SELECT transfercd from discord where discord_id=$1").bind(&self.did).fetch_one(&self.pool).await?.try_get("transfercd")?;
-        let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
-        if now > cd as u64{
-            let week = now + 24*60*60;
-            sqlx::query("UPDATE discord SET transfercd=$2 where discord_id=$1").bind(&self.did).bind(week as i64).execute(&self.pool).await?;
-            return Ok((true,week as i64));
+    pub async fn transfer_cd(&self) -> Result<(bool, i64), sqlx::Error> {
+        let cd: i64 = sqlx::query("SELECT transfercd from discord where discord_id=$1")
+            .bind(&self.did)
+            .fetch_one(&self.pool)
+            .await?
+            .try_get("transfercd")?;
+        let now = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        if now > cd as u64 {
+            let week = now + 24 * 60 * 60;
+            sqlx::query("UPDATE discord SET transfercd=$2 where discord_id=$1")
+                .bind(&self.did)
+                .bind(week as i64)
+                .execute(&self.pool)
+                .await?;
+            return Ok((true, week as i64));
         }
-        Ok((false,cd))
+        Ok((false, cd))
     }
-    pub async fn transfer_file(&self,file:&FileSave,cid:i32)->Result<(),BitwiseError>{
-        sqlx::query(&format!("UPDATE characters SET {}=$1 WHERE id=$2",&file.name)).bind(file.bin.as_slice()).bind(cid).execute(&self.pool).await?;
+    pub async fn transfer_file(&self, file: &FileSave, cid: i32) -> Result<(), BitwiseError> {
+        sqlx::query(&format!(
+            "UPDATE characters SET {}=$1 WHERE id=$2",
+            &file.name
+        ))
+        .bind(file.bin.as_slice())
+        .bind(cid)
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
-    pub async fn purge(&self)->Result<(),BitwiseError>{
-        sqlx::query("DELETE from discord_register WHERE discord_id=$1").bind(&self.did).execute(&self.pool).await?;
-        sqlx::query("DELETE from discord WHERE discord_id=$1").bind(&self.did).execute(&self.pool).await?;
+    pub async fn purge(&self) -> Result<(), BitwiseError> {
+        sqlx::query("DELETE from discord_register WHERE discord_id=$1")
+            .bind(&self.did)
+            .execute(&self.pool)
+            .await?;
+        sqlx::query("DELETE from discord WHERE discord_id=$1")
+            .bind(&self.did)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
 }
 impl SaveData {
-    fn to_file(&self)->Result<(),std::io::Error>{
-        if let Some(x) = &self.savedata{
+    fn to_file(&self) -> Result<(), std::io::Error> {
+        if let Some(x) = &self.savedata {
             let mut y = File::create("./save/savefile.bin").unwrap();
             y.write_all(x.as_slice())?;
         }
@@ -118,19 +188,26 @@ impl SaveData {
     }
 }
 
-
 use crate::reusable::utils::MyTime;
 
-fn get_naive()->Option<NaiveDateTime>{
-    let amonth = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs()+30*24*60*60;
-    NaiveDateTime::from_timestamp_opt(amonth as i64,0)
+fn get_naive() -> Option<NaiveDateTime> {
+    let amonth = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
+        + 30 * 24 * 60 * 60;
+    NaiveDateTime::from_timestamp_opt(amonth as i64, 0)
 }
-async fn use_history(pool:&Pool<Postgres>,did:&str,uid:i64)->Result<(),sqlx::Error>{
-    sqlx::query(&format!("INSERT INTO discord_register (discord_id,user_id) VALUES ('{did}',{uid})")).execute(pool).await?;
+async fn use_history(pool: &Pool<Postgres>, did: &str, uid: i64) -> Result<(), sqlx::Error> {
+    sqlx::query(&format!(
+        "INSERT INTO discord_register (discord_id,user_id) VALUES ('{did}',{uid})"
+    ))
+    .execute(pool)
+    .await?;
     Ok(())
 }
 #[cfg(test)]
-mod test_postgres{
+mod test_postgres {
     // use super::*;
     // // use super::super::connection;
     // use crate::get_config;

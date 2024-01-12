@@ -1,10 +1,8 @@
-
-use std::path::{Path, PathBuf};
-use serde::{Deserialize,Serialize};
 use crate::MyErr;
+use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
 
-
-#[derive(Debug,Deserialize,Serialize,Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Init {
     // pub(crate) server_market: ServerMarket,
     // pub(crate) speedrun_contest: SpeedrunContest,
@@ -13,29 +11,29 @@ pub struct Init {
     // pub(crate) transmog_contest: TransmogContest,
     // pub(crate) gacha_channel: GachaChannel,
     // pub(crate) bounty_message_id:BountyMessageId,
-    pub(crate) bounty:Bounty,
-    pub chat_gpt:ChatGpt,
-    pub(crate) server_role:ServerRole,
+    pub(crate) bounty: Bounty,
+    pub chat_gpt: ChatGpt,
+    pub(crate) server_role: ServerRole,
     // pub(crate) server_channel_url:ServerChannelUrl,
     // pub(crate) server_channel:ServerChannel,
-    pub(crate) log_channel:LogChannels,
-    pub(crate) bot_config:BotConfig,
-    pub(crate) mhfz_config:MhfzConfig,
-    pub(crate) postgress:binding::postgres::DbConf,
-    pub(crate) discord:Discord
+    pub(crate) log_channel: LogChannels,
+    pub(crate) bot_config: BotConfig,
+    pub(crate) mhfz_config: MhfzConfig,
+    pub(crate) postgress: binding::postgres::DbConf,
+    pub(crate) discord: Discord,
 }
-#[derive(Debug,Deserialize,Clone,Serialize)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Discord {
     pub(crate) token: String,
     pub(crate) prefix: String,
-    pub(crate) author_id:u64
+    pub(crate) author_id: u64,
 }
-#[derive(Debug,Deserialize,Clone,Serialize)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct MhfzConfig {
     pub(crate) account_creation: bool,
-    pub(crate) sending_log: bool
+    pub(crate) sending_log: bool,
 }
-#[derive(Debug,Deserialize,Clone,Serialize)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct BotConfig {
     pub(crate) member_join: bool,
     pub(crate) member_leave: bool,
@@ -46,11 +44,10 @@ pub struct BotConfig {
     // pub(crate) transmog_contest: bool,
     // pub(crate) mezfes_contest: bool,
     pub(crate) server_market: bool,
-    pub(crate) transfer_timeout:u64
-    // pub(crate) pvp_contest: bool,
-    // pub(crate) speedrun_contest: bool,
+    pub(crate) transfer_timeout: u64, // pub(crate) pvp_contest: bool,
+                                      // pub(crate) speedrun_contest: bool,
 }
-#[derive(Debug,Deserialize,Clone,Serialize)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct LogChannels {
     pub(crate) err_channel: u64,
     pub(crate) account_channel: u64,
@@ -78,7 +75,7 @@ pub struct LogChannels {
 //     pub(crate) game_channel: u64,
 //     pub(crate) bot_channel: u64,
 // }
-#[derive(Debug,Deserialize,Clone,Serialize)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct ServerRole {
     pub(crate) admin_role: u64,
     pub(crate) bartender_role: u64,
@@ -88,7 +85,7 @@ pub struct ServerRole {
     pub(crate) judge_role: u64,
     pub(crate) maintainer_role: u64,
 }
-#[derive(Debug,Deserialize,Clone,Serialize)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Bounty {
     pub(crate) board_ch: u64,
     pub(crate) conquered_ch: u64,
@@ -98,10 +95,10 @@ pub struct Bounty {
     pub(crate) cooldown_msg: u64,
     pub(crate) judge_ch: u64,
 }
-#[derive(Debug,Deserialize,Clone,Serialize)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct ChatGpt {
-    pub(crate) token:String,
-    pub(crate) timeout:u32
+    pub(crate) token: String,
+    pub(crate) timeout: u32,
 }
 // #[derive(Debug,Deserialize,Clone)]
 // pub struct BountyMessageId {
@@ -137,24 +134,24 @@ pub struct ChatGpt {
 // }
 
 impl Init {
-    fn path()->PathBuf{
+    fn path() -> PathBuf {
         Path::new(".").join("config.json")
     }
-    pub async fn save(&self)->Result<(),MyErr>{
+    pub async fn save(&self) -> Result<(), MyErr> {
         Ok(tokio::fs::write(&Init::path(), serde_json::to_string_pretty(&self)?).await?)
     }
-    pub async fn new()->Result<Init,MyErr>{
+    pub async fn new() -> Result<Init, MyErr> {
         let input = tokio::fs::read_to_string(&Init::path()).await?;
         Ok(serde_json::from_str(&input)?)
     }
-    pub fn block_new()->Result<Init,MyErr>{
+    pub fn block_new() -> Result<Init, MyErr> {
         let input = std::fs::read_to_string(&Init::path())?;
         Ok(serde_json::from_str(&input)?)
     }
 }
 
 #[cfg(test)]
-mod tests{
+mod tests {
     use super::*;
 
     #[test]

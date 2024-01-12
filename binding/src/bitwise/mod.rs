@@ -1,10 +1,10 @@
-use std::num::ParseIntError;
+use serde::{Deserialize, Serialize};
 use std::fmt;
-use serde::{Serialize,Deserialize};
+use std::num::ParseIntError;
 
 pub mod distribution;
 
-#[derive(Debug,Serialize,Deserialize,Clone,PartialEq,Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct ItemCode {
     pub key: String,
     pub count: u16,
@@ -12,7 +12,11 @@ pub struct ItemCode {
 }
 impl Default for ItemCode {
     fn default() -> Self {
-        ItemCode { key: "0700".to_string(), count: 1, types: 7 }
+        ItemCode {
+            key: "0700".to_string(),
+            count: 1,
+            types: 7,
+        }
     }
 }
 
@@ -33,7 +37,7 @@ impl fmt::Display for BitwiseError {
             BitwiseError::InvalidKey => "the key for converting endian is invalid length".fmt(f),
             BitwiseError::NoItem => "no item on the selected data".fmt(f),
             BitwiseError::ParseInt(e) => e.fmt(f),
-            BitwiseError::Sqlx(e)=>e.fmt(f)
+            BitwiseError::Sqlx(e) => e.fmt(f),
         }
     }
 }
@@ -45,19 +49,19 @@ impl From<ParseIntError> for BitwiseError {
         BitwiseError::ParseInt(e)
     }
 }
-impl From<sqlx::Error> for BitwiseError{
+impl From<sqlx::Error> for BitwiseError {
     fn from(value: sqlx::Error) -> Self {
         BitwiseError::Sqlx(value)
     }
 }
 
-pub struct Bitwise<'a>{
-    item:&'a [ItemCode]
+pub struct Bitwise<'a> {
+    item: &'a [ItemCode],
 }
 
-impl<'a> Bitwise<'a>{
-    pub fn decode(hex_value:&str)->Result<Vec<u8>,BitwiseError>{
-        if hex_value.len()%2 != 0{
+impl<'a> Bitwise<'a> {
+    pub fn decode(hex_value: &str) -> Result<Vec<u8>, BitwiseError> {
+        if hex_value.len() % 2 != 0 {
             return Err(BitwiseError::OddLength);
         }
         //pair it two then decode
