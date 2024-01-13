@@ -1,7 +1,11 @@
-use std::{path::Path, sync::Arc, fmt::Debug};
+pub mod websocket;
 
+
+
+use std::{path::Path, sync::Arc, fmt::Debug, process::Command};
 use axum::{routing::get, Router, extract::State, response::{IntoResponse, Html}};
 use tera::{Tera, Context};
+use tower_http::services::ServeDir;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -10,7 +14,7 @@ pub struct AppState {
 
 impl AppState {
     fn new() -> Self {
-        let path = Path::new("templates").join("**/*.html");
+        let path = Path::new("./rain-lab/templates").join("**/*.html");
         let tera = Arc::new(Tera::new(path.to_str().unwrap()).unwrap());
         AppState {tera}
     }
@@ -59,7 +63,14 @@ async fn main() -> shuttle_axum::ShuttleAxum {
     let state = AppState::new();
     let router = Router::new()
         .route("/", get(test_index))
-        .with_state(state);
+        .with_state(state)
+        .fallback_service(ServeDir::new("./rain-lab/public"));
+
+    // build tailwind script
+    println!("start run script");
+    let cmd = Command::new("sh")
+        .args(&["-c","cd rain-lab&&npx tailwindcss -i ./tailwind.css -o ./public/index.css"]).spawn().expect("cant run the script");
+    cmd.wait_with_output().expect("stuck in infinite loop");
 
     Ok(router.into())
 }

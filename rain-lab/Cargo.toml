@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = "0.7.3"
+axum = { version="0.7.3", features = ["ws"] }
 futures = "0.3.30"
 futures-util = { version = "0.3.30", features = ["sink", "std"] }
 serde = { version = "1.0.195", features = ["derive"] }
@@ -14,4 +14,6 @@ shuttle-runtime = "0.36.0"
 tera = { version = "1.19.1", features = ["chrono", "urlencode", "slug"] }
 tokio = "1.28.2"
 tokio-tungstenite = "0.21.0"
+tower = { version = "0.4.13", features = ["util"] }
+tower-http = { version = "0.5.0", features = ["fs", "trace"] }
 tracing = "0.1.40"
