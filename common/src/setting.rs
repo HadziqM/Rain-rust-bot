@@ -11,6 +11,15 @@ pub trait JsonSetting: Serialize + DeserializeOwned {
         debug!("loading setting file {}", ty.path());
         Ok(serde_json::from_slice(&std::fs::read(ty.path())?)?)
     }
+    fn placeholder(ty: SettingList) -> Result<(), Box<dyn std::error::Error>>
+    where
+        Self: Default,
+    {
+        debug!("creating placeholder file {}", ty.path());
+        let pretty = serde_json::to_string_pretty(&Self::default())?;
+        std::fs::write(ty.path(), pretty.as_bytes())?;
+        Ok(())
+    }
 }
 
 impl JsonSetting for SettingMain {}
@@ -19,7 +28,7 @@ impl JsonSetting for SettingGacha {}
 impl JsonSetting for SettingSaveFile {}
 impl JsonSetting for SettingDiscord {}
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct SettingAll {
     pub main: SettingMain,
     pub market: SettingMarket,
@@ -37,6 +46,21 @@ impl SettingAll {
             savefile: SettingList::SaveFile.load().unwrap_log(),
             discord: SettingList::Discord.load().unwrap_log(),
         }
+    }
+    fn create_placeholders() {
+        SettingList::Main.placeholder::<SettingMain>().unwrap_log();
+        SettingList::Market
+            .placeholder::<SettingMarket>()
+            .unwrap_log();
+        SettingList::Gacha
+            .placeholder::<SettingGacha>()
+            .unwrap_log();
+        SettingList::SaveFile
+            .placeholder::<SettingSaveFile>()
+            .unwrap_log();
+        SettingList::Discord
+            .placeholder::<SettingDiscord>()
+            .unwrap_log();
     }
 }
 
@@ -59,19 +83,22 @@ impl SettingList {
             Self::Market => SYSDIR.config_dir("market.json"),
         }
     }
+    fn placeholder<T: JsonSetting + Default>(self) -> Result<(), Box<dyn std::error::Error>> {
+        T::placeholder(self)
+    }
     pub fn load<T: JsonSetting>(self) -> Result<T, Box<dyn std::error::Error>> {
         T::open(self)
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct SettingGacha {
     pub cost: u32,
     pub pity: u32,
     pub rarity: GachaRaritySetting,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct GachaRaritySetting {
     pub ur: Vec<ItemCode>,
     pub ssr1: Vec<ItemCode>,
@@ -82,14 +109,14 @@ pub struct GachaRaritySetting {
     pub r2: Vec<ItemCode>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct SettingSaveFile {
     pub cooldown_hour: u32,
     pub autoaccept_countdown_mins: i32,
     pub allowed_file: AllowedFileSetting,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct AllowedFileSetting {
     pub savedata: bool,
     pub decomyset: bool,
@@ -103,24 +130,24 @@ pub struct AllowedFileSetting {
     pub savemercenary: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct SettingMarket {
     pub market: Vec<ItemCode>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct SettingMain {
     pub discord: DiscordBotSetting,
     pub database: DatabaseSetting,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct SettingDiscord {
     pub channel: DiscordChannelSetting,
     pub role: DiscordServerRole,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct DiscordChannelSetting {
     pub log_channel: u64,
     pub error_channel: u64,
@@ -135,7 +162,7 @@ pub struct DiscordChannelSetting {
     pub market_menu_msg: u64,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct DiscordServerRole {
     pub admin: String,
     pub registered: String,
@@ -144,17 +171,28 @@ pub struct DiscordServerRole {
     pub bounty_judge: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct DiscordBotSetting {
     pub token: String,
     pub webhook: String,
     pub author: u64,
 }
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct DatabaseSetting {
     pub user: String,
     pub host: String,
     pub password: String,
     pub port: u16,
     pub database: String,
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn create_placeholders() {
+        SettingList::Main.path().execute_dir();
+        SettingAll::create_placeholders();
+    }
 }

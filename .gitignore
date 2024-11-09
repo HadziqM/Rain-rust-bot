@@ -11,3 +11,8 @@ vite-press/docs/.vitepress/cache
 vite-press/docs/.vitepress/dist
 CACHE
 .env
+main.json
+discord.json
+gacha.json
+market.json
+savefile.json
