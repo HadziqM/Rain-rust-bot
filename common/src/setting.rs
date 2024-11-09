@@ -122,16 +122,17 @@ pub struct SettingDiscord {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DiscordChannelSetting {
-    pub log_channel: String,
-    pub transfer_channel: String,
-    pub bounty_submision: String,
-    pub bounty_title: String,
-    pub speedrun_submision: String,
-    pub speedrun_leaderboard_channel: String,
-    pub speedrun_leaderboard_msg: String,
-    pub market_channel: String,
-    pub market_menu_channel: String,
-    pub market_menu_msg: String,
+    pub log_channel: u64,
+    pub error_channel: u64,
+    pub transfer_channel: u64,
+    pub bounty_submision: u64,
+    pub bounty_title: u64,
+    pub speedrun_submision: u64,
+    pub speedrun_leaderboard_channel: u64,
+    pub speedrun_leaderboard_msg: u64,
+    pub market_channel: u64,
+    pub market_menu_channel: u64,
+    pub market_menu_msg: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -147,7 +148,7 @@ pub struct DiscordServerRole {
 pub struct DiscordBotSetting {
     pub token: String,
     pub webhook: String,
-    pub author: String,
+    pub author: u64,
 }
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DatabaseSetting {

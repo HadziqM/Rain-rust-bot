@@ -3,7 +3,7 @@ use serenity::all::*;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
 
-use crate::error::MyError;
+use crate::error::{ErrorHandling, MyError};
 
 pub type MyResult<T> = Result<T, MyError>;
 
@@ -19,13 +19,59 @@ pub struct DiscordHandler<T: CommandInteractionTrait> {
 #[async_trait]
 pub trait CommandInteractionTrait: Sync + Send + 'static {
     async fn hand(&self, app: Arc<App>, cmd: CommandInteraction, ctx: Context) {
-        if let Err(e) = Self::handle(app, cmd, ctx).await {
-            // TODO: Proper error handling
-            log::error!("there is error {:?}", e);
+        if let Err(e) = Self::handle(app.clone(), cmd.clone(), ctx.clone()).await {
+            e.log();
+            let setting = app.setting.read().await;
+            let err = ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), Self::name()).await;
+            if cmd
+                .create_response(&ctx.http, err.response())
+                .await
+                .is_err()
+            {
+                err.channel_send(&ctx).await
+            }
         }
     }
     async fn handle(app: Arc<App>, cmd: CommandInteraction, ctx: Context) -> MyResult<()>;
     fn command() -> CreateCommand;
+    fn name() -> String;
+}
+#[async_trait]
+pub trait ButtonInteractionTrait: Sync + Send + 'static {
+    async fn hand(&self, app: Arc<App>, cmd: ComponentInteraction, ctx: Context) {
+        if let Err(e) = Self::handle(app.clone(), cmd.clone(), ctx.clone()).await {
+            e.log();
+            let setting = app.setting.read().await;
+            let err = ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), Self::name()).await;
+            if cmd
+                .create_response(&ctx.http, err.response())
+                .await
+                .is_err()
+            {
+                err.channel_send(&ctx).await
+            }
+        }
+    }
+    async fn handle(app: Arc<App>, cmd: ComponentInteraction, ctx: Context) -> MyResult<()>;
+    fn name() -> String;
+}
+#[async_trait]
+pub trait ModalInteractionTrait: Sync + Send + 'static {
+    async fn hand(&self, app: Arc<App>, cmd: ModalInteraction, ctx: Context) {
+        if let Err(e) = Self::handle(app.clone(), cmd.clone(), ctx.clone()).await {
+            e.log();
+            let setting = app.setting.read().await;
+            let err = ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), Self::name()).await;
+            if cmd
+                .create_response(&ctx.http, err.response())
+                .await
+                .is_err()
+            {
+                err.channel_send(&ctx).await
+            }
+        }
+    }
+    async fn handle(app: Arc<App>, cmd: ModalInteraction, ctx: Context) -> MyResult<()>;
     fn name() -> String;
 }
 
