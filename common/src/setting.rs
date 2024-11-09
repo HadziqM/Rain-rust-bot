@@ -1,11 +1,14 @@
 #![allow(dead_code)]
 
+use crate::MyResult;
 use crate::{item_code::ItemCode, SYSDIR};
+use log::debug;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sysdir::Sysdir;
 
-trait JsonSetting: Serialize + DeserializeOwned {
+pub trait JsonSetting: Serialize + DeserializeOwned {
     fn open(ty: SettingList) -> Result<Self, Box<dyn std::error::Error>> {
+        debug!("loading setting file {}", ty.path());
         Ok(serde_json::from_slice(&std::fs::read(ty.path())?)?)
     }
 }
@@ -26,8 +29,14 @@ pub struct SettingAll {
 }
 
 impl SettingAll {
-    fn load() -> Self {
-        todo!()
+    pub fn load_all() -> Self {
+        Self {
+            main: SettingList::Main.load().unwrap_log(),
+            market: SettingList::Market.load().unwrap_log(),
+            gacha: SettingList::Gacha.load().unwrap_log(),
+            savefile: SettingList::SaveFile.load().unwrap_log(),
+            discord: SettingList::Discord.load().unwrap_log(),
+        }
     }
 }
 
@@ -49,6 +58,9 @@ impl SettingList {
             Self::Gacha => SYSDIR.config_dir("gacha.json"),
             Self::Market => SYSDIR.config_dir("market.json"),
         }
+    }
+    pub fn load<T: JsonSetting>(self) -> Result<T, Box<dyn std::error::Error>> {
+        T::open(self)
     }
 }
 
