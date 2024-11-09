@@ -1,5 +1,5 @@
 [workspace]
-members = ["common", "material"]
+members = ["common", "material", "rain-bot"]
 resolver = "2"
 
 
@@ -10,7 +10,7 @@ logger = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "logger", 
   "discord",
 ] }
 sysdir = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "sysdir" }
-appflow-std = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "appflow-std" }
+appflow = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "appflow" }
 macros = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "macros" }
 
 # async runtime
