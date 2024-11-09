@@ -9,5 +9,6 @@ serenity.workspace = true
 appflow.workspace = true
 log.workspace = true
 logger.workspace = true
-common = { path = "../common" }
 lazy_static.workspace = true
+thiserror.workspace = true
+common = { path = "../common" }

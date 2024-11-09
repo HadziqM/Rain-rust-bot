@@ -15,11 +15,7 @@ macros = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "macros" }
 
 # async runtime
 tokio = { version = "1.32", features = ["full"] }
-sqlx = { version = "0.8.2", features = [
-  "postgres",
-  "chrono",
-  "runtime-tokio-native-tls",
-] }
+sqlx = { version = "0.8.2", features = ["postgres", "chrono"] }
 reqwest = { version = "0.12.9", features = ["json"] }
 
 # Image processing

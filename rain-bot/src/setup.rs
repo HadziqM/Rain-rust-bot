@@ -1,11 +1,6 @@
 use common::setting::SettingAll;
-use lazy_static::lazy_static;
 use serenity::all::*;
-use std::{
-    collections::HashMap,
-    future::Future,
-    sync::{Arc, RwLock, RwLockReadGuard},
-};
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
 
 use crate::error::MyError;
@@ -16,55 +11,43 @@ pub struct App {
     pub setting: Arc<RwLock<SettingAll>>,
 }
 
-pub struct DiscordHandler {
+pub struct DiscordHandler<T: CommandInteractionTrait> {
     pub app: Arc<App>,
-    pub command_list: HashMap<String, InteractionHandler>,
+    pub command_list: HashMap<String, T>,
 }
 
-pub struct InteractionHandler {
-    pub handle: Fn(App, CommandInteraction, Context) -> Future<Output = MyResult<()>>,
-    pub id: String,
-    pub command: CreateCommand,
-}
-
-impl InteractionHandler {
-    async fn handle_command(&self, app: App, cmd: CommandInteraction, ctx: Context) {
-        if let Err(e) = self.handle(app, cmd, ctx).await {
-            // TODO: Proper Error Handling
-            log::error!("Getting error: {:#?}", e);
+#[async_trait]
+pub trait CommandInteractionTrait: Sync + Send + 'static {
+    async fn hand(&self, app: Arc<App>, cmd: CommandInteraction, ctx: Context) {
+        if let Err(e) = Self::handle(app, cmd, ctx).await {
+            // TODO: Proper error handling
+            log::error!("there is error {:?}", e);
         }
     }
-}
-
-pub trait InteractionTrait {
-    fn id() -> String;
+    async fn handle(app: Arc<App>, cmd: CommandInteraction, ctx: Context) -> MyResult<()>;
     fn command() -> CreateCommand;
-    async fn handle(app: App, cmd: CommandInteraction, ctx: Context) -> MyResult<()>;
-    fn reg(&self) -> InteractionHandler {
-        InteractionHandler {
-            id: Self::id(),
-            handle: Self::handle,
-            command: Self::command(),
-        }
-    }
+    fn name() -> String;
 }
 
-impl EventHandler for DiscordHandler {
-    async fn ready(&self, ctx: Context, data_about_bot: Ready) {
+#[async_trait]
+impl<T: CommandInteractionTrait> EventHandler for DiscordHandler<T> {
+    async fn ready(&self, _ctx: Context, _data_about_bot: Ready) {
         todo!()
     }
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         match interaction {
             Interaction::Command(cmd) => {
-                if let Some(hnd) = self.command_list.get(&cmd.data.name) {
-                    hnd.handle_command(self.app.clone(), cmd, ctx).await;
+                if let Some(x) = self.command_list.get(&cmd.data.name) {
+                    x.hand(self.app.clone(), cmd, ctx).await;
                 }
+            }
+            Interaction::Component(_x) => {
+                todo!()
             }
             _ => {}
         }
-        todo!()
     }
-    async fn message(&self, ctx: Context, new_message: Message) {
+    async fn message(&self, _ctx: Context, _new_message: Message) {
         todo!()
     }
 }
