@@ -1,0 +1,12 @@
+[package]
+name = "database"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+common = { path = "../common" }
+sqlx.workspace = true
+log.workspace = true
+thiserror.workspace = true
+macros.workspace = true
+bcrypt.workspace = true
