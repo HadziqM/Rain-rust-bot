@@ -1,3 +1,52 @@
 [workspace]
-members = ["rain-bot","material","image-edit","binding", "test-bot","rain-lab"]
+members = ["common", "material"]
 resolver = "2"
+
+
+[workspace.dependencies]
+
+# My library
+logger = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "logger", features = [
+  "discord",
+] }
+sysdir = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "sysdir" }
+appflow-std = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "appflow-std" }
+macros = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "macros" }
+
+# async runtime
+tokio = { version = "1.32", features = ["full"] }
+sqlx = { version = "0.8.2", features = [
+  "postgres",
+  "chrono",
+  "runtime-tokio-native-tls",
+] }
+reqwest = { version = "0.12.9", features = ["json"] }
+
+# Image processing
+image = "0.25.5"
+imageproc = "0.25.0"
+rusttype = "0.9.3"
+
+
+# utils
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+log = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
+itermap = "0.4"
+thiserror = "2.0"
+lazy_static = "1.5"
+
+# Cryptolock
+bcrypt = "0.15"
+
+
+# discord bot client
+serenity = { version = "0.12.2", features = [
+  "client",
+  "gateway",
+  "model",
+  "utils",
+  "builder",
+] }

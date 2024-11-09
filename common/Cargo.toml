@@ -1,0 +1,13 @@
+[package]
+name = "common"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde.workspace = true
+log.workspace = true
+thiserror.workspace = true
+macros.workspace = true
+sysdir.workspace = true
+lazy_static.workspace = true
+serde_json.workspace = true

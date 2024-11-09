@@ -10,3 +10,4 @@ vite-press/node_modules
 vite-press/docs/.vitepress/cache
 vite-press/docs/.vitepress/dist
 CACHE
+.env

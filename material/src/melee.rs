@@ -15051,7 +15051,7 @@ impl Default for Melee {
                     ("9538", "Imperial War Katana"),
                     ("9638", "Imperial Dynasty Katana"),
                     ("9738", "Imperial Hammer"),
-                    ("9838", "Imperial Commandment​ H."),
+                    ("9838", "Imperial Commandment H."),
                     ("9938", "Imperial Outbreak Hammer"),
                     ("9A38", "Imperial Destruction H."),
                     ("9B38", "Imperial Defeat Hammer"),
