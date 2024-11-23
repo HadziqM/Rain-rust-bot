@@ -12,3 +12,4 @@ logger.workspace = true
 lazy_static.workspace = true
 thiserror.workspace = true
 common = { path = "../common" }
+database = { path = "../database" }

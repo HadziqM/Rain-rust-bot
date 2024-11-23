@@ -139,6 +139,7 @@ pub struct SettingMarket {
 pub struct SettingMain {
     pub discord: DiscordBotSetting,
     pub database: DatabaseSetting,
+    pub updater: GithubUpdaterSetting,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default)]
@@ -184,6 +185,13 @@ pub struct DatabaseSetting {
     pub password: String,
     pub port: u16,
     pub database: String,
+}
+#[derive(Serialize, Deserialize, Clone, Default)]
+pub struct GithubUpdaterSetting {
+    pub repo: String,
+    pub owner: String,
+    pub token: Option<String>,
+    pub app_name: String,
 }
 
 #[cfg(test)]

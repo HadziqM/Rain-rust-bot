@@ -1,4 +1,5 @@
 use common::setting::SettingAll;
+use database::Db;
 use serenity::all::*;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
@@ -9,6 +10,7 @@ pub type MyResult<T> = Result<T, MyError>;
 
 pub struct App {
     pub setting: Arc<RwLock<SettingAll>>,
+    pub db: Db,
 }
 
 pub struct DiscordHandler {

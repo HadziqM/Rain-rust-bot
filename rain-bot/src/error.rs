@@ -1,4 +1,5 @@
 use common::setting::SettingAll;
+use database::DbError;
 use serenity::all::{
     ChannelId, Color, Context, CreateEmbed, CreateEmbedAuthor, CreateEmbedFooter,
     CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, User, UserId,
@@ -7,11 +8,22 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum MyError {
-    #[error("Test")]
-    Test,
+    #[error("{0}")]
+    Custom(String),
+    #[error("sqlx error: {0}")]
+    Db(DbError),
 }
 
-enum Severity {
+impl From<DbError> for MyError {
+    fn from(err: DbError) -> Self {
+        match err {
+            DbError::Sqlx(_) => Self::Db(err),
+            DbError::Custom(str) => Self::Custom(str),
+        }
+    }
+}
+
+pub enum Severity {
     Critical,
     FalsePossitive,
     CanBeHandledManually,
@@ -19,13 +31,26 @@ enum Severity {
 
 impl MyError {
     pub fn severity(&self) -> Severity {
-        todo!()
+        match self {
+            Self::Custom(_) => Severity::CanBeHandledManually,
+            Self::Db(_) => Severity::Critical,
+        }
     }
     pub fn advice(&self) -> String {
-        todo!()
+        match self {
+            Self::Custom(_) => {
+                String::from("Error writen by author themself, please read carefully")
+            }
+            Self::Db(_) => String::from(
+                "Please report this error to author, or wait till database connection stabilize",
+            ),
+        }
     }
     pub fn log(&self) {
-        todo!()
+        match self {
+            Self::Custom(str) => log::warn!("Custom Error: {}", str),
+            Self::Db(err) => log::error!("Db Error: {}", err),
+        }
     }
 }
 

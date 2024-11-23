@@ -2,15 +2,29 @@ use std::sync::Arc;
 
 use appflow::Appflow;
 use common::{setting::SettingAll, SYSDIR};
+use database::Db;
 use logger::Mylogger;
 use serenity::{all::GatewayIntents, Client};
 use setup::{App, DiscordHandler};
 use tokio::sync::RwLock;
 
+pub mod command;
 pub mod error;
 pub mod setup;
+pub mod utils;
 
 impl Appflow for App {
+    async fn update_config(self: Arc<Self>) -> appflow::GithubUpdater {
+        let setting = self.setting.read().await;
+        let update = &setting.main.updater;
+        appflow::GithubUpdater {
+            repo: update.repo.clone(),
+            owner: update.owner.clone(),
+            token: update.token.clone(),
+            app_name: update.app_name.clone(),
+        }
+    }
+
     async fn main_process(self: Arc<Self>) {
         let setting = self.setting.read().await;
         Mylogger::webhook_url(&setting.main.discord.webhook, setting.main.discord.author)
@@ -37,6 +51,7 @@ impl Appflow for App {
 async fn main() {
     let setting = SettingAll::load_all();
     let app = App {
+        db: Db::connect(&setting).await.unwrap(),
         setting: Arc::new(RwLock::new(setting)),
     };
     app.init().await

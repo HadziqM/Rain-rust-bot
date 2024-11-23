@@ -9,8 +9,10 @@ resolver = "2"
 logger = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "logger", features = [
   "discord",
 ] }
+appflow = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "appflow", features = [
+  "update",
+] }
 sysdir = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "sysdir" }
-appflow = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "appflow" }
 macros = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "macros" }
 
 # async runtime

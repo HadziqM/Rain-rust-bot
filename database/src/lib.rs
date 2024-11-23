@@ -4,6 +4,7 @@ use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use thiserror::Error;
 
 pub mod account;
+pub mod card;
 
 #[derive(Debug, Error)]
 pub enum DbError {

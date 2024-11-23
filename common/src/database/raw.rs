@@ -1,11 +1,11 @@
 pub struct DbCard {
-    pub char_id: i32,
-    pub user_id: i64,
-    pub name: String,
-    pub gr: i32,
-    pub hrp: i32,
-    pub login: i32,
-    pub weapon_type: i32,
+    pub char_id: Option<i32>,
+    pub user_id: Option<i64>,
+    pub name: Option<String>,
+    pub gr: Option<i32>,
+    pub hrp: Option<i32>,
+    pub login: Option<i32>,
+    pub weapon_type: Option<i32>,
     pub username: String,
     pub guild_id: Option<i64>,
     pub guild_name: Option<String>,
@@ -17,19 +17,19 @@ pub struct DbEvent {
     pub pity: i32,
     pub latest_bounty: String,
     pub latest_bounty_time: i64,
-    pub title: i32,
-    pub bronze: i32,
-    pub silver: i32,
-    pub gold: i32,
-    pub name: String,
+    pub title: Option<i32>,
+    pub bronze: Option<i32>,
+    pub silver: Option<i32>,
+    pub gold: Option<i32>,
+    pub name: Option<String>,
     pub char_id: i32,
 }
 
 pub struct DbUserData {
     // Character_id
     pub cid: i32,
-    // Account_id
-    pub aid: i32,
+    // User_id
+    pub uid: Option<i32>,
 }
 
 pub struct DbAccountData {
@@ -68,7 +68,7 @@ impl DbCard {
         "https://media.discordapp.net/attachments/1068440173479739393/1068440373132800080/SAF.png",
         "https://media.discordapp.net/attachments/1068440173479739393/1068440372709167174/MS.png"
         ];
-        iconlist[self.weapon_type as usize].to_string()
+        iconlist[self.weapon_type.unwrap_or_default() as usize].to_string()
     }
     pub fn g_name(&self) -> String {
         match &self.guild_name {
@@ -83,22 +83,17 @@ impl DbCard {
         }
     }
     pub fn hrp(&self) -> u8 {
-        if self.hrp == 999 {
-            return 7;
-        } else if self.hrp > 299 {
-            return 6;
-        } else if self.hrp > 99 {
-            return 5;
-        } else if self.hrp > 50 {
-            return 4;
-        } else if self.hrp > 30 {
-            return 3;
-        } else if self.hrp > 1 {
-            return 2;
+        match self.hrp.unwrap_or(0) {
+            999 => 7,
+            300..=998 => 6,
+            100..=299 => 5,
+            51..=99 => 4,
+            31..=50 => 3,
+            1..=30 => 2,
+            _ => 1,
         }
-        1
     }
     pub fn last_login(&self) -> String {
-        format!("<t:{}:R>", self.login)
+        format!("<t:{}:R>", self.login.unwrap_or_default())
     }
 }
