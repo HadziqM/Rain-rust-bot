@@ -18,6 +18,8 @@ pub enum MyError {
     Db(DbError),
     #[error("discord API error: {0}")]
     Serenity(#[from] serenity::Error),
+    #[error("Tokio IO error: {0}")]
+    Tokio(#[from] tokio::io::Error),
 }
 
 impl From<&str> for MyError {
@@ -56,6 +58,7 @@ impl MyError {
             Self::Custom(_) => Severity::CanBeHandledManually,
             Self::Db(_) => Severity::Critical,
             MyError::Serenity(_) => Severity::FalsePossitive,
+            Self::Tokio(_) => Severity::Critical,
         }
     }
     pub fn advice(&self) -> String {
@@ -67,6 +70,7 @@ impl MyError {
                 "Please report this error to author, or wait till database connection stabilize",
             ),
             Self::Serenity(_) => String::from("Discord API error, please report this error"),
+            Self::Tokio(_) => String::from("Tokio IO error, please report this error"),
         }
     }
     pub fn log(&self, location: impl Display, user: impl Display, ctype: CommandLocationType) {
@@ -79,6 +83,9 @@ impl MyError {
             Self::Db(err) => log::error!("\n[Database Error]\ndetails: `{err}`\non_command: `{location}`\ncommand_type: `{ctype:?}`\nuser: `{user}`"),
             Self::Serenity(err) => {
                 log::warn!("\n[Serenity Error]\ndetails: `{err}`\non_command: `{location}`\ncommand_type: `{ctype:?}`\nuser: `{user}`")
+            }
+            Self::Tokio(err) => {
+                log::warn!("\n[Tokio Error]\ndetails: `{err}`\non_command: `{location}`\ncommand_type: `{ctype:?}`\nuser: `{user}`")
             }
         }
     }

@@ -4,6 +4,7 @@ use crate::MyResult;
 use crate::{item_code::ItemCode, SYSDIR};
 use log::debug;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use strum::{EnumIter, EnumString};
 use sysdir::Sysdir;
 
 pub trait JsonSetting: Serialize + DeserializeOwned {
@@ -11,6 +12,7 @@ pub trait JsonSetting: Serialize + DeserializeOwned {
         debug!("loading setting file {}", ty.path());
         Ok(serde_json::from_slice(&std::fs::read(ty.path())?)?)
     }
+
     fn placeholder(ty: SettingList) -> Result<(), Box<dyn std::error::Error>>
     where
         Self: Default,
@@ -64,7 +66,7 @@ impl SettingAll {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, Clone, Debug)]
+#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug, EnumIter, EnumString, strum::Display)]
 pub enum SettingList {
     Main,
     Discord,
@@ -83,6 +85,42 @@ impl SettingList {
             Self::Market => SYSDIR.config_dir("market.json"),
         }
     }
+
+    pub fn validete_and_change(
+        &self,
+        bytes: &[u8],
+        setting: &mut SettingAll,
+    ) -> Result<(), String> {
+        match self {
+            SettingList::Main => {
+                let x = serde_json::from_slice::<SettingMain>(bytes)
+                    .map_err(|e| format!("Validation failed for Main: {e}"))?;
+                setting.main = x;
+            }
+            SettingList::Discord => {
+                let x = serde_json::from_slice::<SettingDiscord>(bytes)
+                    .map_err(|e| format!("Validation failed for Main: {e}"))?;
+                setting.discord = x;
+            }
+            SettingList::SaveFile => {
+                let x = serde_json::from_slice::<SettingSaveFile>(bytes)
+                    .map_err(|e| format!("Validation failed for Main: {e}"))?;
+                setting.savefile = x;
+            }
+            SettingList::Gacha => {
+                let x = serde_json::from_slice::<SettingGacha>(bytes)
+                    .map_err(|e| format!("Validation failed for Main: {e}"))?;
+                setting.gacha = x;
+            }
+            SettingList::Market => {
+                let x = serde_json::from_slice::<SettingMarket>(bytes)
+                    .map_err(|e| format!("Validation failed for Main: {e}"))?;
+                setting.market = x;
+            }
+        };
+        Ok(())
+    }
+
     fn placeholder<T: JsonSetting + Default>(self) -> Result<(), Box<dyn std::error::Error>> {
         T::placeholder(self)
     }
