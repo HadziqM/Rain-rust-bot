@@ -14,3 +14,4 @@ reg![
 ];
 reg![reg_button, ButtonInteractionTrait, register::reg_button()];
 reg![reg_modal, ModalInteractionTrait, register::reg_modal()];
+reg![reg_message, MessageCommandTrait, admin::reg_message()];

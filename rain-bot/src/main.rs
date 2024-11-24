@@ -3,6 +3,7 @@ use std::sync::Arc;
 use appflow::Appflow;
 use common::{setting::SettingAll, SYSDIR};
 use database::Db;
+use log::debug;
 use logger::Mylogger;
 use serenity::{all::GatewayIntents, Client};
 use setup::{App, DiscordHandler};
@@ -55,7 +56,10 @@ impl Appflow for App {
             log::error!("Client error: {:?}", why);
         }
     }
-    async fn cleanup(self: Arc<Self>) {}
+    async fn cleanup(self: Arc<Self>) {
+        debug!("Just sleep 2 sec to emulate clean up");
+        tokio::time::sleep(std::time::Duration::from_secs(3)).await
+    }
 }
 #[tokio::main]
 async fn main() {

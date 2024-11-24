@@ -10,3 +10,4 @@ log.workspace = true
 thiserror.workspace = true
 macros.workspace = true
 bcrypt.workspace = true
+chrono.workspace = true

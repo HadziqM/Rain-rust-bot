@@ -2,11 +2,7 @@ use common::setting::SettingAll;
 use database::Db;
 use log::{debug, error, info};
 use serenity::all::*;
-pub use std::{
-    collections::HashMap,
-    ops::Deref,
-    sync::{Arc, LazyLock},
-};
+pub use std::{collections::HashMap, ops::Deref, sync::Arc};
 use tokio::sync::RwLock;
 
 use crate::error::{CommandLocationType, ErrorHandling, MyError};
@@ -24,6 +20,7 @@ pub struct DiscordHandler {
     pub command_list: HashMap<String, Box<dyn CommandInteractionTrait>>,
     pub button_list: HashMap<String, Box<dyn ButtonInteractionTrait>>,
     pub modal_list: HashMap<String, Box<dyn ModalInteractionTrait>>,
+    pub message_list: HashMap<String, Box<dyn MessageCommandTrait>>,
 }
 
 #[async_trait]
@@ -126,6 +123,33 @@ pub trait ModalInteractionTrait: Sync + Send + 'static {
     ) -> MyResult<()>;
     fn name_mdl(&self) -> String;
 }
+#[async_trait]
+pub trait MessageCommandTrait: Sync + Send + 'static {
+    async fn hand_msg(&self, app: Arc<App>, cmd: Message, ctx: Context) {
+        if let Err(e) = self.handle_msg(app.clone(), cmd.clone(), ctx.clone()).await {
+            let setting = app.setting.read().await;
+            let err = ErrorHandling::new(
+                e,
+                &ctx,
+                &setting,
+                cmd.author.clone(),
+                self.name_msg(),
+                CommandLocationType::Modal,
+            )
+            .await;
+            if cmd
+                .channel_id
+                .send_message(&ctx.http, CreateMessage::new().embed(err.embed()))
+                .await
+                .is_err()
+            {
+                err.channel_send(&ctx).await
+            }
+        }
+    }
+    async fn handle_msg(&self, app: Arc<App>, cmd: Message, ctx: Context) -> MyResult<()>;
+    fn name_msg(&self) -> String;
+}
 
 impl DiscordHandler {
     pub fn new(app: Arc<App>) -> Self {
@@ -134,6 +158,7 @@ impl DiscordHandler {
             command_list: crate::command::reg_command(),
             button_list: crate::command::reg_button(),
             modal_list: crate::command::reg_modal(),
+            message_list: crate::command::reg_message(),
         }
     }
 }
@@ -184,6 +209,18 @@ impl EventHandler for DiscordHandler {
                 }
             }
             _ => {}
+        }
+    }
+
+    async fn message(&self, ctx: Context, msg: Message) {
+        if msg.content.starts_with("?") && !msg.author.bot {
+            let name = msg.content.split_whitespace().next();
+            if let Some(x) = name {
+                let y = x.replace("?", "");
+                if let Some(x) = self.message_list.get(&y) {
+                    x.hand_msg(self.app.clone(), msg, ctx).await;
+                }
+            }
         }
     }
 }

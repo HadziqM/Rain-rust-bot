@@ -37,6 +37,19 @@ macro_rules! modal_reg {
         }
     };
 }
+#[macro_export]
+macro_rules! message_reg {
+    ( $( $x:expr ),* ) => {
+
+        pub fn reg_message() -> HashMap<String, Box<dyn MessageCommandTrait>> {
+            let mut _y = HashMap::new();
+            $(
+                _y.insert($x.name_msg(), Box::new($x) as Box<dyn MessageCommandTrait>);
+            )*
+            _y
+        }
+    };
+}
 
 #[macro_export]
 macro_rules! reg {

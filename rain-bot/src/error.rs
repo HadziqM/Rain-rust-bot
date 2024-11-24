@@ -78,7 +78,7 @@ impl MyError {
             }
             Self::Db(err) => log::error!("\n[Database Error]\ndetails: `{err}`\non_command: `{location}`\ncommand_type: `{ctype:?}`\nuser: `{user}`"),
             Self::Serenity(err) => {
-                log::error!("\n[Serenity Error]\ndetails: `{err}`\non_command: `{location}`\ncommand_type: `{ctype:?}`\nuser: `{user}`")
+                log::warn!("\n[Serenity Error]\ndetails: `{err}`\non_command: `{location}`\ncommand_type: `{ctype:?}`\nuser: `{user}`")
             }
         }
     }
@@ -142,7 +142,7 @@ impl ErrorHandling {
         }
     }
 
-    fn embed(&self) -> CreateEmbed {
+    pub fn embed(&self) -> CreateEmbed {
         let color = match self.err.severity() {
             Severity::Critical => Color::RED,
             Severity::FalsePossitive => Color::DARK_GREEN,
