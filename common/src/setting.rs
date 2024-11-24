@@ -165,11 +165,11 @@ pub struct DiscordChannelSetting {
 
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub struct DiscordServerRole {
-    pub admin: String,
-    pub registered: String,
-    pub save_judge: String,
-    pub speedrun_judge: String,
-    pub bounty_judge: String,
+    pub admin: u64,
+    pub registered: u64,
+    pub save_judge: u64,
+    pub speedrun_judge: u64,
+    pub bounty_judge: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default)]

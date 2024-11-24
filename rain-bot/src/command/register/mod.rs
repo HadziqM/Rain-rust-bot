@@ -1,7 +1,21 @@
 use crate::all::*;
 
+mod create;
 mod credential;
 
-command_reg![credential::ChangePassword, credential::AddPsn];
-button_reg![credential::AddPsn];
-modal_reg![credential::AddPsn];
+command_reg![
+    credential::ChangePassword,
+    credential::AddPsn,
+    create::RegisterAccount,
+    create::BindAccount
+];
+button_reg![
+    credential::AddPsn,
+    create::BindAccount,
+    create::RegisterAccount
+];
+modal_reg![
+    credential::AddPsn,
+    create::BindAccount,
+    create::RegisterAccount
+];

@@ -53,7 +53,7 @@ dependencies = [
 [[package]]
 name = "appflow"
 version = "0.1.0"
-source = "git+https://github.com/HadziqM/myrustlib.git#952eec53801f3d265375ad72b72b92aa089bec52"
+source = "git+https://github.com/HadziqM/myrustlib.git#168087e782999a86d2e456c97e10e73ee55a2be6"
 dependencies = [
  "indexmap",
  "log",
@@ -1376,7 +1376,7 @@ checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 [[package]]
 name = "logger"
 version = "0.1.0"
-source = "git+https://github.com/HadziqM/myrustlib.git#952eec53801f3d265375ad72b72b92aa089bec52"
+source = "git+https://github.com/HadziqM/myrustlib.git#168087e782999a86d2e456c97e10e73ee55a2be6"
 dependencies = [
  "chrono",
  "log",
@@ -1389,7 +1389,7 @@ dependencies = [
 [[package]]
 name = "macros"
 version = "0.1.0"
-source = "git+https://github.com/HadziqM/myrustlib.git#952eec53801f3d265375ad72b72b92aa089bec52"
+source = "git+https://github.com/HadziqM/myrustlib.git#168087e782999a86d2e456c97e10e73ee55a2be6"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -2619,7 +2619,7 @@ dependencies = [
 [[package]]
 name = "sysdir"
 version = "0.1.0"
-source = "git+https://github.com/HadziqM/myrustlib.git#952eec53801f3d265375ad72b72b92aa089bec52"
+source = "git+https://github.com/HadziqM/myrustlib.git#168087e782999a86d2e456c97e10e73ee55a2be6"
 dependencies = [
  "dirs",
  "log",

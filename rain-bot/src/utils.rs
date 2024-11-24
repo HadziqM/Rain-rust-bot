@@ -37,6 +37,13 @@ impl App {
             }
         }
     }
+    pub async fn only_unregister_user(&self, user: &User) -> MyResult<()> {
+        match self.get_user_status(user).await {
+            RegisteredStatus::FullyRegistered { user:_ } => Err(MyError::Custom("User is already fully registered with".to_string())),
+            RegisteredStatus::PartiallyRegistered { user:_ } => Err(MyError::Custom("User isnt fully registered yet, please use `/switch` to select your main character".to_string())),
+            RegisteredStatus::Unregistered => Ok(())
+        }
+    }
 }
 
 pub struct AppReg;
@@ -164,6 +171,9 @@ pub trait JoinCommandTrait: Sized + 'static {
     async fn get_message(&self, ctx: &Context) -> MyResult<Message>;
     async fn edit(&self, ctx: &Context, reply: EditInteractionResponse) -> MyResult<()>;
     fn user(&self) -> User;
+    fn discord_id(&self) -> String {
+        self.user().id.to_string()
+    }
 }
 
 impl JoinCommandTrait for CommandInteraction {

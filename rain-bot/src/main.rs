@@ -38,6 +38,7 @@ impl Appflow for App {
         let setting = self.setting.read().await;
         Mylogger::webhook_url(&setting.main.discord.webhook, setting.main.discord.author)
             .set_file_logger(SYSDIR.log_dir("botlog.txt").execute_dir())
+            .add_exception("serenity")
             .init();
         log::debug!("Logger initialized");
 
