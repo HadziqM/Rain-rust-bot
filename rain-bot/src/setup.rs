@@ -1,7 +1,7 @@
 use common::setting::SettingAll;
 use database::Db;
 use serenity::all::*;
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, ops::Deref, sync::Arc};
 use tokio::sync::RwLock;
 
 use crate::error::{ErrorHandling, MyError};
@@ -16,20 +16,9 @@ pub struct App {
 
 pub struct DiscordHandler {
     pub app: Arc<App>,
-    pub command_list: HashMap<String, Box<dyn CommandInteractionTrait>>,
-    pub button_list: HashMap<String, Box<dyn ButtonInteractionTrait>>,
-    pub modal_list: HashMap<String, Box<dyn ModalInteractionTrait>>,
-}
-
-impl DiscordHandler {
-    pub fn new(app: Arc<App>) -> Self {
-        Self {
-            app,
-            command_list: HashMap::new(),
-            button_list: HashMap::new(),
-            modal_list: HashMap::new(),
-        }
-    }
+    pub command_list: HashMap<String, &'static dyn CommandInteractionTrait>,
+    pub button_list: HashMap<String, &'static dyn ButtonInteractionTrait>,
+    pub modal_list: HashMap<String, &'static dyn ModalInteractionTrait>,
 }
 
 #[async_trait]
@@ -110,6 +99,33 @@ pub trait ModalInteractionTrait: Sync + Send + 'static {
         ctx: Context,
     ) -> MyResult<()>;
     fn name(&self) -> String;
+}
+
+inventory::collect!(Box<dyn CommandInteractionTrait>);
+inventory::collect!(Box<dyn ButtonInteractionTrait>);
+inventory::collect!(Box<dyn ModalInteractionTrait>);
+
+impl DiscordHandler {
+    pub fn new(app: Arc<App>) -> Self {
+        let command_list = inventory::iter::<Box<dyn CommandInteractionTrait>>()
+            .map(|x| (x.name(), x.deref()))
+            .collect();
+
+        let button_list = inventory::iter::<Box<dyn ButtonInteractionTrait>>()
+            .map(|x| (x.name(), x.deref()))
+            .collect();
+
+        let modal_list = inventory::iter::<Box<dyn ModalInteractionTrait>>()
+            .map(|x| (x.name(), x.deref()))
+            .collect();
+
+        Self {
+            app,
+            command_list,
+            button_list,
+            modal_list,
+        }
+    }
 }
 
 #[async_trait]
