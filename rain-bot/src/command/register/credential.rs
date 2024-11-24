@@ -46,7 +46,7 @@ impl CommandInteractionTrait for AddPsn {
         _ctx: Context,
     ) -> MyResult<()> {
         let res = CreateInteractionResponse::Modal(
-            CreateModal::new("add_psn", "Register/Override PSN ID").components(vec![
+            CreateModal::new(self.name(), "Register/Override PSN ID").components(vec![
                 CreateActionRow::InputText(
                     CreateInputText::new(InputTextStyle::Short, "PSN_ID", "psn_id")
                         .required(true)
@@ -71,7 +71,7 @@ impl ButtonInteractionTrait for AddPsn {
         _ctx: Context,
     ) -> MyResult<()> {
         let res = CreateInteractionResponse::Modal(
-            CreateModal::new("add_psn", "Register/Override PSN ID").components(vec![
+            CreateModal::new(self.name(), "Register/Override PSN ID").components(vec![
                 CreateActionRow::InputText(
                     CreateInputText::new(InputTextStyle::Short, "PSN_ID", "psn_id")
                         .required(true)

@@ -9,5 +9,5 @@ reg![
     CommandInteractionTrait,
     register::reg_command()
 ];
-reg![reg_button, ButtonInteractionTrait,];
-reg![reg_modal, ModalInteractionTrait,];
+reg![reg_button, ButtonInteractionTrait, register::reg_button()];
+reg![reg_modal, ModalInteractionTrait, register::reg_modal()];

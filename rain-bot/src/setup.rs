@@ -1,5 +1,6 @@
 use common::setting::SettingAll;
 use database::Db;
+use log::{error, info};
 use serenity::all::*;
 pub use std::{
     collections::HashMap,
@@ -120,8 +121,34 @@ impl DiscordHandler {
 
 #[async_trait]
 impl EventHandler for DiscordHandler {
-    async fn ready(&self, _ctx: Context, _data_about_bot: Ready) {
-        todo!()
+    async fn ready(&self, ctx: Context, data_about_bot: Ready) {
+        info!("🤖 Bot is running as {}", data_about_bot.user.tag());
+
+        let command = self
+            .command_list
+            .values()
+            .map(|x| x.command())
+            .collect::<Vec<_>>();
+
+        for guild in &data_about_bot.guilds {
+            match guild.id.set_commands(&ctx.http, command.clone()).await {
+                Ok(_) => {
+                    info!(
+                        "🎉 Successfully registered commands for {} guild",
+                        guild.id.to_string()
+                    );
+                }
+                Err(err) => {
+                    error!(
+                        "🚫 Failed to register commands for {} guild: {}",
+                        guild.id.to_string(),
+                        err
+                    );
+                }
+            }
+        }
+
+        ctx.set_activity(Some(ActivityData::playing("🎮 Rain Erupe")));
     }
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         match interaction {
