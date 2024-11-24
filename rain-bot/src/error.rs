@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use common::setting::SettingAll;
 use database::DbError;
 use serenity::all::{
@@ -18,6 +20,12 @@ pub enum MyError {
     Serenity(#[from] serenity::Error),
 }
 
+impl From<&str> for MyError {
+    fn from(err: &str) -> Self {
+        MyError::Custom(err.to_string())
+    }
+}
+
 impl From<DbError> for MyError {
     fn from(err: DbError) -> Self {
         match err {
@@ -31,6 +39,15 @@ pub enum Severity {
     Critical,
     FalsePossitive,
     CanBeHandledManually,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum CommandLocationType {
+    Slash,
+    Button,
+    Modal,
+    Message,
+    Other,
 }
 
 impl MyError {
@@ -52,11 +69,17 @@ impl MyError {
             Self::Serenity(_) => String::from("Discord API error, please report this error"),
         }
     }
-    pub fn log(&self) {
+    pub fn log(&self, location: impl Display, user: impl Display, ctype: CommandLocationType) {
         match self {
-            Self::Custom(str) => log::warn!("Custom Error: {}", str),
-            Self::Db(err) => log::error!("Db Error: {}", err),
-            Self::Serenity(err) => log::error!("Serenity Error: {}", err),
+            Self::Custom(err) => {
+                log::warn!(
+                    "\n[Custom Error]\ndetails: `{err}`\non_command: `{location}`\ncommand_type: `{ctype:?}`\nuser: `{user}`"
+                )
+            }
+            Self::Db(err) => log::error!("\n[Database Error]\ndetails: `{err}`\non_command: `{location}`\ncommand_type: `{ctype:?}`\nuser: `{user}`"),
+            Self::Serenity(err) => {
+                log::error!("\n[Serenity Error]\ndetails: `{err}`\non_command: `{location}`\ncommand_type: `{ctype:?}`\nuser: `{user}`")
+            }
         }
     }
 }
@@ -67,6 +90,7 @@ pub struct ErrorHandling {
     pub effected_user: User,
     pub location: String,
     pub log_channel: u64,
+    pub ctype: CommandLocationType,
 }
 
 impl ErrorHandling {
@@ -76,6 +100,7 @@ impl ErrorHandling {
         setting: &SettingAll,
         effected_user: User,
         location: String,
+        ctype: CommandLocationType,
     ) -> Self {
         let thor = UserId::new(setting.main.discord.author);
         let author = thor.to_user(&ctx.http).await.unwrap_or_default();
@@ -84,11 +109,14 @@ impl ErrorHandling {
             author,
             effected_user,
             location,
+            ctype,
             log_channel: setting.discord.channel.error_channel,
         }
     }
 
     pub fn response(&self) -> CreateInteractionResponse {
+        self.err
+            .log(&self.location, &self.effected_user.name, self.ctype);
         CreateInteractionResponse::Message(
             CreateInteractionResponseMessage::new().embed(self.embed()),
         )

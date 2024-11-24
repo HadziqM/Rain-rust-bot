@@ -1,6 +1,6 @@
 use common::setting::SettingAll;
 use database::Db;
-use log::{error, info};
+use log::{debug, error, info};
 use serenity::all::*;
 pub use std::{
     collections::HashMap,
@@ -9,7 +9,7 @@ pub use std::{
 };
 use tokio::sync::RwLock;
 
-use crate::error::{ErrorHandling, MyError};
+use crate::error::{CommandLocationType, ErrorHandling, MyError};
 
 pub type MyResult<T> = Result<T, MyError>;
 
@@ -30,9 +30,16 @@ pub struct DiscordHandler {
 pub trait CommandInteractionTrait: Sync + Send + 'static {
     async fn hand_int(&self, app: Arc<App>, cmd: CommandInteraction, ctx: Context) {
         if let Err(e) = self.handle_int(app.clone(), cmd.clone(), ctx.clone()).await {
-            e.log();
             let setting = app.setting.read().await;
-            let err = ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), self.name()).await;
+            let err = ErrorHandling::new(
+                e,
+                &ctx,
+                &setting,
+                cmd.user.clone(),
+                self.name(),
+                CommandLocationType::Slash,
+            )
+            .await;
             if cmd
                 .create_response(&ctx.http, err.response())
                 .await
@@ -58,10 +65,16 @@ pub trait ButtonInteractionTrait: Sync + Send + 'static {
             .handle_button(app.clone(), cmd.clone(), ctx.clone())
             .await
         {
-            e.log();
             let setting = app.setting.read().await;
-            let err =
-                ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), self.name_btn()).await;
+            let err = ErrorHandling::new(
+                e,
+                &ctx,
+                &setting,
+                cmd.user.clone(),
+                self.name_btn(),
+                CommandLocationType::Button,
+            )
+            .await;
             if cmd
                 .create_response(&ctx.http, err.response())
                 .await
@@ -86,10 +99,16 @@ pub trait ModalInteractionTrait: Sync + Send + 'static {
             .handle_modal(app.clone(), cmd.clone(), ctx.clone())
             .await
         {
-            e.log();
             let setting = app.setting.read().await;
-            let err =
-                ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), self.name_mdl()).await;
+            let err = ErrorHandling::new(
+                e,
+                &ctx,
+                &setting,
+                cmd.user.clone(),
+                self.name_mdl(),
+                CommandLocationType::Modal,
+            )
+            .await;
             if cmd
                 .create_response(&ctx.http, err.response())
                 .await
@@ -131,22 +150,19 @@ impl EventHandler for DiscordHandler {
             .collect::<Vec<_>>();
 
         for guild in &data_about_bot.guilds {
+            let name = guild.id.to_partial_guild(&ctx.http).await.unwrap().name;
             match guild.id.set_commands(&ctx.http, command.clone()).await {
                 Ok(_) => {
-                    info!(
-                        "🎉 Successfully registered commands for {} guild",
-                        guild.id.to_string()
-                    );
+                    info!("🎉 Successfully registered commands for {name} guild",);
                 }
                 Err(err) => {
-                    error!(
-                        "🚫 Failed to register commands for {} guild: {}",
-                        guild.id.to_string(),
-                        err
-                    );
+                    error!("🚫 Failed to register commands for guild: {name} error: {err}",);
                 }
             }
         }
+
+        debug!(" Delete all global commands");
+        Command::set_global_commands(&ctx.http, vec![]).await.ok();
 
         ctx.set_activity(Some(ActivityData::playing("🎮 Rain Erupe")));
     }
@@ -169,8 +185,5 @@ impl EventHandler for DiscordHandler {
             }
             _ => {}
         }
-    }
-    async fn message(&self, _ctx: Context, _new_message: Message) {
-        todo!()
     }
 }

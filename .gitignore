@@ -1,6 +1,7 @@
 /target
 config.json
 /bounty
+/logs
 /save/*
 !/save/this_save.txt
 test.jpg

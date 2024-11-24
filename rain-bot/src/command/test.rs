@@ -38,7 +38,7 @@ impl CommandInteractionTrait for TestError {
         _cmd: CommandInteraction,
         _ctx: Context,
     ) -> MyResult<()> {
-        Err(MyError::Custom("error tested".to_string()))
+        Err("error tested".into())
     }
 }
 
