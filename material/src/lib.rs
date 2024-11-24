@@ -123,7 +123,7 @@ impl ItemPedia {
     ) -> HashMap<&'a str, &'a str> {
         let mut out = HashMap::new();
         for (k, v) in en {
-            if v.len() == 0 {
+            if v.is_empty() {
                 let val = match jp.get(k) {
                     Some(x) => x.to_owned(),
                     None => "No name",

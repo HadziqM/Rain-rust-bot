@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT savedata,decomyset,hunternavi,otomoairou,partner,platebox,platemyset,rengokudata,savemercenary,platedata FROM characters WHERE id=$1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "savedata",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 1,
+        "name": "decomyset",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 2,
+        "name": "hunternavi",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 3,
+        "name": "otomoairou",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 4,
+        "name": "partner",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 5,
+        "name": "platebox",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 6,
+        "name": "platemyset",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 7,
+        "name": "rengokudata",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 8,
+        "name": "savemercenary",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 9,
+        "name": "platedata",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "885e2acc2550878cc95d17568a7717d4a568027c418b0c2f75fd21a7ff9e4b73"
+}

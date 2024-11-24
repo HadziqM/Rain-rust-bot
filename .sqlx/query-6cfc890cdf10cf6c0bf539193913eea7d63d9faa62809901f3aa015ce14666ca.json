@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE from discord WHERE discord_id=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6cfc890cdf10cf6c0bf539193913eea7d63d9faa62809901f3aa015ce14666ca"
+}

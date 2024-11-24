@@ -3,10 +3,23 @@ use std::fmt::Debug;
 use lazy_static::lazy_static;
 use log::{error, warn};
 use sysdir::Sysdir;
+use thiserror::Error;
 pub mod database;
 pub mod item_code;
 pub mod setting;
 pub mod utils;
+
+#[derive(Debug, Error)]
+pub enum CommonError {
+    #[error("{0}")]
+    Custom(String),
+}
+
+impl From<&str> for CommonError {
+    fn from(value: &str) -> Self {
+        CommonError::Custom(value.to_string())
+    }
+}
 
 lazy_static! {
     pub static ref SYSDIR: Sysdir = Sysdir::custom_name("RustDiscordBot");

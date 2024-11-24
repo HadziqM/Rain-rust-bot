@@ -53,6 +53,7 @@ async fn main() {
     let app = App {
         db: Db::connect(&setting).await.unwrap(),
         setting: Arc::new(RwLock::new(setting)),
+        pedia: Arc::new(material::ItemPedia::default()),
     };
     app.init().await
 }

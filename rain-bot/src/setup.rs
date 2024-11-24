@@ -11,6 +11,7 @@ pub type MyResult<T> = Result<T, MyError>;
 pub struct App {
     pub setting: Arc<RwLock<SettingAll>>,
     pub db: Db,
+    pub pedia: Arc<material::ItemPedia>,
 }
 
 pub struct DiscordHandler {
@@ -33,8 +34,8 @@ impl DiscordHandler {
 
 #[async_trait]
 pub trait CommandInteractionTrait: Sync + Send + 'static {
-    async fn hand(&self, app: Arc<App>, cmd: CommandInteraction, ctx: Context) {
-        if let Err(e) = self.handle(app.clone(), cmd.clone(), ctx.clone()).await {
+    async fn hand_int(&self, app: Arc<App>, cmd: CommandInteraction, ctx: Context) {
+        if let Err(e) = self.handle_int(app.clone(), cmd.clone(), ctx.clone()).await {
             e.log();
             let setting = app.setting.read().await;
             let err = ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), self.name()).await;
@@ -47,14 +48,22 @@ pub trait CommandInteractionTrait: Sync + Send + 'static {
             }
         }
     }
-    async fn handle(&self, app: Arc<App>, cmd: CommandInteraction, ctx: Context) -> MyResult<()>;
+    async fn handle_int(
+        &self,
+        app: Arc<App>,
+        cmd: CommandInteraction,
+        ctx: Context,
+    ) -> MyResult<()>;
     fn command(&self) -> CreateCommand;
     fn name(&self) -> String;
 }
 #[async_trait]
 pub trait ButtonInteractionTrait: Sync + Send + 'static {
-    async fn hand(&self, app: Arc<App>, cmd: ComponentInteraction, ctx: Context) {
-        if let Err(e) = self.handle(app.clone(), cmd.clone(), ctx.clone()).await {
+    async fn hand_button(&self, app: Arc<App>, cmd: ComponentInteraction, ctx: Context) {
+        if let Err(e) = self
+            .handle_button(app.clone(), cmd.clone(), ctx.clone())
+            .await
+        {
             e.log();
             let setting = app.setting.read().await;
             let err = ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), self.name()).await;
@@ -67,13 +76,21 @@ pub trait ButtonInteractionTrait: Sync + Send + 'static {
             }
         }
     }
-    async fn handle(&self, app: Arc<App>, cmd: ComponentInteraction, ctx: Context) -> MyResult<()>;
+    async fn handle_button(
+        &self,
+        app: Arc<App>,
+        cmd: ComponentInteraction,
+        ctx: Context,
+    ) -> MyResult<()>;
     fn name(&self) -> String;
 }
 #[async_trait]
 pub trait ModalInteractionTrait: Sync + Send + 'static {
-    async fn hand(&self, app: Arc<App>, cmd: ModalInteraction, ctx: Context) {
-        if let Err(e) = self.handle(app.clone(), cmd.clone(), ctx.clone()).await {
+    async fn hand_modal(&self, app: Arc<App>, cmd: ModalInteraction, ctx: Context) {
+        if let Err(e) = self
+            .handle_modal(app.clone(), cmd.clone(), ctx.clone())
+            .await
+        {
             e.log();
             let setting = app.setting.read().await;
             let err = ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), self.name()).await;
@@ -86,7 +103,12 @@ pub trait ModalInteractionTrait: Sync + Send + 'static {
             }
         }
     }
-    async fn handle(&self, app: Arc<App>, cmd: ModalInteraction, ctx: Context) -> MyResult<()>;
+    async fn handle_modal(
+        &self,
+        app: Arc<App>,
+        cmd: ModalInteraction,
+        ctx: Context,
+    ) -> MyResult<()>;
     fn name(&self) -> String;
 }
 
@@ -99,17 +121,17 @@ impl EventHandler for DiscordHandler {
         match interaction {
             Interaction::Command(cmd) => {
                 if let Some(x) = self.command_list.get(&cmd.data.name) {
-                    x.hand(self.app.clone(), cmd, ctx).await;
+                    x.hand_int(self.app.clone(), cmd, ctx).await;
                 }
             }
             Interaction::Component(cmd) => {
                 if let Some(x) = self.button_list.get(&cmd.data.custom_id) {
-                    x.hand(self.app.clone(), cmd, ctx).await;
+                    x.hand_button(self.app.clone(), cmd, ctx).await;
                 }
             }
             Interaction::Modal(cmd) => {
                 if let Some(x) = self.modal_list.get(&cmd.data.custom_id) {
-                    x.hand(self.app.clone(), cmd, ctx).await;
+                    x.hand_modal(self.app.clone(), cmd, ctx).await;
                 }
             }
             _ => {}

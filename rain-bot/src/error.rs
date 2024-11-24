@@ -6,12 +6,16 @@ use serenity::all::{
 };
 use thiserror::Error;
 
+pub type MyResult<T> = Result<T, MyError>;
+
 #[derive(Debug, Error)]
 pub enum MyError {
     #[error("{0}")]
     Custom(String),
     #[error("sqlx error: {0}")]
     Db(DbError),
+    #[error("discord API error: {0}")]
+    Serenity(#[from] serenity::Error),
 }
 
 impl From<DbError> for MyError {
@@ -34,6 +38,7 @@ impl MyError {
         match self {
             Self::Custom(_) => Severity::CanBeHandledManually,
             Self::Db(_) => Severity::Critical,
+            MyError::Serenity(_) => Severity::FalsePossitive,
         }
     }
     pub fn advice(&self) -> String {
@@ -44,12 +49,14 @@ impl MyError {
             Self::Db(_) => String::from(
                 "Please report this error to author, or wait till database connection stabilize",
             ),
+            Self::Serenity(_) => String::from("Discord API error, please report this error"),
         }
     }
     pub fn log(&self) {
         match self {
             Self::Custom(str) => log::warn!("Custom Error: {}", str),
             Self::Db(err) => log::error!("Db Error: {}", err),
+            Self::Serenity(err) => log::error!("Serenity Error: {}", err),
         }
     }
 }

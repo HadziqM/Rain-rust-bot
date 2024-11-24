@@ -1,3 +1,4 @@
+#[derive(Debug, Clone)]
 pub struct DbCard {
     pub char_id: Option<i32>,
     pub user_id: Option<i64>,
@@ -11,6 +12,7 @@ pub struct DbCard {
     pub guild_name: Option<String>,
 }
 
+#[derive(Debug, Clone)]
 pub struct DbEvent {
     pub bounty: i32,
     pub gacha: i32,
@@ -25,18 +27,21 @@ pub struct DbEvent {
     pub char_id: i32,
 }
 
+#[derive(Debug, Clone)]
 pub struct DbUserData {
     // Character_id
-    pub cid: i32,
+    pub cid: Option<i32>,
     // User_id
     pub uid: Option<i32>,
 }
 
+#[derive(Debug, Clone)]
 pub struct DbAccountData {
     pub id: i32,
     pub username: String,
     pub password: String,
 }
+#[derive(Debug, Clone)]
 pub struct DbSaveData {
     pub savedata: Option<Vec<u8>>,
     pub decomyset: Option<Vec<u8>>,

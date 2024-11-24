@@ -11,5 +11,7 @@ log.workspace = true
 logger.workspace = true
 lazy_static.workspace = true
 thiserror.workspace = true
+inventory = "0.3"
 common = { path = "../common" }
 database = { path = "../database" }
+material = { path = "../material" }

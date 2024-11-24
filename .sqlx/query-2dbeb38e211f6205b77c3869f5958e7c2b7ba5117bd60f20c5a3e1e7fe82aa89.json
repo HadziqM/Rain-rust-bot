@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO discord_register (discord_id,user_id) VALUES ($1,$2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2dbeb38e211f6205b77c3869f5958e7c2b7ba5117bd60f20c5a3e1e7fe82aa89"
+}

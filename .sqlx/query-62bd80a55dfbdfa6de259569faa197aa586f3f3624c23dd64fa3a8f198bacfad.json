@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT characters.id as char_id, user_id,characters.name as name,gr,hrp,weapon_type,\n            characters.last_login as login,username,guild_id,guilds.name as guild_name \n            FROM characters \n            INNER JOIN users ON characters.user_id = users.id \n            LEFT OUTER JOIN guild_characters ON characters.id = guild_characters.character_id\n            LEFT OUTER JOIN guilds ON guild_characters.guild_id = guilds.id\n            WHERE characters.id=$1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "char_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "gr",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "hrp",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "weapon_type",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "login",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "guild_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "guild_name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "62bd80a55dfbdfa6de259569faa197aa586f3f3624c23dd64fa3a8f198bacfad"
+}

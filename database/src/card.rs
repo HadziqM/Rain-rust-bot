@@ -61,7 +61,7 @@ impl Db {
             DbUserData,
             "SELECT user_id as uid, char_id as cid 
             FROM discord_register
-            LEFT JOIN discord ON discord_register.discord_id=discord.discord_id
+            LEFT OUTER JOIN discord ON discord_register.discord_id=discord.discord_id
             WHERE discord.discord_id=$1",
             did
         )

@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO characters \n                            (user_id, is_female, is_new_character, name,unk_desc_string,\n                            hrp, gr, weapon_type, last_login) VALUES($1, False, True, '', '', 0, 0, 0, $2) returning id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "dbd1b45db3cbad6325dbbac9212a698d9f9be4741917efdb8b9918516d6c927b"
+}
