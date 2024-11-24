@@ -27,10 +27,14 @@ impl Db {
             .await?;
         Ok(())
     }
-    pub async fn change_psn(&self, psn: &str, id: i32) -> DbResult<()> {
-        sqlx::query!("UPDATE users SET psn_id=$1 where id=$2", psn, id)
-            .execute(&**self)
-            .await?;
+    pub async fn change_psn(&self, psn: impl ToString, uid: i32) -> DbResult<()> {
+        sqlx::query!(
+            "UPDATE users SET psn_id=$1 where id=$2",
+            psn.to_string(),
+            uid
+        )
+        .execute(&**self)
+        .await?;
         Ok(())
     }
     pub async fn add_account(

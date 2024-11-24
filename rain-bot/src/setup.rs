@@ -59,7 +59,8 @@ pub trait ButtonInteractionTrait: Sync + Send + 'static {
         {
             e.log();
             let setting = app.setting.read().await;
-            let err = ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), self.name()).await;
+            let err =
+                ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), self.name_btn()).await;
             if cmd
                 .create_response(&ctx.http, err.response())
                 .await
@@ -75,7 +76,7 @@ pub trait ButtonInteractionTrait: Sync + Send + 'static {
         cmd: ComponentInteraction,
         ctx: Context,
     ) -> MyResult<()>;
-    fn name(&self) -> String;
+    fn name_btn(&self) -> String;
 }
 #[async_trait]
 pub trait ModalInteractionTrait: Sync + Send + 'static {
@@ -86,7 +87,8 @@ pub trait ModalInteractionTrait: Sync + Send + 'static {
         {
             e.log();
             let setting = app.setting.read().await;
-            let err = ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), self.name()).await;
+            let err =
+                ErrorHandling::new(e, &ctx, &setting, cmd.user.clone(), self.name_mdl()).await;
             if cmd
                 .create_response(&ctx.http, err.response())
                 .await
@@ -102,7 +104,7 @@ pub trait ModalInteractionTrait: Sync + Send + 'static {
         cmd: ModalInteraction,
         ctx: Context,
     ) -> MyResult<()>;
-    fn name(&self) -> String;
+    fn name_mdl(&self) -> String;
 }
 
 impl DiscordHandler {

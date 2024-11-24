@@ -28,7 +28,7 @@ impl App {
         }
     }
 
-    pub async fn register_user(&self, user: &User) -> MyResult<FormattedUserData> {
+    pub async fn only_register_user(&self, user: &User) -> MyResult<FormattedUserData> {
         match self.get_user_status(user).await {
             RegisteredStatus::FullyRegistered { user } => Ok(user),
             RegisteredStatus::PartiallyRegistered { user:_ } => Err(MyError::Custom("User isnt fully registered yet, please use `/switch` to select your main character".to_string())),
