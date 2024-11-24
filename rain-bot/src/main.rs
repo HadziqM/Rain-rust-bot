@@ -10,8 +10,17 @@ use tokio::sync::RwLock;
 
 pub mod command;
 pub mod error;
+pub mod macros;
 pub mod setup;
 pub mod utils;
+
+pub mod all {
+    pub use crate::button_reg;
+    pub use crate::command_reg;
+    pub use crate::modal_reg;
+    pub use crate::utils::*;
+    pub use std::sync::Arc;
+}
 
 impl Appflow for App {
     async fn update_config(self: Arc<Self>) -> appflow::GithubUpdater {

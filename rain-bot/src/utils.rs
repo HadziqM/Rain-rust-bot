@@ -42,33 +42,33 @@ impl App {
 pub struct AppReg;
 
 impl AppReg {
-    pub fn user_context(name: &str) -> CreateCommand {
+    pub fn user_context(name: impl Into<String>) -> CreateCommand {
         CreateCommand::new(name).kind(CommandType::User)
     }
-    pub fn message_context(name: &str) -> CreateCommand {
+    pub fn message_context(name: impl Into<String>) -> CreateCommand {
         CreateCommand::new(name).kind(CommandType::Message)
     }
-    pub fn normal_slash(name: &str, desc: &str) -> CreateCommand {
+    pub fn normal_slash(name: impl Into<String>, desc: impl Into<String>) -> CreateCommand {
         CreateCommand::new(name).description(desc)
     }
-    pub fn admin_slash(name: &str, desc: &str) -> CreateCommand {
+    pub fn admin_slash(name: impl Into<String>, desc: impl Into<String>) -> CreateCommand {
         CreateCommand::new(name)
             .description(desc)
             .default_member_permissions(Permissions::ADMINISTRATOR)
     }
-    pub fn subcommand(name: &str, desc: &str) -> CreateCommandOption {
+    pub fn subcommand(name: impl Into<String>, desc: impl Into<String>) -> CreateCommandOption {
         CreateCommandOption::new(serenity::all::CommandOptionType::SubCommand, name, desc)
     }
-    pub fn user_option(name: &str, desc: &str) -> CreateCommandOption {
+    pub fn user_option(name: impl Into<String>, desc: impl Into<String>) -> CreateCommandOption {
         CreateCommandOption::new(serenity::all::CommandOptionType::User, name, desc)
     }
-    pub fn int_option(name: &str, desc: &str) -> CreateCommandOption {
+    pub fn int_option(name: impl Into<String>, desc: impl Into<String>) -> CreateCommandOption {
         CreateCommandOption::new(serenity::all::CommandOptionType::Integer, name, desc)
     }
-    pub fn att_option(name: &str, desc: &str) -> CreateCommandOption {
+    pub fn att_option(name: impl Into<String>, desc: impl Into<String>) -> CreateCommandOption {
         CreateCommandOption::new(serenity::all::CommandOptionType::Attachment, name, desc)
     }
-    pub fn str_option(name: &str, desc: &str) -> CreateCommandOption {
+    pub fn str_option(name: impl Into<String>, desc: impl Into<String>) -> CreateCommandOption {
         CreateCommandOption::new(serenity::all::CommandOptionType::String, name, desc)
     }
 }
@@ -101,13 +101,12 @@ impl Components {
         content: &str,
         ephemeral: bool,
     ) -> MyResult<()> {
-        Ok(cmd
-            .response(ctx, Components::interaction_response(content, ephemeral))
-            .await?)
+        cmd.response(ctx, Components::interaction_response(content, ephemeral))
+            .await
     }
     pub async fn edit<T: JoinCommandTrait>(cmd: &T, ctx: &Context, content: &str) -> MyResult<()> {
         let rply = EditInteractionResponse::new().content(content);
-        Ok(cmd.edit(ctx, rply).await?)
+        cmd.edit(ctx, rply).await
     }
     pub async fn msg(msg: Message, ctx: &Context, content: &str) -> MyResult<Message> {
         if content.len() >= 2000 {
@@ -120,10 +119,7 @@ impl Components {
             .send_message(&ctx.http, CreateMessage::new().content(content))
             .await?)
     }
-    pub fn sub_options<'a>(
-        cmd: &'a CommandInteraction,
-        ctx: &Context,
-    ) -> MyResult<&'a Vec<CommandDataOption>> {
+    pub fn sub_options(cmd: &CommandInteraction) -> MyResult<&Vec<CommandDataOption>> {
         for data in &cmd.data.options {
             if let CommandDataOptionValue::SubCommand(x) = &data.value {
                 return Ok(x);
@@ -134,26 +130,26 @@ impl Components {
     pub fn get_mentions(ment: &str) -> Vec<UserId> {
         let mut out = Vec::new();
         for i in ment.split(">") {
-            let val;
-            if i.contains("<!@") {
-                val = i.replace("<!@", "").trim().to_owned();
+            let val = if i.contains("<!@") {
+                i.replace("<!@", "").trim().to_owned()
             } else {
-                val = i.replace("<@", "").trim().to_owned();
-            }
+                i.replace("<@", "").trim().to_owned()
+            };
+
             if let Ok(id) = val.parse::<u64>() {
-                out.push(UserId::new(id))
+                out.push(UserId::new(id));
             }
         }
         out
     }
-    pub async fn add_role(mut member: Member, ctx: &Context, role: u64) -> MyResult<()> {
+    pub async fn add_role(member: Member, ctx: &Context, role: u64) -> MyResult<()> {
         let role = RoleId::new(role);
         if !member.roles.contains(&role) {
             let _ = member.add_role(&ctx.http, role).await;
         }
         Ok(())
     }
-    pub async fn remove_role(mut member: Member, ctx: &Context, role: u64) -> MyResult<()> {
+    pub async fn remove_role(member: Member, ctx: &Context, role: u64) -> MyResult<()> {
         let role = RoleId::new(role);
         if member.roles.contains(&role) {
             let _ = member.remove_role(&ctx.http, role).await;
