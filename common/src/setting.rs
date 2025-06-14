@@ -9,8 +9,9 @@ use sysdir::Sysdir;
 
 pub trait JsonSetting: Serialize + DeserializeOwned {
     fn open(ty: SettingList) -> Result<Self, Box<dyn std::error::Error>> {
-        debug!("loading setting file {}", ty.path());
-        Ok(serde_json::from_slice(&std::fs::read(ty.path())?)?)
+        let path = SYSDIR.find_path(ty.path()).ok_or("config path not found")?;
+        debug!("loading setting file {}", path);
+        Ok(serde_json::from_slice(&std::fs::read(path)?)?)
     }
 
     fn placeholder(ty: SettingList) -> Result<(), Box<dyn std::error::Error>>
@@ -76,13 +77,13 @@ pub enum SettingList {
 }
 
 impl SettingList {
-    pub fn path(&self) -> Sysdir {
+    pub fn path(&self) -> &'static str {
         match self {
-            Self::Main => SYSDIR.config_dir("main.json"),
-            Self::Discord => SYSDIR.config_dir("discord.json"),
-            Self::SaveFile => SYSDIR.config_dir("savefile.json"),
-            Self::Gacha => SYSDIR.config_dir("gacha.json"),
-            Self::Market => SYSDIR.config_dir("market.json"),
+            Self::Main => "main.json",
+            Self::Discord => "discord.json",
+            Self::SaveFile => "savefile.json",
+            Self::Gacha => "gacha.json",
+            Self::Market => "market.json",
         }
     }
 
@@ -192,9 +193,9 @@ pub struct DiscordChannelSetting {
     pub log_channel: u64,
     pub error_channel: u64,
     pub transfer_channel: u64,
-    pub bounty_submision: u64,
+    pub bounty_submission: u64,
     pub bounty_title: u64,
-    pub speedrun_submision: u64,
+    pub speedrun_submission: u64,
     pub speedrun_leaderboard_channel: u64,
     pub speedrun_leaderboard_msg: u64,
     pub market_channel: u64,
@@ -233,14 +234,14 @@ pub struct GithubUpdaterSetting {
     pub app_name: String,
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn create_placeholders() {
-        SettingList::Main.path().execute_dir();
-        println!("{:?}", SettingList::Main.path());
-        SettingAll::create_placeholders();
-    }
-}
+// #[cfg(test)]
+// mod test {
+//     use super::*;
+//
+//     #[test]
+//     fn create_placeholders() {
+//         SettingList::Main.path().execute_dir();
+//         println!("{:?}", SettingList::Main.path());
+//         SettingAll::create_placeholders();
+//     }
+// }

@@ -28,7 +28,8 @@ pub enum AssetIcon {
 
 impl AssetIcon {
     pub fn local_path(&self) -> PathBuf {
-        let asset = SYSDIR.assets_dir("icon").execute_dir();
+        let assets = SYSDIR.config_dir("icon");
+        let asset = assets.as_ref();
         match self {
             Self::Gs => asset.join("GS.png"),
             Self::HS => asset.join("HS.png"),
