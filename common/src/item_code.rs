@@ -25,7 +25,7 @@ impl ItemCode {
     }
 
     pub fn transform_key(&self) -> Result<i32, ParseIntError> {
-        i32::from_str_radix(&self.key, 16)
+        i32::from_str_radix(&self.reverse_key().unwrap(), 16)
     }
 }
 

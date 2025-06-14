@@ -2,6 +2,7 @@ use crate::all::*;
 
 mod create;
 mod credential;
+mod gacha;
 
 command_reg![
     credential::ChangePassword,

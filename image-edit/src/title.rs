@@ -19,7 +19,7 @@ impl TitleImage {
             .decode()?)
     }
     async fn get_rect(&self, url: &str) -> Result<Rectangle, CustomImageError> {
-        Ok(Rectangle::get_rect(url, self.diameter / 2, self.x_start, self.y_start).await?)
+        Rectangle::get_rect(url, self.diameter / 2, self.x_start, self.y_start).await
     }
     pub async fn title(&self, url: &str) -> Result<Vec<u8>, CustomImageError> {
         let mut bg = self.load_image().await?.to_rgb8();

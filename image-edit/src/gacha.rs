@@ -1,6 +1,6 @@
 use super::CustomImageError;
 use super::Images;
-use binding::bitwise::ItemCode;
+use common::item_code::ItemCode;
 use image::imageops::{resize, FilterType};
 use image::{ImageBuffer, Rgb, RgbImage};
 use material::ItemPedia;
@@ -121,7 +121,7 @@ impl GachaImage {
             }
         }
         //draw text to image
-        let text = match gacha.code.text(pedia) {
+        let text = match pedia.dictionary(gacha.code.types, &gacha.code.key) {
             Some(x) => x,
             None => {
                 return Err(CustomImageError::Custom(
@@ -132,11 +132,11 @@ impl GachaImage {
         let res = imageproc::drawing::draw_text(
             &img,
             Rgb([255, 255, 255]),
-            self.get_x(&text),
+            self.get_x(text),
             510,
             rusttype::Scale { x: 50.0, y: 50.0 },
             &self.font,
-            &text,
+            text,
         );
         Ok(res)
     }

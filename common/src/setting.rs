@@ -143,6 +143,7 @@ pub struct GachaRaritySetting {
     pub ssr2: Vec<ItemCode>,
     pub sr1: Vec<ItemCode>,
     pub sr2: Vec<ItemCode>,
+    pub sr3: Vec<ItemCode>,
     pub r1: Vec<ItemCode>,
     pub r2: Vec<ItemCode>,
 }

@@ -15,3 +15,5 @@ strum.workspace = true
 common = { path = "../common" }
 database = { path = "../database" }
 material = { path = "../material" }
+image-edit = { path = "../image-edit" }
+rand = "0.9"

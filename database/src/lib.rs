@@ -5,6 +5,7 @@ use thiserror::Error;
 
 pub mod account;
 pub mod card;
+pub mod distribution;
 pub mod query;
 
 #[derive(Debug, Error)]

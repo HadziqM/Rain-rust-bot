@@ -5,6 +5,7 @@ use log::{error, warn};
 use sysdir::Sysdir;
 use thiserror::Error;
 pub mod database;
+pub mod gacha;
 pub mod item_code;
 pub mod setting;
 pub mod utils;
@@ -37,13 +38,13 @@ where
 {
     fn log(self) -> Self {
         if let Err(e) = &self {
-            error!("Getting error: {:#?}", e);
+            error!("Getting error: {e:#?}");
         }
         self
     }
     fn log_warn(self) -> Self {
         if let Err(e) = &self {
-            warn!("Getting error: {:#?}", e);
+            warn!("Getting error: {e:#?}");
         }
         self
     }
@@ -51,7 +52,7 @@ where
         match self {
             Ok(v) => v,
             Err(e) => {
-                error!("Getting error: {:#?}", e);
+                error!("Getting error: {e:#?}");
                 panic!();
             }
         }
