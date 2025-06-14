@@ -240,6 +240,7 @@ mod test {
     #[test]
     fn create_placeholders() {
         SettingList::Main.path().execute_dir();
+        println!("{:?}", SettingList::Main.path());
         SettingAll::create_placeholders();
     }
 }

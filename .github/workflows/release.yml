@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - sensei
-
 jobs:
   upload-artifact:
     permissions:
@@ -12,67 +11,20 @@ jobs:
       fail-fast: false
       matrix:
         platform: [macos-latest, ubuntu-22.04, windows-latest]
-
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v3
-
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
-
       - uses: Swatinem/rust-cache@v2
-
+      - name: set env
+        run: export SQLX_OFFLINE=true
       - name: build release
-        run: cargo build --release
-      - name: rename windows config and move exutable
-        if: matrix.platform == 'windows-latest'
-        run: ren ./config.json.example config.json&&copy ./target/release/rain-bot.exe .
-      - name: rename linux and mac config and move exutable
-        if: matrix.platform != 'windows-latest'
-        run: mv ./config.json.example config.json&&cp ./target/release/rain-bot .
-
-
-      - name: upload windows-artefact
+        run: cargo build --release --bins -Z unstable-options --artifact-dir artefact
+      - name: upload artefact
         uses: actions/upload-artifact@v3
         if: matrix.platform == 'windows-latest'
         with:
-          name: windows-artifact
+          name: matrix.platform
           path: |
-            rain-bot.exe
-            src/
-            icon/
-            save/
-            query/
-            static/
-            Cargo.toml
-            config.json
-
-      - name: upload linux-artifact
-        uses: actions/upload-artifact@v3
-        if: matrix.platform == 'ubuntu-22.04'
-        with:
-          name: linux-artifact
-          path: |
-            rain-bot
-            src/
-            icon/
-            save/
-            query/
-            static/
-            Cargo.toml
-            config.json
-
-      - name: upload macos-artifact
-        uses: actions/upload-artifact@v3
-        if: matrix.platform == 'macos-latest'
-        with:
-          name: mac-artifact
-          path: |
-            rain-bot
-            src/
-            icon/
-            save/
-            query/
-            static/
-            Cargo.toml
-            config.json
+            artefact/

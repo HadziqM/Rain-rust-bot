@@ -1,7 +1,5 @@
 on: [push, pull_request]
-
 name: Check
-
 jobs:
   check:
     name: Check
@@ -9,12 +7,10 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
-
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
-
       - uses: Swatinem/rust-cache@v2
-
+      - name: set env
+        run: export SQLX_OFFLINE=true
       - name: build release
         run: cargo check
-
