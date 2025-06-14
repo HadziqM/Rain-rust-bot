@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT \n                characters.name as name,char_id,bounty,gacha,pity,latest_bounty,latest_bounty_time,\n                title,bronze,silver,gold \n                FROM discord \n                JOIN characters on discord.char_id=characters.id\n                WHERE discord_id=$1",
+  "query": "SELECT\n                characters.name as name,char_id,bounty,gacha,pity,latest_bounty,latest_bounty_time,\n                title,bronze,silver,gold\n                FROM discord\n                JOIN characters on discord.char_id=characters.id\n                WHERE discord_id=$1",
   "describe": {
     "columns": [
       {
@@ -78,5 +78,5 @@
       true
     ]
   },
-  "hash": "796e83ce1470ca6c89e503e32c49d255326b1b46278f78651d6f7bf5d6d90cf5"
+  "hash": "3a4b470426e5a5a076245b39323d27341e414a59912c376504569c8356d39684"
 }

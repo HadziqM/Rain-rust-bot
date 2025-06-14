@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE discord\n            SET\n                bounty = bounty + $1,\n                gacha = gacha + $2\n            WHERE char_id = ANY($3)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4d35b250b776398ccab3d4b535424bdc94ab14e17fc64b0ab22060de49bdf451"
+}

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT user_id as uid, char_id as cid \n            FROM discord_register\n            LEFT OUTER JOIN discord ON discord_register.discord_id=discord.discord_id\n            WHERE discord.discord_id=$1",
+  "query": "SELECT user_id as uid, char_id as cid\n            FROM discord_register\n            LEFT OUTER JOIN discord ON discord_register.discord_id=discord.discord_id\n            WHERE discord.discord_id=$1",
   "describe": {
     "columns": [
       {
@@ -24,5 +24,5 @@
       false
     ]
   },
-  "hash": "6b1c2e87c21cbf3d5c0453eab69eec5baef5f08ba3f5cf5d132982777b79e24f"
+  "hash": "a7c2db72897c1e2df1a248d48f0ccb867edc74fdb3391e50dbdcb269060102d1"
 }

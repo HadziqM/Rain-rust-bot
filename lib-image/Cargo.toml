@@ -1,0 +1,14 @@
+[package]
+name = "lib-image"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+common = { version = "0.1.0", path = "../common" }
+material = { version = "0.1.0", path = "../material" }
+tokio.workspace = true
+reqwest.workspace = true
+rayon.workspace = true
+image = "0.25"
+imageproc = "0.25"
+rusttype = "0.9.3"

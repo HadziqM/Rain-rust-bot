@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH di AS(\n                INSERT INTO distribution\n                    (character_id,type,bot,event_name,description)\n                SELECT * FROM\n                    UNNEST($1::INT[], $2::INT[], $3::bool[], $4::text[], $5::text[])\n                RETURNING id\n            )\n            INSERT INTO distribution_items\n                (distribution_id,item_type, item_id, quantity)\n            SELECT di.id,u.type,u.key,u.count\n            FROM di\n                CROSS JOIN unnest($6::INT[],$7::INT[],$8::INT[])\n                AS u(type,key,count)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4Array",
+        "Int4Array",
+        "BoolArray",
+        "TextArray",
+        "TextArray",
+        "Int4Array",
+        "Int4Array",
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e07b2d891f21a1cd8fb1780a89f4d04cabbe1deb1ad5abb13675f39b50d5ba87"
+}

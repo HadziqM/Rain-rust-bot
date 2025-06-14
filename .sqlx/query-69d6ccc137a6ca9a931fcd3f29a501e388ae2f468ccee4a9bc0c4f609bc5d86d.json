@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE discord SET\n            bounty = $1,\n            gacha = $2,\n            pity = $3,\n            latest_bounty = $4,\n            latest_bounty_time = $5,\n            title = $6,\n            bronze = $7,\n            silver = $8,\n            gold = $9\n        WHERE char_id = $10",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Int4",
+        "Varchar",
+        "Int8",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "69d6ccc137a6ca9a931fcd3f29a501e388ae2f468ccee4a9bc0c4f609bc5d86d"
+}

@@ -1,5 +1,5 @@
 [workspace]
-members = ["common", "database", "material", "rain-bot", "image-edit"]
+members = ["common", "database", "material", "rain-bot", "image-edit", "lib-image"]
 resolver = "2"
 
 [workspace.dependencies]
@@ -23,6 +23,7 @@ sqlx = { version = "0.8.2", default-features = false , features = [
   "runtime-tokio-rustls",
 ] }
 reqwest = { version = "0.12.5", features = ["json","rustls-tls"], default-features = false}
+rayon = "1.10"
 
 # Image processing
 image = "0.25.5"

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT characters.id as char_id, user_id,characters.name as name,gr,hrp,weapon_type,\n            characters.last_login as login,username,guild_id,guilds.name as guild_name \n            FROM characters \n            INNER JOIN users ON characters.user_id = users.id \n            LEFT OUTER JOIN guild_characters ON characters.id = guild_characters.character_id\n            LEFT OUTER JOIN guilds ON guild_characters.guild_id = guilds.id\n            WHERE characters.id=$1",
+  "query": "SELECT characters.id as char_id, user_id,characters.name as name,gr,hrp,weapon_type,\n            characters.last_login as login,username,guild_id,guilds.name as guild_name\n            FROM characters\n            INNER JOIN users ON characters.user_id = users.id\n            LEFT OUTER JOIN guild_characters ON characters.id = guild_characters.character_id\n            LEFT OUTER JOIN guilds ON guild_characters.guild_id = guilds.id\n            WHERE characters.id=$1",
   "describe": {
     "columns": [
       {
@@ -72,5 +72,5 @@
       true
     ]
   },
-  "hash": "62bd80a55dfbdfa6de259569faa197aa586f3f3624c23dd64fa3a8f198bacfad"
+  "hash": "1252d9b65dc89452202dc6d4dc165eb6df8ecd2259b52660b4155cd053da7255"
 }
