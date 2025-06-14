@@ -32,7 +32,7 @@ impl RegisteredMessage {
             }
             "binded"
         };
-        let embed = CreateEmbed::new().title(format!("Account Succesfully {} on Server",word()))
+        let embed = CreateEmbed::new().title(format!("Account Successfully {} on Server",word()))
                 .description(format!("{} {} an account on server, remember that you still need to have a character in game to fully use our discord features so hurry up and create one if you havent",self.member,word())).fields(vec![
                     ("👤 Username",&format!("`{}`",self.name),false),
                     ("🆔 User Id",&format!("`{}`",self.uid),false)
@@ -70,7 +70,7 @@ fn modal_response(reg: bool) -> CreateInteractionResponse {
 fn modal_register_row(name: &str, pass: bool) -> CreateActionRow {
     let placeholder = match pass {
         false => "your MHFZ username on launcher".to_owned(),
-        true => "your MHFZ user password (igonore discord warning)".to_owned(),
+        true => "your MHFZ user password (ignore discord warning)".to_owned(),
     };
     CreateActionRow::InputText(
         CreateInputText::new(InputTextStyle::Short, name, name)

@@ -2,7 +2,6 @@
 members = ["common", "database", "material", "rain-bot"]
 resolver = "2"
 
-
 [workspace.dependencies]
 
 # My library
@@ -25,7 +24,6 @@ image = "0.25.5"
 imageproc = "0.25.0"
 rusttype = "0.9.3"
 
-
 # utils
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -35,11 +33,10 @@ chrono = { version = "0.4", features = ["serde"] }
 itermap = "0.4"
 thiserror = "2.0"
 lazy_static = "1.5"
-strum = { version = "0.26", features = ["derive"] }
+strum = { version = "0.27", features = ["derive"] }
 
 # Cryptolock
-bcrypt = "0.16"
-
+bcrypt = "0.17"
 
 # discord bot client
 serenity = { version = "0.12.2", features = [

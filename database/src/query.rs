@@ -73,11 +73,11 @@ fn get_value(row: PgRow) -> DbResult<String> {
                     let time: NaiveTime = <NaiveTime as Decode<Postgres>>::decode(value).unwrap();
                     time.to_string()
                 }
-                _ => format!("[{}]", name),
+                _ => format!("[{name}]"),
             }
         };
 
-        string.push(format!("{}|", val));
+        string.push(format!("{val}|"));
     }
 
     Ok(string.concat())

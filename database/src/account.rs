@@ -78,7 +78,7 @@ impl Db {
             let month = now + 30 * 24 * 60 * 60;
             data = query_as!(DbAccountData,"INSERT INTO users (username,password,return_expires) VALUES ($1,$2,$3) RETURNING id,username,password",user,hash,month as i32)
                 .fetch_one(&**self).await?;
-            id = query!("INSERT INTO characters 
+            id = query!("INSERT INTO characters
                             (user_id, is_female, is_new_character, name,unk_desc_string,
                             hrp, gr, weapon_type, last_login) VALUES($1, False, True, '', '', 0, 0, 0, $2) returning id",data.id as i64,now as i32).fetch_one(&**self).await?.id;
         }
@@ -112,7 +112,7 @@ impl Db {
     }
 
     pub async fn transfer_file(&self, name: &str, file: Vec<u8>, cid: i32) -> DbResult<()> {
-        sqlx::query(&format!("UPDATE characters SET {}=$1 WHERE id=$2", name))
+        sqlx::query(&format!("UPDATE characters SET {name}=$1 WHERE id=$2"))
             .bind(file.as_slice())
             .bind(cid)
             .execute(&**self)

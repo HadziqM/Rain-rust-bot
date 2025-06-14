@@ -118,7 +118,7 @@ impl Components {
     pub async fn msg(msg: Message, ctx: &Context, content: &str) -> MyResult<Message> {
         if content.len() >= 2000 {
             return Err(MyError::Custom(
-                "the result is higher than 2000 char,a nd discord doesnt allow it".to_string(),
+                "the result is higher than 2000 char,and discord doesnt allow it".to_string(),
             ));
         }
         Ok(msg
@@ -134,9 +134,9 @@ impl Components {
         }
         Err(MyError::Custom("cant find subcommand".to_string()))
     }
-    pub fn get_mentions(ment: &str) -> Vec<UserId> {
+    pub fn get_mentions(mention: &str) -> Vec<UserId> {
         let mut out = Vec::new();
-        for i in ment.split(">") {
+        for i in mention.split(">") {
             let val = if i.contains("<!@") {
                 i.replace("<!@", "").trim().to_owned()
             } else {

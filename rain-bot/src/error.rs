@@ -39,7 +39,7 @@ impl From<DbError> for MyError {
 
 pub enum Severity {
     Critical,
-    FalsePossitive,
+    FalsePositive,
     CanBeHandledManually,
 }
 
@@ -57,14 +57,14 @@ impl MyError {
         match self {
             Self::Custom(_) => Severity::CanBeHandledManually,
             Self::Db(_) => Severity::Critical,
-            MyError::Serenity(_) => Severity::FalsePossitive,
+            MyError::Serenity(_) => Severity::FalsePositive,
             Self::Tokio(_) => Severity::Critical,
         }
     }
     pub fn advice(&self) -> String {
         match self {
             Self::Custom(_) => {
-                String::from("Error writen by author themself, please read carefully")
+                String::from("Error written by author themself, please read carefully")
             }
             Self::Db(_) => String::from(
                 "Please report this error to author, or wait till database connection stabilize",
@@ -152,16 +152,16 @@ impl ErrorHandling {
     pub fn embed(&self) -> CreateEmbed {
         let color = match self.err.severity() {
             Severity::Critical => Color::RED,
-            Severity::FalsePossitive => Color::DARK_GREEN,
+            Severity::FalsePositive => Color::DARK_GREEN,
             Severity::CanBeHandledManually => Color::ORANGE,
         };
         CreateEmbed::default()
             .color(color)
-            .title("🛑 Error Occured 🛑")
-            .description("some cant be handled error occured")
+            .title("🛑 Error Occurred 🛑")
+            .description("some cant be handled error Occurred")
             .fields(vec![
                 (
-                    "🚧 occured on",
+                    "🚧 Occurred on",
                     format!("**{}**", self.location.to_uppercase()),
                     false,
                 ),

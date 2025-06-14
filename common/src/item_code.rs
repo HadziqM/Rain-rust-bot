@@ -23,6 +23,10 @@ impl ItemCode {
     pub fn new(key: String, count: u8, types: u8) -> ItemCode {
         ItemCode { key, count, types }
     }
+
+    pub fn transform_key(&self) -> Result<i32, ParseIntError> {
+        i32::from_str_radix(&self.key, 16)
+    }
 }
 
 #[derive(Debug, Error)]
@@ -38,32 +42,32 @@ pub enum ItemCodeError {
 }
 
 #[derive(Wrapper)]
-pub struct ItemHexOpration(Vec<ItemCode>);
+pub struct ItemHexOperation(Vec<ItemCode>);
 
-impl ItemHexOpration {
-    pub fn new(data: Vec<ItemCode>) -> ItemHexOpration {
+impl ItemHexOperation {
+    pub fn new(data: Vec<ItemCode>) -> ItemHexOperation {
         Self(data)
     }
-    pub fn encode(&self) -> Result<Vec<u8>, ItemCodeError> {
-        if self.len() == 0 {
-            return Err(ItemCodeError::NoItem);
-        }
-        let mut hex_value = format!("{:04X}", self.len());
-        for code in self.iter() {
-            hex_value.push_str(&format!(
-                "{:02X}0000{}0000{:04X}00000000",
-                code.types,
-                code.reverse_key()?,
-                code.count
-            ));
-        }
-        if hex_value.len() % 2 != 0 {
-            return Err(ItemCodeError::OddLength(hex_value.len()));
-        }
-        //pair it two then decode
-        (0..hex_value.len())
-            .step_by(2)
-            .map(|i| u8::from_str_radix(&hex_value[i..i + 2], 16).map_err(|e| e.into()))
-            .collect()
-    }
+    // pub fn encode(&self) -> Result<Vec<u8>, ItemCodeError> {
+    //     if self.is_empty() {
+    //         return Err(ItemCodeError::NoItem);
+    //     }
+    //     let mut hex_value = format!("{:04X}", self.len());
+    //     for code in self.iter() {
+    //         hex_value.push_str(&format!(
+    //             "{:02X}0000{}0000{:04X}00000000",
+    //             code.types,
+    //             code.reverse_key()?,
+    //             code.count
+    //         ));
+    //     }
+    //     if hex_value.len() % 2 != 0 {
+    //         return Err(ItemCodeError::OddLength(hex_value.len()));
+    //     }
+    //     //pair it two then decode
+    //     (0..hex_value.len())
+    //         .step_by(2)
+    //         .map(|i| u8::from_str_radix(&hex_value[i..i + 2], 16).map_err(|e| e.into()))
+    //         .collect()
+    // }
 }
