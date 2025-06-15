@@ -1664,6 +1664,8 @@ dependencies = [
  "common",
  "image 0.25.6",
  "imageproc 0.25.0",
+ "log",
+ "logger",
  "material",
  "rayon",
  "reqwest 0.12.20",

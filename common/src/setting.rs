@@ -134,6 +134,7 @@ impl SettingList {
 pub struct SettingGacha {
     pub cost: u32,
     pub pity: u32,
+    pub multi_count: u32,
     pub rarity: GachaRaritySetting,
 }
 

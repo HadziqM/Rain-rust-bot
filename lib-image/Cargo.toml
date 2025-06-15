@@ -10,6 +10,10 @@ tokio.workspace = true
 reqwest.workspace = true
 rayon.workspace = true
 thiserror.workspace=true
+log.workspace=true
 image = "0.25"
 imageproc = "0.25"
 ab_glyph = "0.2"
+
+[dev-dependencies]
+logger.workspace = true
