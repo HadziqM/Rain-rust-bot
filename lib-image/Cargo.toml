@@ -12,4 +12,4 @@ rayon.workspace = true
 thiserror.workspace=true
 image = "0.25"
 imageproc = "0.25"
-rusttype = "0.9.3"
+ab_glyph = "0.2"

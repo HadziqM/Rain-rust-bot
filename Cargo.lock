@@ -1660,13 +1660,13 @@ checksum = "db13adb97ab515a3691f56e4dbab09283d0b86cb45abd991d8634a9d6f501760"
 name = "lib-image"
 version = "0.1.0"
 dependencies = [
+ "ab_glyph",
  "common",
  "image 0.25.6",
  "imageproc 0.25.0",
  "material",
  "rayon",
  "reqwest 0.12.20",
- "rusttype",
  "thiserror 2.0.12",
  "tokio",
 ]

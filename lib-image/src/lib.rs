@@ -1,6 +1,5 @@
 use std::{io::Cursor, path::Path};
 
-use common::gacha::GachaR;
 use image::{imageops::FilterType, DynamicImage, ImageBuffer, ImageReader, Rgb};
 use rayon::prelude::*;
 use thiserror::Error;
@@ -19,6 +18,7 @@ pub enum MyImageError {
     Custom(String),
 }
 pub type ImageResult<T> = Result<T, MyImageError>;
+pub type ImageRgb = ImageBuffer<Rgb<u8>, Vec<u8>>;
 
 /// Rounded Profile picture mask
 #[derive(Debug, Clone)]
@@ -28,32 +28,12 @@ pub struct Circle {
     pub off_y: u32,
     pub img: DynamicImage,
 }
-#[derive(Debug, Clone)]
-pub struct GachaCache {
-    pub ur: Circle,
-    pub ssr: Circle,
-    pub sr: Circle,
-    pub r: Circle,
-}
-
-impl GachaCache {
-    pub fn load() -> ImageResult<Self> {
-        let ur = Circle::load_local(GachaR::UR.path().unwrap(), 51, 338, 48)?;
-        let ssr = Circle::load_local(GachaR::SSR.path().unwrap(), 51, 338, 48)?;
-        let sr = Circle::load_local(GachaR::SR.path().unwrap(), 51, 338, 48)?;
-        let r = Circle::load_local(GachaR::R.path().unwrap(), 51, 338, 48)?;
-        Ok(Self { ur, ssr, sr, r })
-    }
-}
 
 impl Circle {
-    pub fn load_local(
-        path: impl AsRef<Path>,
-        radius: u32,
-        off_x: u32,
-        off_y: u32,
-    ) -> ImageResult<Self> {
-        let img = ImageReader::open(path)?.decode()?;
+    pub fn load_local(byte: Vec<u8>, radius: u32, off_x: u32, off_y: u32) -> ImageResult<Self> {
+        let img = ImageReader::new(Cursor::new(byte))
+            .with_guessed_format()?
+            .decode()?;
         Ok(Self {
             img,
             radius,
@@ -62,26 +42,26 @@ impl Circle {
         })
     }
 
-    pub async fn mask_avatar(
-        &self,
-        url: impl ToString,
-    ) -> ImageResult<ImageBuffer<Rgb<u8>, Vec<u8>>> {
+    pub async fn load_avatar(&self, url: impl ToString) -> ImageResult<ImageRgb> {
         let client = reqwest::Client::new();
         let bytes = client.get(url.to_string()).send().await?.bytes().await?;
         let read = ImageReader::new(Cursor::new(bytes))
             .with_guessed_format()?
             .decode()?;
-        let img = read
+        Ok(read
             .resize_exact(
                 self.radius * 2 + 1,
                 self.radius * 2 + 1,
                 FilterType::Nearest,
             )
-            .to_rgb8();
+            .to_rgb8())
+    }
 
-        let mut bg = self.img.clone().to_rgb8();
-
-        bg.enumerate_pixels_mut()
+    /// need to use avatar with exact size as radius
+    pub fn mask_avatar(&mut self, avatar: ImageRgb) -> ImageResult<()> {
+        self.img
+            .to_rgb8()
+            .enumerate_pixels_mut()
             .par_bridge()
             .for_each(|(x, y, px)| {
                 // move pixel to no offside
@@ -95,9 +75,11 @@ impl Circle {
                 // vector equation √(x² + y²) = r
                 if (dx * dx + dy * dy) <= (self.radius as i32).pow(2) {
                     // replace pixel with avatar pixel
-                    *px = img.get_pixel(corner_x as u32, corner_y as u32).to_owned();
+                    *px = avatar
+                        .get_pixel(corner_x as u32, corner_y as u32)
+                        .to_owned();
                 }
             });
-        Ok(bg)
+        Ok(())
     }
 }
