@@ -1,9 +1,10 @@
-use std::{collections::HashMap, io::Cursor, sync::Arc};
+use std::{io::Cursor, sync::Arc};
 
-use crate::{Circle, ImageResult, MyImageError};
+use crate::{Circle, ImageResult, ImageRgb, MyImageError};
 use ab_glyph::FontRef;
 use common::gacha::{GachaData, GachaR};
-use image::{ImageBuffer, ImageFormat, Rgb};
+use image::{ImageFormat, ImageReader, Rgba};
+use indexmap::IndexMap;
 use log::debug;
 use material::ItemPedia;
 use rayon::iter::{IntoParallelRefIterator, ParallelBridge, ParallelIterator};
@@ -16,6 +17,8 @@ pub struct GachaCache {
     pub sr: Circle,
     pub r: Circle,
     pub font: FontRef<'static>,
+    pub bg: ImageRgb,
+    pub ratio: f32,
 }
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct CacheKey {
@@ -24,7 +27,7 @@ pub struct CacheKey {
 }
 #[derive(Debug, Clone)]
 pub struct ProcessedCache {
-    pub store: HashMap<CacheKey, Circle>,
+    pub store: IndexMap<CacheKey, Circle>,
 }
 
 #[derive(Debug, Clone)]
@@ -33,12 +36,23 @@ pub struct GachaState {
     pub processed_cache: Arc<RwLock<ProcessedCache>>,
 }
 
+impl ProcessedCache {
+    /// insert cache with limit
+    pub fn insert(&mut self, key: CacheKey, val: Circle) {
+        if self.store.len() > 200 {
+            self.store.pop();
+            self.store.insert(key, val);
+        }
+    }
+}
+
 impl GachaState {
     pub fn new() -> ImageResult<Self> {
         let raw_cache = GachaCache::load()?;
         let processed_cache = Arc::new(RwLock::new(ProcessedCache {
-            store: HashMap::new(),
+            store: IndexMap::new(),
         }));
+
         Ok(Self {
             raw_cache,
             processed_cache,
@@ -48,10 +62,19 @@ impl GachaState {
 
 impl GachaCache {
     pub fn load() -> ImageResult<Self> {
-        let ur = Circle::load_local(GachaR::UR.bytes(), 51, 338, 48)?;
-        let ssr = Circle::load_local(GachaR::SSR.bytes(), 51, 338, 48)?;
-        let sr = Circle::load_local(GachaR::SR.bytes(), 51, 338, 48)?;
-        let r = Circle::load_local(GachaR::R.bytes(), 51, 338, 48)?;
+        let ur = Circle::load_local(GachaR::UR.bytes())?;
+        let ssr = Circle::load_local(GachaR::SSR.bytes())?;
+        let sr = Circle::load_local(GachaR::SR.bytes())?;
+        let r = Circle::load_local(GachaR::R.bytes())?;
+
+        let ratio = r.ratio;
+
+        let bg = ImageReader::new(Cursor::new(include_bytes!(
+            "../../image/background_upscaled.png"
+        )))
+        .with_guessed_format()?
+        .decode()?
+        .to_rgba8();
 
         debug!("Loaded all image binaries");
 
@@ -66,7 +89,54 @@ impl GachaCache {
             sr,
             r,
             font,
+            bg,
+            ratio,
         })
+    }
+
+    fn place_background(&self, gacha_result: Vec<ImageRgb>) -> ImageRgb {
+        //param
+        let column = 5;
+
+        let ratio = self.ratio;
+
+        let padding_x_corner = (270.0 * ratio).ceil() as u32;
+        let padding_x = (60.0 * ratio).ceil() as u32;
+        let padding_y_up = (375.0 * ratio).ceil() as u32;
+        let padding_y = (275.0 * ratio).ceil() as u32;
+        let item_height = (615.0 * ratio).ceil() as u32;
+        let item_width = (772.0 * ratio).ceil() as u32;
+        let mut res = self.bg.clone();
+
+        res.enumerate_pixels_mut()
+            .par_bridge()
+            .for_each(|(x, y, px)| {
+                for (index, img) in gacha_result.iter().enumerate() {
+                    let col = index % column;
+                    let row_idx = index / column;
+
+                    // Calculate image position on background
+                    let img_start_x = padding_x_corner + col as u32 * (item_width + padding_x);
+                    let img_end_x = img_start_x + item_width;
+                    let img_start_y = padding_y_up + row_idx as u32 * (item_height + padding_y);
+                    let img_end_y = img_start_y + item_height;
+
+                    // Check if current pixel is within this image's bounds
+                    if x >= img_start_x && x < img_end_x && y >= img_start_y && y < img_end_y {
+                        // Calculate relative position within the image
+                        let rel_x = x - img_start_x;
+                        let rel_y = y - img_start_y;
+
+                        // Get pixel from the source image
+                        if let Some(source_pixel) = img.get_pixel_checked(rel_x, rel_y) {
+                            *px = *source_pixel;
+                        }
+                        break;
+                    }
+                }
+            });
+
+        res
     }
 
     pub async fn pull(
@@ -83,7 +153,7 @@ impl GachaCache {
 
         let results = res
             .iter()
-            .map(|e| -> ImageResult<(Circle, String, usize)> {
+            .map(|e| -> ImageResult<(Circle, String)> {
                 let key = CacheKey {
                     url: url.clone(),
                     rarity: e.result.clone(),
@@ -98,11 +168,9 @@ impl GachaCache {
                         ))?;
                 let text = format!("{item_name} x {}", e.code.count);
 
-                let x = 368 - text.len() * 16 / 2;
-
                 // get the processed image in cache if available
                 match cache.store.get(&key) {
-                    Some(img) => Ok((img.clone(), text, x)),
+                    Some(img) => Ok((img.clone(), text)),
                     None => {
                         let mut cir = match e.result {
                             GachaR::SSR => self.ssr.clone(),
@@ -113,8 +181,8 @@ impl GachaCache {
 
                         debug!("begin masking");
                         cir.mask_avatar(avatar.clone())?;
-                        cache.store.insert(key, cir.clone());
-                        Ok((cir, text, x))
+                        cache.insert(key, cir.clone());
+                        Ok((cir, text))
                     }
                 }
             })
@@ -123,21 +191,30 @@ impl GachaCache {
         debug!("image masked");
         let written = results
             .par_iter()
-            .map(|(cir, text, x)| {
-                let rgb = Rgb([255, 255, 255]);
-                imageproc::drawing::draw_text(&cir.img, rgb, *x as i32, 510, 50.0, &self.font, text)
+            .map(|(cir, text)| {
+                let rgb = Rgba([255, 255, 255, 255]);
+                let ratio = self.ratio;
+                let x = (368.0 * ratio - text.len() as f32 * 8.0 * ratio).ceil() as i32;
+                let y = (510.0 * ratio).ceil() as i32;
+                let scale = 50.0 * ratio;
+
+                imageproc::drawing::draw_text(&cir.img, rgb, x, y, scale, &self.font, text)
             })
             .collect::<Vec<_>>();
+
+        debug!("all image drawed");
+
+        let res = match written.len() == 1 {
+            true => written.first().unwrap().to_owned(),
+            false => self.place_background(written),
+        };
 
         let mut byte = vec![];
 
         #[cfg(debug_assertions)]
-        written.first().unwrap().save("test.jpg")?;
+        res.save("test.png")?;
 
-        written
-            .first()
-            .unwrap()
-            .write_to(&mut Cursor::new(&mut byte), ImageFormat::Jpeg)?;
+        res.write_to(&mut Cursor::new(&mut byte), ImageFormat::Png)?;
 
         Ok(byte)
 
@@ -154,22 +231,57 @@ impl GachaCache {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
+    use std::{collections::HashMap, error::Error, io::Cursor, path::Path};
 
     use common::{
         gacha::{GachaData, GachaR},
         item_code::ItemCode,
     };
+    use image::{imageops::FilterType, ImageReader};
+    use indexmap::IndexMap;
     use material::ItemPedia;
 
     use crate::gacha::{GachaCache, ProcessedCache};
 
+    fn downscale(path: impl AsRef<Path>, byte: Vec<u8>) -> Result<(), Box<dyn Error>> {
+        let read = ImageReader::new(Cursor::new(byte))
+            .with_guessed_format()?
+            .decode()?;
+        let resized = read.resize_to_fill(510, 408, FilterType::CatmullRom);
+        resized.save(path)?;
+        Ok(())
+    }
+
+    #[ignore]
+    #[test]
+    fn downscale_gacha() -> Result<(), Box<dyn Error>> {
+        let path = Path::new("..").join("image");
+        downscale(path.join("r_downscaled.jpg"), GachaR::R.bytes())?;
+        downscale(path.join("sr_downscaled.jpg"), GachaR::SR.bytes())?;
+        downscale(path.join("ssr_downscaled.jpg"), GachaR::SSR.bytes())?;
+        downscale(path.join("ur_downscaled.jpg"), GachaR::UR.bytes())?;
+        Ok(())
+    }
+
+    #[ignore]
+    #[test]
+    fn upscale() -> Result<(), Box<dyn Error>> {
+        let bg = include_bytes!("../../image/background.png");
+        let read = ImageReader::new(Cursor::new(bg))
+            .with_guessed_format()?
+            .decode()?;
+        let resized = read.resize_to_fill(3072, 1575, FilterType::CatmullRom);
+        resized.save("../image/background_upscaled.png")?;
+        Ok(())
+    }
+
+    // #[ignore]
     #[tokio::test]
     async fn gacha_test() {
         logger::Mylogger::default().init();
         let raw = GachaCache::load().unwrap();
         let mut proc = ProcessedCache {
-            store: HashMap::new(),
+            store: IndexMap::new(),
         };
         let x = GachaData {
             result: GachaR::UR,
@@ -183,6 +295,8 @@ mod test {
 
         let pedia = ItemPedia::default();
 
-        raw.pull(data, "https://media.discordapp.net/attachments/950666821210619914/1383712831505039431/image-1.png?ex=684fca7f&is=684e78ff&hm=0de9c1af13eca72781d7bdd3ccb471a5241201b768dd16a138d61bbcddf21563&=&format=webp&quality=lossless", &pedia, &mut proc).await.unwrap();
+        let url = "https://cdn.discordapp.com/attachments/950666821210619914/1383868770568769658/image.png?ex=68510479&is=684fb2f9&hm=87e444fdc39aba529841dba6b4b3c1abf2062e4f0be36540bdaaede76a113306&";
+
+        raw.pull(data, url, &pedia, &mut proc).await.unwrap();
     }
 }

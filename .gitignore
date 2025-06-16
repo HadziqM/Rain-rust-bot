@@ -4,7 +4,7 @@ config.json
 /logs
 /save/*
 !/save/this_save.txt
-test.jpg
+test.*
 log.txt
 hertz/target
 vite-press/node_modules

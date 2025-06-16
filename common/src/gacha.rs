@@ -20,10 +20,10 @@ pub enum GachaR {
 impl GachaR {
     pub fn bytes(&self) -> Vec<u8> {
         match self {
-            Self::SR => include_bytes!("../../image/sr.jpg").to_vec(),
-            Self::SSR => include_bytes!("../../image/ssr.jpg").to_vec(),
-            Self::R => include_bytes!("../../image/r.jpg").to_vec(),
-            Self::UR => include_bytes!("../../image/ur.jpg").to_vec(),
+            Self::SR => include_bytes!("../../image/sr_downscaled.jpg").to_vec(),
+            Self::SSR => include_bytes!("../../image/ssr_downscaled.jpg").to_vec(),
+            Self::R => include_bytes!("../../image/r_downscaled.jpg").to_vec(),
+            Self::UR => include_bytes!("../../image/ur_downscaled.jpg").to_vec(),
         }
     }
     pub fn path(&self) -> Option<Sysdir> {

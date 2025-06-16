@@ -99,6 +99,11 @@
         };
 
         devShells = {
+          test = pkgs.mkShell {
+            name = "test";
+
+            shellHook = ''echo "test"'';
+          };
           minimal = pkgs.mkShell {
             name = "my-dev-shell";
 
