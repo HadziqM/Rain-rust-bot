@@ -3,48 +3,11 @@
 pub mod all {
     pub use crate::error::{MyError, MyResult};
     pub use crate::setup::*;
+    pub use crate::MyApp as App;
     pub use serenity::all::*;
 }
 
 pub use all::*;
-
-use common::database::{formatted::FormattedUserData, raw::DbUserData};
-
-pub enum RegisteredStatus {
-    FullyRegistered { user: FormattedUserData },
-    PartiallyRegistered { user: DbUserData },
-    Unregistered,
-}
-
-impl App {
-    pub async fn get_user_status(&self, user: &User) -> RegisteredStatus {
-        let did = user.id.to_string();
-        match self.db.fetch_user_data(did).await {
-            Ok(data) => match data.clone().try_into() {
-                Ok(user) => RegisteredStatus::FullyRegistered { user },
-                Err(_) => RegisteredStatus::PartiallyRegistered { user: data },
-            },
-            Err(_) => RegisteredStatus::Unregistered,
-        }
-    }
-
-    pub async fn only_register_user(&self, user: &User) -> MyResult<FormattedUserData> {
-        match self.get_user_status(user).await {
-            RegisteredStatus::FullyRegistered { user } => Ok(user),
-            RegisteredStatus::PartiallyRegistered { user:_ } => Err(MyError::Custom("User isnt fully registered yet, please use `/switch` to select your main character".to_string())),
-            RegisteredStatus::Unregistered => {
-                Err(MyError::Custom("User not registered please use `/bind` to binde existing game account or `/create` to create new game account".to_string()))
-            }
-        }
-    }
-    pub async fn only_unregister_user(&self, user: &User) -> MyResult<()> {
-        match self.get_user_status(user).await {
-            RegisteredStatus::FullyRegistered { user:_ } => Err(MyError::Custom("User is already fully registered with".to_string())),
-            RegisteredStatus::PartiallyRegistered { user:_ } => Err(MyError::Custom("User isnt fully registered yet, please use `/switch` to select your main character".to_string())),
-            RegisteredStatus::Unregistered => Ok(())
-        }
-    }
-}
 
 pub struct AppReg;
 

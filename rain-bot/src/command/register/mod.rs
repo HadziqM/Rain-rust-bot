@@ -7,6 +7,7 @@ mod gacha;
 command_reg![
     credential::ChangePassword,
     credential::AddPsn,
+    gacha::GachaCommand,
     create::RegisterAccount,
     create::BindAccount
 ];

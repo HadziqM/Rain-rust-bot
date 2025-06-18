@@ -1,13 +1,12 @@
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 
 use appflow::Appflow;
-use common::{setting::SettingAll, SYSDIR};
-use database::Db;
+use common::SYSDIR;
+use lib_process::App;
 use log::debug;
 use logger::Mylogger;
 use serenity::{all::GatewayIntents, Client};
-use setup::{App, DiscordHandler};
-use tokio::sync::RwLock;
+use setup::DiscordHandler;
 
 pub mod command;
 pub mod error;
@@ -23,7 +22,17 @@ pub mod all {
     pub use std::sync::Arc;
 }
 
-impl Appflow for App {
+pub struct MyApp(App);
+
+impl Deref for MyApp {
+    type Target = App;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Appflow for MyApp {
     async fn update_config(self: Arc<Self>) -> appflow::GithubUpdater {
         let setting = self.setting.read().await;
         let update = &setting.main.updater;
@@ -63,11 +72,6 @@ impl Appflow for App {
 }
 #[tokio::main]
 async fn main() {
-    let setting = SettingAll::load_all();
-    let app = App {
-        db: Db::connect(&setting).await.unwrap(),
-        setting: Arc::new(RwLock::new(setting)),
-        pedia: Arc::new(material::ItemPedia::default()),
-    };
-    app.init().await
+    let app = App::new().await;
+    MyApp(app).init().await
 }

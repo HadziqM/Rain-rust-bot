@@ -2,6 +2,7 @@ use std::fmt::Display;
 
 use common::setting::SettingAll;
 use database::DbError;
+use lib_process::MyError as ProcessError;
 use serenity::all::{
     ChannelId, Color, Context, CreateEmbed, CreateEmbedAuthor, CreateEmbedFooter,
     CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, User, UserId,
@@ -21,6 +22,19 @@ pub enum MyError {
     Serenity(#[from] Box<serenity::Error>),
     #[error("Tokio IO error: {0}")]
     Tokio(#[from] tokio::io::Error),
+    #[error("Image Error")]
+    Image(ProcessError),
+}
+
+impl From<ProcessError> for MyError {
+    fn from(value: ProcessError) -> Self {
+        match value {
+            ProcessError::Custom(x) => Self::Custom(x),
+            ProcessError::Db(x) => Self::Db(x),
+            ProcessError::Tokio(x) => Self::Tokio(x),
+            _ => Self::Image(value),
+        }
+    }
 }
 
 impl From<serenity::Error> for MyError {
@@ -66,6 +80,7 @@ impl MyError {
             Self::Db(_) => Severity::Critical,
             MyError::Serenity(_) => Severity::FalsePositive,
             Self::Tokio(_) => Severity::Critical,
+            Self::Image(_) => Severity::Critical,
         }
     }
     pub fn advice(&self) -> String {
@@ -78,6 +93,9 @@ impl MyError {
             ),
             Self::Serenity(_) => String::from("Discord API error, please report this error"),
             Self::Tokio(_) => String::from("Tokio IO error, please report this error"),
+            Self::Image(_) => String::from(
+                " Image processing error either discord api restriction or memory corruption",
+            ),
         }
     }
     pub fn log(&self, location: impl Display, user: impl Display, ctype: CommandLocationType) {
@@ -93,6 +111,9 @@ impl MyError {
             }
             Self::Tokio(err) => {
                 log::warn!("\n[Tokio Error]\ndetails: `{err}`\non_command: `{location}`\ncommand_type: `{ctype:?}`\nuser: `{user}`")
+            }
+            Self::Image(err) => {
+                log::warn!("\n[Image Error]\ndetails: `{err}`\non_command: `{location}`\ncommand_type: `{ctype:?}`\nuser: `{user}`")
             }
         }
     }

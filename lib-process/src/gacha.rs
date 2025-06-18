@@ -11,7 +11,7 @@ use rand::prelude::*;
 trait GachaPull {
     fn pull(&self, rng: &mut ThreadRng) -> GachaData;
     fn guaranteed(&self, rng: &mut ThreadRng) -> GachaData;
-    fn multi(&self, event: &mut DbEvent) -> MyResult<Vec<GachaData>>;
+    fn multi(&self, event: &mut DbEvent, total: usize) -> MyResult<Vec<GachaData>>;
 }
 
 impl GachaPull for SettingGacha {
@@ -46,8 +46,9 @@ impl GachaPull for SettingGacha {
         GachaData { code, result }
     }
 
-    fn multi(&self, event: &mut DbEvent) -> MyResult<Vec<GachaData>> {
-        if self.cost as i32 > event.gacha {
+    fn multi(&self, event: &mut DbEvent, total: usize) -> MyResult<Vec<GachaData>> {
+        let cost = self.cost * total as u32;
+        if cost as i32 > event.gacha {
             return Err(MyError::Custom(format!(
                 "Insufficient ticket, you need to have at least {} ticket",
                 self.cost
@@ -56,9 +57,9 @@ impl GachaPull for SettingGacha {
 
         let mut current_pity = event.pity;
         let mut rng = rand::rng();
-        let mut results = Vec::with_capacity(11);
+        let mut results = Vec::with_capacity(total);
 
-        for _ in 0..11 {
+        for _ in 0..total {
             current_pity += 1;
 
             let pull_result = if current_pity >= self.pity as i32 {
@@ -78,7 +79,7 @@ impl GachaPull for SettingGacha {
             results.push(pull_result);
         }
 
-        event.gacha -= self.cost as i32;
+        event.gacha -= cost as i32;
         event.pity = current_pity;
         Ok(results)
     }
@@ -86,7 +87,25 @@ impl GachaPull for SettingGacha {
 
 impl App {
     /// state pull result byte
-    pub async fn command_gacha(&self, did: impl ToString, pull: i32) -> MyResult<Vec<u8>> {
-        todo!()
+    pub async fn command_gacha(
+        &self,
+        did: impl ToString,
+        avatar_url: impl ToString,
+        pull: usize,
+    ) -> MyResult<Vec<u8>> {
+        let did = did.to_string();
+        let _ = self.only_register_user(&did).await?;
+        let mut event = self.db.fetch_event(&did).await?;
+        let setting = self.setting.read().await;
+
+        let data = setting.gacha.multi(&mut event, pull)?;
+        let mut cache = self.gacha.processed_cache.write().await;
+        let byte = self
+            .gacha
+            .raw_cache
+            .pull(data, avatar_url, &self.pedia, &mut cache)
+            .await?;
+
+        Ok(byte)
     }
 }

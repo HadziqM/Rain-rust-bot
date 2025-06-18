@@ -6,10 +6,11 @@ use common::{
 };
 use database::{Db, DbError};
 use indexmap::IndexMap;
-use lib_image::gacha::GachaState;
+use lib_image::{gacha::GachaState, MyImageError};
 use thiserror::Error;
 use tokio::sync::RwLock;
 
+pub mod admin;
 pub mod gacha;
 
 #[derive(Debug, Error)]
@@ -20,6 +21,8 @@ pub enum MyError {
     Db(DbError),
     #[error("Tokio IO error: {0}")]
     Tokio(#[from] tokio::io::Error),
+    #[error("Image error : {0}")]
+    Image(MyImageError),
 }
 
 type MyResult<T> = Result<T, MyError>;
@@ -27,6 +30,15 @@ type MyResult<T> = Result<T, MyError>;
 impl From<&str> for MyError {
     fn from(err: &str) -> Self {
         MyError::Custom(err.to_string())
+    }
+}
+
+impl From<MyImageError> for MyError {
+    fn from(value: MyImageError) -> Self {
+        match value {
+            MyImageError::Custom(x) => Self::Custom(x),
+            _ => Self::Image(value),
+        }
     }
 }
 
@@ -51,7 +63,9 @@ impl UserCache {
             self.store.insert(key.to_string(), val);
         }
     }
-    pub fn new() -> Self {
+}
+impl Default for UserCache {
+    fn default() -> Self {
         Self {
             store: IndexMap::with_capacity(2000),
         }
@@ -82,7 +96,7 @@ impl App {
             setting: Arc::new(RwLock::new(setting)),
             pedia: Arc::new(material::ItemPedia::default()),
             gacha: Arc::new(GachaState::new().unwrap()),
-            user_cache: Arc::new(RwLock::new(UserCache::new())),
+            user_cache: Arc::new(RwLock::new(UserCache::default())),
         }
     }
 

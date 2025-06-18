@@ -1,22 +1,14 @@
-use common::setting::SettingAll;
-use database::Db;
+use crate::MyApp;
 use log::{debug, error, info};
 use serenity::all::*;
 pub use std::{collections::HashMap, ops::Deref, sync::Arc};
-use tokio::sync::RwLock;
 
 use crate::error::{CommandLocationType, ErrorHandling, MyError};
 
 pub type MyResult<T> = Result<T, MyError>;
 
-pub struct App {
-    pub setting: Arc<RwLock<SettingAll>>,
-    pub db: Db,
-    pub pedia: Arc<material::ItemPedia>,
-}
-
 pub struct DiscordHandler {
-    pub app: Arc<App>,
+    pub app: Arc<MyApp>,
     pub command_list: HashMap<String, Box<dyn CommandInteractionTrait>>,
     pub button_list: HashMap<String, Box<dyn ButtonInteractionTrait>>,
     pub modal_list: HashMap<String, Box<dyn ModalInteractionTrait>>,
@@ -25,7 +17,7 @@ pub struct DiscordHandler {
 
 #[async_trait]
 pub trait CommandInteractionTrait: Sync + Send + 'static {
-    async fn hand_int(&self, app: Arc<App>, cmd: CommandInteraction, ctx: Context) {
+    async fn hand_int(&self, app: Arc<MyApp>, cmd: CommandInteraction, ctx: Context) {
         if let Err(e) = self.handle_int(app.clone(), cmd.clone(), ctx.clone()).await {
             let setting = app.setting.read().await;
             let err = ErrorHandling::new(
@@ -48,7 +40,7 @@ pub trait CommandInteractionTrait: Sync + Send + 'static {
     }
     async fn handle_int(
         &self,
-        app: Arc<App>,
+        app: Arc<MyApp>,
         cmd: CommandInteraction,
         ctx: Context,
     ) -> MyResult<()>;
@@ -57,7 +49,7 @@ pub trait CommandInteractionTrait: Sync + Send + 'static {
 }
 #[async_trait]
 pub trait ButtonInteractionTrait: Sync + Send + 'static {
-    async fn hand_button(&self, app: Arc<App>, cmd: ComponentInteraction, ctx: Context) {
+    async fn hand_button(&self, app: Arc<MyApp>, cmd: ComponentInteraction, ctx: Context) {
         if let Err(e) = self
             .handle_button(app.clone(), cmd.clone(), ctx.clone())
             .await
@@ -83,7 +75,7 @@ pub trait ButtonInteractionTrait: Sync + Send + 'static {
     }
     async fn handle_button(
         &self,
-        app: Arc<App>,
+        app: Arc<MyApp>,
         cmd: ComponentInteraction,
         ctx: Context,
     ) -> MyResult<()>;
@@ -91,7 +83,7 @@ pub trait ButtonInteractionTrait: Sync + Send + 'static {
 }
 #[async_trait]
 pub trait ModalInteractionTrait: Sync + Send + 'static {
-    async fn hand_modal(&self, app: Arc<App>, cmd: ModalInteraction, ctx: Context) {
+    async fn hand_modal(&self, app: Arc<MyApp>, cmd: ModalInteraction, ctx: Context) {
         if let Err(e) = self
             .handle_modal(app.clone(), cmd.clone(), ctx.clone())
             .await
@@ -117,7 +109,7 @@ pub trait ModalInteractionTrait: Sync + Send + 'static {
     }
     async fn handle_modal(
         &self,
-        app: Arc<App>,
+        app: Arc<MyApp>,
         cmd: ModalInteraction,
         ctx: Context,
     ) -> MyResult<()>;
@@ -125,7 +117,7 @@ pub trait ModalInteractionTrait: Sync + Send + 'static {
 }
 #[async_trait]
 pub trait MessageCommandTrait: Sync + Send + 'static {
-    async fn hand_msg(&self, app: Arc<App>, cmd: Message, ctx: Context) {
+    async fn hand_msg(&self, app: Arc<MyApp>, cmd: Message, ctx: Context) {
         if let Err(e) = self.handle_msg(app.clone(), cmd.clone(), ctx.clone()).await {
             let setting = app.setting.read().await;
             let err = ErrorHandling::new(
@@ -147,12 +139,12 @@ pub trait MessageCommandTrait: Sync + Send + 'static {
             }
         }
     }
-    async fn handle_msg(&self, app: Arc<App>, cmd: Message, ctx: Context) -> MyResult<()>;
+    async fn handle_msg(&self, app: Arc<MyApp>, cmd: Message, ctx: Context) -> MyResult<()>;
     fn name_msg(&self) -> String;
 }
 
 impl DiscordHandler {
-    pub fn new(app: Arc<App>) -> Self {
+    pub fn new(app: Arc<MyApp>) -> Self {
         Self {
             app,
             command_list: crate::command::reg_command(),

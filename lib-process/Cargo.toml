@@ -8,6 +8,7 @@ tokio.workspace = true
 log.workspace = true
 thiserror.workspace = true
 indexmap.workspace = true
+strum.workspace = true
 common = { path = "../common" }
 database = { path = "../database" }
 material = { path = "../material" }
