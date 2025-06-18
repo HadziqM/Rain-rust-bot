@@ -11,10 +11,10 @@ reqwest.workspace = true
 rayon.workspace = true
 thiserror.workspace=true
 log.workspace=true
+indexmap.workspace = true
 image = "0.25"
 imageproc = "0.25"
 ab_glyph = "0.2"
-indexmap = "2.9"
 
 [dev-dependencies]
 logger.workspace = true

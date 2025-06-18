@@ -17,9 +17,16 @@ pub enum MyError {
     #[error("sqlx error: {0}")]
     Db(DbError),
     #[error("discord API error: {0}")]
-    Serenity(#[from] serenity::Error),
+    //Boxed since it has huge 126 Byte
+    Serenity(#[from] Box<serenity::Error>),
     #[error("Tokio IO error: {0}")]
     Tokio(#[from] tokio::io::Error),
+}
+
+impl From<serenity::Error> for MyError {
+    fn from(value: serenity::Error) -> Self {
+        MyError::Serenity(Box::new(value))
+    }
 }
 
 impl From<&str> for MyError {

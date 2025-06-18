@@ -5,12 +5,11 @@ use crate::{item_code::ItemCode, SYSDIR};
 use log::debug;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use strum::{EnumIter, EnumString};
-use sysdir::Sysdir;
 
 pub trait JsonSetting: Serialize + DeserializeOwned {
     fn open(ty: SettingList) -> Result<Self, Box<dyn std::error::Error>> {
         let path = SYSDIR.find_path(ty.path()).ok_or("config path not found")?;
-        debug!("loading setting file {}", path);
+        debug!("loading setting file {path}");
         Ok(serde_json::from_slice(&std::fs::read(path)?)?)
     }
 
@@ -31,7 +30,7 @@ impl JsonSetting for SettingGacha {}
 impl JsonSetting for SettingSaveFile {}
 impl JsonSetting for SettingDiscord {}
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct SettingAll {
     pub main: SettingMain,
     pub market: SettingMarket,
@@ -130,7 +129,7 @@ impl SettingList {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct SettingGacha {
     pub cost: u32,
     pub pity: u32,
@@ -138,7 +137,7 @@ pub struct SettingGacha {
     pub rarity: GachaRaritySetting,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct GachaRaritySetting {
     pub ur: Vec<ItemCode>,
     pub ssr1: Vec<ItemCode>,
@@ -150,14 +149,14 @@ pub struct GachaRaritySetting {
     pub r2: Vec<ItemCode>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct SettingSaveFile {
     pub cooldown_hour: u32,
     pub autoaccept_countdown_mins: i32,
     pub allowed_file: AllowedFileSetting,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct AllowedFileSetting {
     pub savedata: bool,
     pub decomyset: bool,
@@ -171,25 +170,25 @@ pub struct AllowedFileSetting {
     pub savemercenary: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct SettingMarket {
     pub market: Vec<ItemCode>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct SettingMain {
     pub discord: DiscordBotSetting,
     pub database: DatabaseSetting,
     pub updater: GithubUpdaterSetting,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct SettingDiscord {
     pub channel: DiscordChannelSetting,
     pub role: DiscordServerRole,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct DiscordChannelSetting {
     pub log_channel: u64,
     pub error_channel: u64,
@@ -204,7 +203,7 @@ pub struct DiscordChannelSetting {
     pub market_menu_msg: u64,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct DiscordServerRole {
     pub admin: u64,
     pub registered: u64,
@@ -213,13 +212,13 @@ pub struct DiscordServerRole {
     pub bounty_judge: u64,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct DiscordBotSetting {
     pub token: String,
     pub webhook: String,
     pub author: u64,
 }
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct DatabaseSetting {
     pub user: String,
     pub host: String,
@@ -227,7 +226,7 @@ pub struct DatabaseSetting {
     pub port: u16,
     pub database: String,
 }
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct GithubUpdaterSetting {
     pub repo: String,
     pub owner: String,

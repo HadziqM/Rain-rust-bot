@@ -1675,6 +1675,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "lib-process"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "database",
+ "indexmap",
+ "lib-image",
+ "log",
+ "material",
+ "rand 0.9.1",
+ "thiserror 2.0.12",
+ "tokio",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.173"
 source = "registry+https://github.com/rust-lang/crates.io-index"

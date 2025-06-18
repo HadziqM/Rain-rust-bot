@@ -53,7 +53,7 @@ impl Appflow for App {
             .await
             .expect("Err creating client");
         if let Err(why) = client.start().await {
-            log::error!("Client error: {:?}", why);
+            log::error!("Client error: {why:?}");
         }
     }
     async fn cleanup(self: Arc<Self>) {

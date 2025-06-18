@@ -1,0 +1,15 @@
+[package]
+name = "lib-process"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio.workspace = true
+log.workspace = true
+thiserror.workspace = true
+indexmap.workspace = true
+common = { path = "../common" }
+database = { path = "../database" }
+material = { path = "../material" }
+lib-image = { path = "../lib-image" }
+rand = "0.9"

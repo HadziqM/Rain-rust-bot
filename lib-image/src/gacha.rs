@@ -202,7 +202,7 @@ impl GachaCache {
             })
             .collect::<Vec<_>>();
 
-        debug!("all image drawed");
+        debug!("all image drawn");
 
         let res = match written.len() == 1 {
             true => written.first().unwrap().to_owned(),
@@ -231,7 +231,7 @@ impl GachaCache {
 
 #[cfg(test)]
 mod test {
-    use std::{collections::HashMap, error::Error, io::Cursor, path::Path};
+    use std::{error::Error, io::Cursor, path::Path};
 
     use common::{
         gacha::{GachaData, GachaR},

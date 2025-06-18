@@ -1,14 +1,15 @@
+use crate::CommonError;
+
 use super::raw::DbUserData;
 
+#[derive(Debug, Clone)]
 pub struct FormattedUserData {
     pub cid: i32,
     pub uid: i32,
 }
 
-impl TryFrom<DbUserData> for FormattedUserData {
-    type Error = crate::CommonError;
-
-    fn try_from(value: DbUserData) -> Result<Self, Self::Error> {
+impl FormattedUserData {
+    pub fn check_if_full(value: &DbUserData) -> Result<FormattedUserData, CommonError> {
         match value.cid {
             Some(cid) => Ok(Self {
                 cid,

@@ -1,6 +1,6 @@
-use std::{io::Cursor, path::Path};
+use std::io::Cursor;
 
-use image::{imageops::FilterType, DynamicImage, ImageBuffer, ImageFormat, ImageReader, Rgb, Rgba};
+use image::{imageops::FilterType, ImageBuffer, ImageReader, Rgba};
 use rayon::prelude::*;
 use thiserror::Error;
 
