@@ -84,8 +84,8 @@ pub struct BindAccount;
 
 #[async_trait]
 impl CommandInteractionTrait for RegisterAccount {
-    fn name(&self) -> String {
-        "create".to_string()
+    fn name(&self) -> &'static str {
+        "create"
     }
 
     fn command(&self) -> CreateCommand {
@@ -105,8 +105,8 @@ impl CommandInteractionTrait for RegisterAccount {
 
 #[async_trait]
 impl CommandInteractionTrait for BindAccount {
-    fn name(&self) -> String {
-        "bind".to_string()
+    fn name(&self) -> &'static str {
+        "bind"
     }
 
     fn command(&self) -> CreateCommand {
@@ -127,7 +127,7 @@ impl CommandInteractionTrait for BindAccount {
 
 #[async_trait]
 impl ButtonInteractionTrait for RegisterAccount {
-    fn name_btn(&self) -> String {
+    fn name_btn(&self) -> &'static str {
         self.name()
     }
     async fn handle_button(
@@ -142,7 +142,7 @@ impl ButtonInteractionTrait for RegisterAccount {
 }
 #[async_trait]
 impl ButtonInteractionTrait for BindAccount {
-    fn name_btn(&self) -> String {
+    fn name_btn(&self) -> &'static str {
         self.name()
     }
     async fn handle_button(
@@ -195,7 +195,7 @@ async fn handle_modal_fn(
 
 #[async_trait]
 impl ModalInteractionTrait for RegisterAccount {
-    fn name_mdl(&self) -> String {
+    fn name_mdl(&self) -> &'static str {
         self.name()
     }
     async fn handle_modal(
@@ -209,7 +209,7 @@ impl ModalInteractionTrait for RegisterAccount {
 }
 #[async_trait]
 impl ModalInteractionTrait for BindAccount {
-    fn name_mdl(&self) -> String {
+    fn name_mdl(&self) -> &'static str {
         self.name()
     }
     async fn handle_modal(

@@ -7,8 +7,8 @@ pub struct Update;
 
 #[async_trait]
 impl CommandInteractionTrait for Restart {
-    fn name(&self) -> String {
-        "restart".to_string()
+    fn name(&self) -> &'static str {
+        "restart"
     }
 
     fn command(&self) -> CreateCommand {
@@ -35,8 +35,8 @@ impl CommandInteractionTrait for Restart {
 
 #[async_trait]
 impl CommandInteractionTrait for Update {
-    fn name(&self) -> String {
-        "update".to_string()
+    fn name(&self) -> &'static str {
+        "update"
     }
     fn command(&self) -> CreateCommand {
         AppReg::admin_slash(self.name(), "update bot")

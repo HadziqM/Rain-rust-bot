@@ -4,8 +4,8 @@ pub struct GachaCommand;
 
 #[async_trait]
 impl CommandInteractionTrait for GachaCommand {
-    fn name(&self) -> String {
-        "gacha".to_string()
+    fn name(&self) -> &'static str {
+        "gacha"
     }
     fn command(&self) -> serenity::all::CreateCommand {
         AppReg::normal_slash(self.name(), "discord server gacha using gacha ticket")

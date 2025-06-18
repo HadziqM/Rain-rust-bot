@@ -34,8 +34,8 @@ pub struct Execute;
 
 #[async_trait]
 impl MessageCommandTrait for Query {
-    fn name_msg(&self) -> String {
-        "query".into()
+    fn name_msg(&self) -> &'static str {
+        "query"
     }
 
     async fn handle_msg(&self, app: Arc<App>, cmd: Message, ctx: Context) -> MyResult<()> {
@@ -47,8 +47,8 @@ impl MessageCommandTrait for Query {
 }
 #[async_trait]
 impl MessageCommandTrait for Execute {
-    fn name_msg(&self) -> String {
-        "execute".into()
+    fn name_msg(&self) -> &'static str {
+        "execute"
     }
 
     async fn handle_msg(&self, app: Arc<App>, cmd: Message, ctx: Context) -> MyResult<()> {

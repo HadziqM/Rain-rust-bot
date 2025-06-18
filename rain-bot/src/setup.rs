@@ -45,7 +45,7 @@ pub trait CommandInteractionTrait: Sync + Send + 'static {
         ctx: Context,
     ) -> MyResult<()>;
     fn command(&self) -> CreateCommand;
-    fn name(&self) -> String;
+    fn name(&self) -> &'static str;
 }
 #[async_trait]
 pub trait ButtonInteractionTrait: Sync + Send + 'static {
@@ -79,7 +79,7 @@ pub trait ButtonInteractionTrait: Sync + Send + 'static {
         cmd: ComponentInteraction,
         ctx: Context,
     ) -> MyResult<()>;
-    fn name_btn(&self) -> String;
+    fn name_btn(&self) -> &'static str;
 }
 #[async_trait]
 pub trait ModalInteractionTrait: Sync + Send + 'static {
@@ -113,7 +113,7 @@ pub trait ModalInteractionTrait: Sync + Send + 'static {
         cmd: ModalInteraction,
         ctx: Context,
     ) -> MyResult<()>;
-    fn name_mdl(&self) -> String;
+    fn name_mdl(&self) -> &'static str;
 }
 #[async_trait]
 pub trait MessageCommandTrait: Sync + Send + 'static {
@@ -140,7 +140,7 @@ pub trait MessageCommandTrait: Sync + Send + 'static {
         }
     }
     async fn handle_msg(&self, app: Arc<MyApp>, cmd: Message, ctx: Context) -> MyResult<()>;
-    fn name_msg(&self) -> String;
+    fn name_msg(&self) -> &'static str;
 }
 
 impl DiscordHandler {

@@ -5,8 +5,8 @@ pub struct AddPsn;
 
 #[async_trait]
 impl CommandInteractionTrait for ChangePassword {
-    fn name(&self) -> String {
-        "change_password".to_string()
+    fn name(&self) -> &'static str {
+        "change_password"
     }
     fn command(&self) -> serenity::all::CreateCommand {
         AppReg::normal_slash(self.name(), "change your in game account password").add_option(
@@ -31,8 +31,8 @@ impl CommandInteractionTrait for ChangePassword {
 
 #[async_trait]
 impl CommandInteractionTrait for AddPsn {
-    fn name(&self) -> String {
-        "add_psn".to_string()
+    fn name(&self) -> &'static str {
+        "add_psn"
     }
 
     fn command(&self) -> serenity::all::CreateCommand {
@@ -61,7 +61,7 @@ impl CommandInteractionTrait for AddPsn {
 
 #[async_trait]
 impl ButtonInteractionTrait for AddPsn {
-    fn name_btn(&self) -> String {
+    fn name_btn(&self) -> &'static str {
         self.name()
     }
     async fn handle_button(
@@ -86,7 +86,7 @@ impl ButtonInteractionTrait for AddPsn {
 
 #[async_trait]
 impl ModalInteractionTrait for AddPsn {
-    fn name_mdl(&self) -> String {
+    fn name_mdl(&self) -> &'static str {
         self.name()
     }
     async fn handle_modal(

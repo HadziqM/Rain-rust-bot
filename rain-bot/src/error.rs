@@ -134,7 +134,7 @@ impl ErrorHandling {
         ctx: &Context,
         setting: &SettingAll,
         effected_user: User,
-        location: String,
+        location: impl ToString,
         ctype: CommandLocationType,
     ) -> Self {
         let thor = UserId::new(setting.main.discord.author);
@@ -143,7 +143,7 @@ impl ErrorHandling {
             err,
             author,
             effected_user,
-            location,
+            location: location.to_string(),
             ctype,
             log_channel: setting.discord.channel.error_channel,
         }

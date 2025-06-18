@@ -10,8 +10,8 @@ pub struct ReadConfig;
 
 #[async_trait]
 impl CommandInteractionTrait for ReadConfig {
-    fn name(&self) -> String {
-        "config_read".to_string()
+    fn name(&self) -> &'static str {
+        "config_read"
     }
     fn command(&self) -> CreateCommand {
         let mut x = AppReg::admin_slash(self.name(), "send configuration");
@@ -49,8 +49,8 @@ impl CommandInteractionTrait for ReadConfig {
 }
 #[async_trait]
 impl CommandInteractionTrait for SetConfig {
-    fn name(&self) -> String {
-        "config_set".to_string()
+    fn name(&self) -> &'static str {
+        "config_set"
     }
     fn command(&self) -> CreateCommand {
         let mut x = AppReg::admin_slash(self.name(), "change configuration");

@@ -5,8 +5,8 @@ struct TestError;
 
 #[async_trait]
 impl CommandInteractionTrait for Test {
-    fn name(&self) -> String {
-        "test".to_string()
+    fn name(&self) -> &'static str {
+        "test"
     }
 
     fn command(&self) -> serenity::all::CreateCommand {
@@ -26,8 +26,8 @@ impl CommandInteractionTrait for Test {
 
 #[async_trait]
 impl CommandInteractionTrait for TestError {
-    fn name(&self) -> String {
-        "test_error".to_string()
+    fn name(&self) -> &'static str {
+        "test_error"
     }
     fn command(&self) -> serenity::all::CreateCommand {
         AppReg::normal_slash(self.name(), "test")

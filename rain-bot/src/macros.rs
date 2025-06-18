@@ -5,7 +5,7 @@ macro_rules! command_reg {
         pub fn reg_command() -> HashMap<String, Box<dyn CommandInteractionTrait>> {
             let mut _y = HashMap::new();
             $(
-                _y.insert($x.name(), Box::new($x) as Box<dyn CommandInteractionTrait>);
+                _y.insert($x.name().to_string(), Box::new($x) as Box<dyn CommandInteractionTrait>);
             )*
             _y
         }
@@ -18,7 +18,7 @@ macro_rules! button_reg {
         pub fn reg_button() -> HashMap<String, Box<dyn ButtonInteractionTrait>> {
             let mut _y = HashMap::new();
             $(
-                _y.insert($x.name_btn(), Box::new($x) as Box<dyn ButtonInteractionTrait>);
+                _y.insert($x.name_btn().to_string(), Box::new($x) as Box<dyn ButtonInteractionTrait>);
             )*
             _y
         }
@@ -31,7 +31,7 @@ macro_rules! modal_reg {
         pub fn reg_modal() -> HashMap<String, Box<dyn ModalInteractionTrait>> {
             let mut _y = HashMap::new();
             $(
-                _y.insert($x.name_mdl(), Box::new($x) as Box<dyn ModalInteractionTrait>);
+                _y.insert($x.name_mdl().to_string(), Box::new($x) as Box<dyn ModalInteractionTrait>);
             )*
             _y
         }
@@ -44,7 +44,7 @@ macro_rules! message_reg {
         pub fn reg_message() -> HashMap<String, Box<dyn MessageCommandTrait>> {
             let mut _y = HashMap::new();
             $(
-                _y.insert($x.name_msg(), Box::new($x) as Box<dyn MessageCommandTrait>);
+                _y.insert($x.name_msg().to_string(), Box::new($x) as Box<dyn MessageCommandTrait>);
             )*
             _y
         }
