@@ -181,7 +181,7 @@ impl EventHandler for DiscordHandler {
         debug!(" Delete all global commands");
         Command::set_global_commands(&ctx.http, vec![]).await.ok();
 
-        ctx.set_activity(Some(ActivityData::playing("🎮 Rain Erupe")));
+        ctx.set_activity(Some(ActivityData::playing("🎮 Rain Mezeporta")));
     }
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         match interaction {
@@ -205,10 +205,10 @@ impl EventHandler for DiscordHandler {
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
-        if msg.content.starts_with("?") && !msg.author.bot {
+        if msg.content.starts_with("&") && !msg.author.bot {
             let name = msg.content.split_whitespace().next();
             if let Some(x) = name {
-                let y = x.replace("?", "");
+                let y = x.replace("&", "");
                 if let Some(x) = self.message_list.get(&y) {
                     x.hand_msg(self.app.clone(), msg, ctx).await;
                 }

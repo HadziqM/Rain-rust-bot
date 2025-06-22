@@ -41,3 +41,5 @@ impl CommandInteractionTrait for GachaCommand {
         Ok(())
     }
 }
+
+command_reg![GachaCommand];

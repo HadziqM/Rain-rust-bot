@@ -7,6 +7,7 @@ use common::{
 };
 use log::debug;
 use rand::prelude::*;
+use tokio::spawn;
 
 trait GachaPull {
     fn pull(&self, rng: &mut ThreadRng) -> GachaData;
@@ -94,11 +95,21 @@ impl App {
         pull: usize,
     ) -> MyResult<Vec<u8>> {
         let did = did.to_string();
-        let _ = self.only_register_user(&did).await?;
+        let user = self.only_register_user(&did).await?;
         let mut event = self.db.fetch_event(&did).await?;
         let setting = self.setting.read().await;
 
         let data = setting.gacha.multi(&mut event, pull)?;
+
+        // send database process to another thread
+        let ids = vec![user.cid];
+        let code = data.iter().map(|e| e.code.to_owned()).collect::<Vec<_>>();
+        let db = self.db.clone();
+        let proc = spawn(async move {
+            db.send_distribution(&ids, &code, "Gacha Reward", "~C05 Gacha Reward")
+                .await
+        });
+
         let mut cache = self.gacha.processed_cache.write().await;
         let byte = self
             .gacha
@@ -106,6 +117,8 @@ impl App {
             .pull(data, avatar_url, &self.pedia, &mut cache)
             .await?;
 
+        // retrieve error form database thread if they has
+        proc.await??;
         Ok(byte)
     }
 }

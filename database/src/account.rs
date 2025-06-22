@@ -27,14 +27,10 @@ impl Db {
             .await?;
         Ok(())
     }
-    pub async fn change_psn(&self, psn: impl ToString, uid: i32) -> DbResult<()> {
-        sqlx::query!(
-            "UPDATE users SET psn_id=$1 where id=$2",
-            psn.to_string(),
-            uid
-        )
-        .execute(&**self)
-        .await?;
+    pub async fn change_psn(&self, psn: Option<String>, uid: i32) -> DbResult<()> {
+        sqlx::query!("UPDATE users SET psn_id=$1 where id=$2", psn, uid)
+            .execute(&**self)
+            .await?;
         Ok(())
     }
     pub async fn add_account(
@@ -90,9 +86,7 @@ impl Db {
         .execute(&**self)
         .await?;
         self.change_character(id, discord_id).await?;
-        if let Some(psn) = psn {
-            self.change_psn(&psn, data.id).await?;
-        }
+        self.change_psn(psn, data.id).await?;
         Ok(data)
     }
 

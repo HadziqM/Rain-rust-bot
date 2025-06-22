@@ -50,10 +50,10 @@ fn modal_response(reg: bool) -> CreateInteractionResponse {
     let name;
     let title;
     if reg {
-        name = "register_m";
+        name = "register";
         title = "Register Command";
     } else {
-        name = "bind_m";
+        name = "bind";
         title = "Bind Command";
     }
     CreateInteractionResponse::Modal(CreateModal::new(name, title).components(vec![
@@ -77,84 +77,6 @@ fn modal_register_row(name: &str, pass: bool) -> CreateActionRow {
             .required(true)
             .placeholder(&placeholder),
     )
-}
-
-pub struct RegisterAccount;
-pub struct BindAccount;
-
-#[async_trait]
-impl CommandInteractionTrait for RegisterAccount {
-    fn name(&self) -> &'static str {
-        "create"
-    }
-
-    fn command(&self) -> CreateCommand {
-        AppReg::normal_slash(self.name(), "create mhfz account to this server")
-    }
-
-    async fn handle_int(
-        &self,
-        _app: Arc<App>,
-        cmd: CommandInteraction,
-        ctx: Context,
-    ) -> MyResult<()> {
-        cmd.create_response(&ctx.http, modal_response(true)).await?;
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl CommandInteractionTrait for BindAccount {
-    fn name(&self) -> &'static str {
-        "bind"
-    }
-
-    fn command(&self) -> CreateCommand {
-        AppReg::normal_slash(self.name(), "create mhfz account to this server")
-    }
-
-    async fn handle_int(
-        &self,
-        _app: Arc<App>,
-        cmd: CommandInteraction,
-        ctx: Context,
-    ) -> MyResult<()> {
-        cmd.create_response(&ctx.http, modal_response(false))
-            .await?;
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl ButtonInteractionTrait for RegisterAccount {
-    fn name_btn(&self) -> &'static str {
-        self.name()
-    }
-    async fn handle_button(
-        &self,
-        _app: Arc<App>,
-        cmd: ComponentInteraction,
-        ctx: Context,
-    ) -> MyResult<()> {
-        cmd.create_response(&ctx.http, modal_response(true)).await?;
-        Ok(())
-    }
-}
-#[async_trait]
-impl ButtonInteractionTrait for BindAccount {
-    fn name_btn(&self) -> &'static str {
-        self.name()
-    }
-    async fn handle_button(
-        &self,
-        _app: Arc<App>,
-        cmd: ComponentInteraction,
-        ctx: Context,
-    ) -> MyResult<()> {
-        cmd.create_response(&ctx.http, modal_response(false))
-            .await?;
-        Ok(())
-    }
 }
 
 async fn handle_modal_fn(
@@ -191,6 +113,59 @@ async fn handle_modal_fn(
     }
 
     Ok(())
+}
+
+pub struct RegisterAccount;
+pub struct BindAccount;
+
+impl RegisterAccount {
+    pub fn name(&self) -> &'static str {
+        "register"
+    }
+}
+impl BindAccount {
+    pub fn name(&self) -> &'static str {
+        "bind"
+    }
+}
+
+/// register = true, bind = false
+pub async fn registration(cmd: CommandInteraction, ctx: Context, regis: bool) -> MyResult<()> {
+    cmd.create_response(&ctx.http, modal_response(regis))
+        .await?;
+    Ok(())
+}
+
+#[async_trait]
+impl ButtonInteractionTrait for RegisterAccount {
+    fn name_btn(&self) -> &'static str {
+        self.name()
+    }
+    async fn handle_button(
+        &self,
+        _app: Arc<App>,
+        cmd: ComponentInteraction,
+        ctx: Context,
+    ) -> MyResult<()> {
+        cmd.create_response(&ctx.http, modal_response(true)).await?;
+        Ok(())
+    }
+}
+#[async_trait]
+impl ButtonInteractionTrait for BindAccount {
+    fn name_btn(&self) -> &'static str {
+        self.name()
+    }
+    async fn handle_button(
+        &self,
+        _app: Arc<App>,
+        cmd: ComponentInteraction,
+        ctx: Context,
+    ) -> MyResult<()> {
+        cmd.create_response(&ctx.http, modal_response(false))
+            .await?;
+        Ok(())
+    }
 }
 
 #[async_trait]

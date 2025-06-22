@@ -8,7 +8,7 @@ use database::{Db, DbError};
 use indexmap::IndexMap;
 use lib_image::{gacha::GachaState, MyImageError};
 use thiserror::Error;
-use tokio::sync::RwLock;
+use tokio::{sync::RwLock, task::JoinError};
 
 pub mod admin;
 pub mod gacha;
@@ -48,6 +48,12 @@ impl From<DbError> for MyError {
             DbError::Sqlx(_) => Self::Db(err),
             DbError::Custom(str) => Self::Custom(str),
         }
+    }
+}
+
+impl From<JoinError> for MyError {
+    fn from(value: JoinError) -> Self {
+        Self::Custom(format!("Tokio Join Handle error {value:?}"))
     }
 }
 

@@ -34,13 +34,11 @@ impl Deref for MyApp {
 
 impl Appflow for MyApp {
     async fn update_config(self: Arc<Self>) -> appflow::GithubUpdater {
-        let setting = self.setting.read().await;
-        let update = &setting.main.updater;
         appflow::GithubUpdater {
-            repo: update.repo.clone(),
-            owner: update.owner.clone(),
-            token: update.token.clone(),
-            app_name: update.app_name.clone(),
+            repo: "Rain-rust-bot".to_string(),
+            owner: "HadziqM".to_string(),
+            token: None,
+            app_name: "rain-bot".to_string(),
         }
     }
 

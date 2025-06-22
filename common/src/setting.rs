@@ -2,14 +2,29 @@
 
 use crate::MyResult;
 use crate::{item_code::ItemCode, SYSDIR};
-use log::debug;
+use log::{debug, info};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use strum::{EnumIter, EnumString};
+use strum::{EnumIter, EnumString, IntoEnumIterator};
+
+pub fn check_setting() {
+    let mut err = false;
+    for set in SettingList::iter() {
+        if SYSDIR.find_path(set.path()).is_none() {
+            err = true;
+            set.raw_placeholder().unwrap();
+            log::error!("file not found");
+        }
+    }
+    if err {
+        log::error!("Edit the config file specified to use bot correctly");
+        std::process::exit(0);
+    }
+}
 
 pub trait JsonSetting: Serialize + DeserializeOwned {
     fn open(ty: SettingList) -> Result<Self, Box<dyn std::error::Error>> {
-        let path = SYSDIR.find_path(ty.path()).ok_or("config path not found")?;
-        debug!("loading setting file {path}");
+        let path = SYSDIR.find_path(ty.path()).unwrap();
+        log::info!("loading setting file {path}");
         Ok(serde_json::from_slice(&std::fs::read(path)?)?)
     }
 
@@ -121,6 +136,20 @@ impl SettingList {
         Ok(())
     }
 
+    fn raw_placeholder(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let def = match self {
+            Self::Gacha => serde_json::to_string_pretty(&SettingGacha::default())?,
+            Self::Main => serde_json::to_string_pretty(&SettingMain::default())?,
+            Self::Discord => serde_json::to_string_pretty(&SettingDiscord::default())?,
+            Self::SaveFile => serde_json::to_string_pretty(&SettingSaveFile::default())?,
+            Self::Market => serde_json::to_string_pretty(&SettingMarket::default())?,
+        };
+        let path = SYSDIR.config_dir(self.path()).execute_dir();
+        info!("creating placeholder setting file on `{path:?}`");
+        std::fs::write(path, def.as_bytes())?;
+        Ok(())
+    }
+
     fn placeholder<T: JsonSetting + Default>(self) -> Result<(), Box<dyn std::error::Error>> {
         T::placeholder(self)
     }
@@ -179,7 +208,7 @@ pub struct SettingMarket {
 pub struct SettingMain {
     pub discord: DiscordBotSetting,
     pub database: DatabaseSetting,
-    pub updater: GithubUpdaterSetting,
+    // pub updater: GithubUpdaterSetting,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -226,13 +255,13 @@ pub struct DatabaseSetting {
     pub port: u16,
     pub database: String,
 }
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
-pub struct GithubUpdaterSetting {
-    pub repo: String,
-    pub owner: String,
-    pub token: Option<String>,
-    pub app_name: String,
-}
+// #[derive(Debug, Serialize, Deserialize, Clone, Default)]
+// pub struct GithubUpdaterSetting {
+//     pub repo: String,
+//     pub owner: String,
+//     pub token: Option<String>,
+//     pub app_name: String,
+// }
 
 // #[cfg(test)]
 // mod test {
