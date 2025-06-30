@@ -1,14 +1,37 @@
+BEGIN;
+
+CREATE TABLE IF NOT EXISTS bot_setting (
+  name TEXT PRIMARY KEY CHECK (checker IN ('Transfer','Feature','Main'))
+  json TEXT NOT NULL,
+);
+
 CREATE TABLE IF NOT EXISTS discord (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  discord_id TEXT UNIQUE,
+  discord_id TEXT PRIMARY KEY,
   user_id INT NOT NULL,
   char_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS event (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  discord_id TEXT,
   benefit INT DEFAULT 0,
   bounty_coin INT DEFAULT 0,
   gacha_ticket INT DEFAULT 0,
   gacha_pity INT DEFAULT 0,
-  global_cd TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  bounty_cd TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  transfer_cd TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
+);
+
+CREATE TABLE IF NOT EXISTS transfer_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bounty_id INT NOT NULL,
+  discord_id TEXT NOT NULL,
+  message_url TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (bounty_id) REFERENCES bounty(id),
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
 );
 
 CREATE TABLE IF NOT EXISTS assets (
@@ -119,3 +142,23 @@ CREATE TABLE IF NOT EXISTS market_meal(
   -- price per day
   price INT NOT NULL,
 );
+
+INSERT INTO bot_setting (name,json) VALUES
+  ('Transfer','{
+    "cooldown_hour": 168,
+    "autoaccept_countdown_mins": 60,
+    "allowed_file": {
+      "savedata": true,
+      "decomyset": true,
+      "hunternavi": true,
+      "otomoairou": true,
+      "partner": true,
+      "platedata": true,
+      "platebox": true,
+      "platemyset": true,
+      "rengokudata": true,
+      "savemercenary": true
+    }
+  }');
+
+COMMIT;
