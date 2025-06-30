@@ -11,3 +11,7 @@ thiserror.workspace = true
 macros.workspace = true
 bcrypt.workspace = true
 chrono.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+logger.workspace = true

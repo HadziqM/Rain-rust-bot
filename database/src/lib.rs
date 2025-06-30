@@ -1,6 +1,10 @@
-use common::setting::SettingAll;
+use common::{setting::SettingAll, SYSDIR};
+use log::{debug, info};
 use macros::Wrapper;
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::{
+    migrate::MigrateDatabase, postgres::PgPoolOptions, sqlite::SqlitePoolOptions, Pool, Postgres,
+    Sqlite,
+};
 use thiserror::Error;
 
 pub mod account;
@@ -32,6 +36,30 @@ pub type DbResult<T> = Result<T, DbError>;
 
 #[derive(Clone, Debug, Wrapper)]
 pub struct Db(Pool<Postgres>);
+pub struct DbLite(Pool<Sqlite>);
+
+impl DbLite {
+    pub async fn connect() -> DbResult<Self> {
+        let path = SYSDIR.config_dir("bot.db").execute_dir();
+        debug!("{path:?}");
+        let url = format!("sqlite:{}", path.display());
+        let exist = Sqlite::database_exists(&url).await?;
+        if !exist {
+            Sqlite::create_database(&url).await?;
+        }
+        let pool = SqlitePoolOptions::new()
+            .max_connections(100)
+            .connect(&url)
+            .await?;
+        if !exist {
+            info!("Initialize New Sqlite Database with url: {url}");
+            let scheme = include_str!("../../query/table1.sql");
+            sqlx::raw_sql(scheme).execute(&pool).await?;
+        }
+        info!("Sqlite Database Ready to use");
+        Ok(Self(pool))
+    }
+}
 
 impl Db {
     pub async fn connect(setting: &SettingAll) -> DbResult<Self> {
@@ -44,6 +72,19 @@ impl Db {
             .max_connections(100)
             .connect(url.as_str())
             .await?;
+        info!("Server Database Connected");
         Ok(Self(pool))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::DbLite;
+
+    #[tokio::test]
+    async fn sqlite() {
+        logger::Mylogger::default().init();
+
+        DbLite::connect().await.unwrap();
     }
 }

@@ -32,7 +32,7 @@
         # scriptFiles = builtins.attrNames (builtins.readDir ./scripts);
         # scripts = builtins.map (file: import (./scripts + "/${file}") { inherit pkgs; }) scriptFiles;
 
-        toolchain = pkgs.rust-bin.nightly.latest.default.override {
+        toolchain = pkgs.rust-bin.nightly.latest.complete.override {
           targets = [
             "wasm32-unknown-unknown"
           ];
