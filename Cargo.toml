@@ -12,7 +12,6 @@ appflow = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "appflow"
   "update",
 ] }
 sysdir = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "sysdir" }
-macros = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "macros" }
 
 # async runtime
 tokio = { version = "1.38.0", features = ["full"] }

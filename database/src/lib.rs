@@ -1,6 +1,5 @@
 use common::{setting::SettingAll, SYSDIR};
 use log::{debug, info};
-use macros::Wrapper;
 use sqlx::{
     migrate::MigrateDatabase, postgres::PgPoolOptions, sqlite::SqlitePoolOptions, Pool, Postgres,
     Sqlite,
@@ -34,8 +33,9 @@ impl From<&str> for DbError {
 
 pub type DbResult<T> = Result<T, DbError>;
 
-#[derive(Clone, Debug, Wrapper)]
+#[derive(Clone, Debug)]
 pub struct Db(Pool<Postgres>);
+#[derive(Clone, Debug)]
 pub struct DbLite(Pool<Sqlite>);
 
 impl DbLite {
@@ -59,6 +59,9 @@ impl DbLite {
         info!("Sqlite Database Ready to use");
         Ok(Self(pool))
     }
+    fn pool(&self) -> &Pool<Sqlite> {
+        &self.0
+    }
 }
 
 impl Db {
@@ -74,6 +77,9 @@ impl Db {
             .await?;
         info!("Server Database Connected");
         Ok(Self(pool))
+    }
+    fn pool(&self) -> &Pool<Postgres> {
+        &self.0
     }
 }
 

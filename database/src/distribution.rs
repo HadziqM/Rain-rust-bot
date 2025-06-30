@@ -50,7 +50,7 @@ impl Db {
             &keys,
             &count
         )
-        .execute(&**self)
+        .execute(self.pool())
         .await?;
 
         Ok(())
@@ -69,7 +69,7 @@ impl Db {
             gacha,
             ids
         )
-        .execute(&**self)
+        .execute(self.pool())
         .await?;
 
         Ok(())

@@ -1,6 +1,5 @@
 use std::num::ParseIntError;
 
-use macros::Wrapper;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -39,35 +38,4 @@ pub enum ItemCodeError {
     NoItem,
     #[error("ParseInt error: {0}")]
     ParseInt(#[from] ParseIntError),
-}
-
-#[derive(Wrapper)]
-pub struct ItemHexOperation(Vec<ItemCode>);
-
-impl ItemHexOperation {
-    pub fn new(data: Vec<ItemCode>) -> ItemHexOperation {
-        Self(data)
-    }
-    // pub fn encode(&self) -> Result<Vec<u8>, ItemCodeError> {
-    //     if self.is_empty() {
-    //         return Err(ItemCodeError::NoItem);
-    //     }
-    //     let mut hex_value = format!("{:04X}", self.len());
-    //     for code in self.iter() {
-    //         hex_value.push_str(&format!(
-    //             "{:02X}0000{}0000{:04X}00000000",
-    //             code.types,
-    //             code.reverse_key()?,
-    //             code.count
-    //         ));
-    //     }
-    //     if hex_value.len() % 2 != 0 {
-    //         return Err(ItemCodeError::OddLength(hex_value.len()));
-    //     }
-    //     //pair it two then decode
-    //     (0..hex_value.len())
-    //         .step_by(2)
-    //         .map(|i| u8::from_str_radix(&hex_value[i..i + 2], 16).map_err(|e| e.into()))
-    //         .collect()
-    // }
 }

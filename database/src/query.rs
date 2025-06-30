@@ -7,13 +7,13 @@ use sqlx::{Column, Decode, Postgres, Row, ValueRef};
 
 impl Db {
     pub async fn query(&self, qry: &str) -> DbResult<String> {
-        match sqlx::query(qry).fetch_all(self.deref()).await {
+        match sqlx::query(qry).fetch_all(self.pool()).await {
             Ok(fetch) => Ok(row_to_table(fetch)?),
             Err(err) => Err(format!(" Query Error: {err}, fix your sql syntax").into()),
         }
     }
     pub async fn execute(&self, qry: &str) -> DbResult<()> {
-        match sqlx::query(qry).execute(self.deref()).await {
+        match sqlx::query(qry).execute(self.pool()).await {
             Ok(_) => Ok(()),
             Err(err) => Err(format!(" Query Error: {err}, fix your sql syntax").into()),
         }

@@ -14,7 +14,7 @@ impl Db {
                 WHERE discord_id=$1",
             discord_id.to_string()
         )
-        .fetch_one(&**self)
+        .fetch_one(self.pool())
         .await?)
     }
 
@@ -42,7 +42,7 @@ impl Db {
             event.gold,
             event.char_id
         )
-        .execute(&**self)
+        .execute(self.pool())
         .await?;
 
         Ok(())
@@ -60,13 +60,13 @@ impl Db {
             WHERE characters.id=$1",
             cid
         )
-        .fetch_one(&**self)
+        .fetch_one(self.pool())
         .await?)
     }
 
     async fn fetch_all_character_id(&self, uid: i64) -> DbResult<Vec<i32>> {
         let row = sqlx::query!("SELECT id FROM characters WHERE user_id=$1", uid)
-            .fetch_all(&**self)
+            .fetch_all(self.pool())
             .await?;
         let mut cid = Vec::new();
         for i in row {
@@ -95,7 +95,7 @@ impl Db {
             WHERE discord.discord_id=$1",
             did
         )
-        .fetch_one(&**self)
+        .fetch_one(self.pool())
         .await?)
     }
 }

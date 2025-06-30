@@ -13,7 +13,7 @@ impl Db {
             "SELECT id,username,password FROM users WHERE id = $1",
             uid
         )
-        .fetch_one(&**self)
+        .fetch_one(self.pool())
         .await?)
     }
     pub async fn check_password(&self, pass: &str, uid: i32) -> DbResult<bool> {
@@ -23,13 +23,13 @@ impl Db {
     pub async fn change_password(&self, pass: &str, uid: i32) -> DbResult<()> {
         let hased = bcrypt::hash(pass, 10).unwrap_or_default();
         sqlx::query!("UPDATE users SET password=$1 where id=$2", hased, uid)
-            .execute(&**self)
+            .execute(self.pool())
             .await?;
         Ok(())
     }
     pub async fn change_psn(&self, psn: Option<String>, uid: i32) -> DbResult<()> {
         sqlx::query!("UPDATE users SET psn_id=$1 where id=$2", psn, uid)
-            .execute(&**self)
+            .execute(self.pool())
             .await?;
         Ok(())
     }
@@ -49,18 +49,18 @@ impl Db {
                 "SELECT id,username,password FROM users WHERE username = $1",
                 user
             )
-            .fetch_one(&**self)
+            .fetch_one(self.pool())
             .await?;
             if !bcrypt::verify(pass, &data.password).unwrap() {
                 return Err("Password doesnt match the account".into());
             }
             id = query!("SELECT id FROM characters WHERE user_id=$1", data.id as i64)
-                .fetch_one(&**self)
+                .fetch_one(self.pool())
                 .await?
                 .id;
         } else {
             if query!("Select username from users where username=$1", user)
-                .fetch_one(&**self)
+                .fetch_one(self.pool())
                 .await
                 .is_ok()
             {
@@ -73,17 +73,17 @@ impl Db {
                 .as_secs();
             let month = now + 30 * 24 * 60 * 60;
             data = query_as!(DbAccountData,"INSERT INTO users (username,password,return_expires) VALUES ($1,$2,$3) RETURNING id,username,password",user,hash,month as i32)
-                .fetch_one(&**self).await?;
+                .fetch_one(self.pool()).await?;
             id = query!("INSERT INTO characters
                             (user_id, is_female, is_new_character, name,unk_desc_string,
-                            hrp, gr, weapon_type, last_login) VALUES($1, False, True, '', '', 0, 0, 0, $2) returning id",data.id as i64,now as i32).fetch_one(&**self).await?.id;
+                            hrp, gr, weapon_type, last_login) VALUES($1, False, True, '', '', 0, 0, 0, $2) returning id",data.id as i64,now as i32).fetch_one(self.pool()).await?.id;
         }
         query!(
             "INSERT INTO discord_register (discord_id,user_id) VALUES ($1,$2)",
             discord_id,
             data.id
         )
-        .execute(&**self)
+        .execute(self.pool())
         .await?;
         self.change_character(id, discord_id).await?;
         self.change_psn(psn, data.id).await?;
@@ -91,7 +91,7 @@ impl Db {
     }
 
     pub async fn change_character(&self, cid: i32, did: &str) -> DbResult<()> {
-        query!("INSERT INTO discord (discord_id,char_id,gacha) VALUES ($1,$2,100) ON CONFLICT (discord_id) DO UPDATE SET char_id=$2",did,cid).execute(&**self).await?;
+        query!("INSERT INTO discord (discord_id,char_id,gacha) VALUES ($1,$2,100) ON CONFLICT (discord_id) DO UPDATE SET char_id=$2",did,cid).execute(self.pool()).await?;
         Ok(())
     }
 
@@ -101,7 +101,7 @@ impl Db {
             "SELECT savedata,decomyset,hunternavi,otomoairou,partner,platebox,platemyset,rengokudata,savemercenary,platedata FROM characters WHERE id=$1",
             cid
         )
-        .fetch_one(&**self)
+        .fetch_one(self.pool())
         .await?)
     }
 
@@ -109,16 +109,16 @@ impl Db {
         sqlx::query(&format!("UPDATE characters SET {name}=$1 WHERE id=$2"))
             .bind(file.as_slice())
             .bind(cid)
-            .execute(&**self)
+            .execute(self.pool())
             .await?;
         Ok(())
     }
     pub async fn purge(&self, did: &str) -> DbResult<()> {
         query!("DELETE from discord_register WHERE discord_id=$1", did)
-            .execute(&**self)
+            .execute(self.pool())
             .await?;
         query!("DELETE from discord WHERE discord_id=$1", did)
-            .execute(&**self)
+            .execute(self.pool())
             .await?;
         Ok(())
     }
