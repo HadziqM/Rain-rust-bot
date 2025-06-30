@@ -1,68 +1,164 @@
-create table if not exists discord_register(
-	id serial,
-	discord_id varchar(32) unique,
-  user_id int,
-  created_at timestamp without time zone default now(),
-	primary key(id)
+BEGIN;
+
+CREATE TABLE IF NOT EXISTS bot_setting (
+  name TEXT PRIMARY KEY CHECK (name IN ('Transfer','Feature','Main')),
+  json TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS discord(
-	id SERIAL,
-	char_id INT NOT NULL,
-	discord_id VARCHAR(32) NOT NULL,
-	bounty INT,
-  newbie BOOLEAN DEFAULT true,
-  gacha INT DEFAULT 0,
-  pity INT DEFAULT 0,
-  latest_bounty VARCHAR(10),
-  latest_bounty_time BIGINT DEFAULT 0,
-  boostcd BIGINT DEFAULT 0,
-  transfercd BIGINT DEFAULT 0,
-	PRIMARY KEY(id)
-      CONSTRAINT fk_discord
-      FOREIGN KEY(discord_id) 
-	  REFERENCES discord_register(discord_id)
+CREATE TABLE IF NOT EXISTS discord (
+  discord_id TEXT PRIMARY KEY,
+  user_id INT NOT NULL,
+  char_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-create table if not exists bounty(
-	id serial,
-	title varchar(255) not null,
-	explain varchar(255),
-	solo_point int not null,
-	multi_point int not null,
-	solo_ticket int not null,
-	multi_ticket int not null,
-	cooldown int not null,
-	primary key(id)
-);
-create table if not exists submitted(
-	id serial,
-	bbq varchar(255),
-	type_b int not null default 1,
-	title varchar(255),
-	cid int not null default 0,
-	team text default 'none',
-    cname text default 'none',
-    uname text default 'none',
-	t_submit int not null,
-	avatar varchar(255),
-	url_i varchar(255),
-	primary key(id)
-);
-drop table if exists mezfes;
 
-create table mezfes(
-	id serial,
-	discord_id varchar(32),
-    Panic_Honey int not null,
-    Guuku_Scoop int not null,
-    Dokkan_Battle_Cats int not null,
-    Nyanrendo int not null,
-    Uruki_Pachinko int not null,
-    total int not null,
-	primary key(id),
-    CONSTRAINT fk_discord
-      FOREIGN KEY(discord_id) 
-	  REFERENCES discord(discord_id)
+CREATE TABLE IF NOT EXISTS event (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  discord_id TEXT,
+  benefit INT DEFAULT 0,
+  bounty_coin INT DEFAULT 0,
+  gacha_ticket INT DEFAULT 0,
+  gacha_pity INT DEFAULT 0,
+  bounty_cd TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  transfer_cd TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
 );
-ALTER TABLE distribution ADD COLUMN IF NOT EXISTS bot boolean DEFAULT false;
-ALTER TABLE discord ADD COLUMN IF NOT EXISTS transfercd BIGINT DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS transfer_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bounty_id INT NOT NULL,
+  discord_id TEXT NOT NULL,
+  message_url TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (bounty_id) REFERENCES bounty(id),
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
+);
+
+CREATE TABLE IF NOT EXISTS assets (
+  name TEXT NOT NULL PRIMARY KEY,
+  data BLOB NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS bounty_category (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  type TEXT NOT NULL CHECK (type IN ('free', 'progression', 'event', 'limited', 'hidden')),
+  cooldown INT DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS bounty (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  category_id INT NOT NULL,
+  bbq INT NOT NULL CHECK (bbq BETWEEN 1 AND 25),
+  thumbnail TEXT NOT NULL,
+  icon TEXT NOT NULL,
+  rules TEXT NOT NULL,
+  solo_reward TEXT NOT NULL,
+  multi_reward TEXT NOT NULL,
+  is_urgent BOOLEAN DEFAULT FALSE,
+  FOREIGN KEY (category_id) REFERENCES bounty_category(id),
+  FOREIGN KEY (thumbnail) REFERENCES assets(name),
+  FOREIGN KEY (icon) REFERENCES assets(name),
+  UNIQUE (category_id, bbq)
+);
+
+CREATE TABLE IF NOT EXISTS bounty_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bounty_id INT NOT NULL,
+  discord_id TEXT NOT NULL,
+  message_url TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (bounty_id) REFERENCES bounty(id),
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
+);
+
+CREATE TABLE IF NOT EXISTS bounty_progression (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  category_id INT NOT NULL,
+  bbq INT NOT NULL DEFAULT 1,
+  discord_id TEXT NOT NULL,
+  FOREIGN KEY (category_id) REFERENCES bounty_category(id),
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
+);
+
+CREATE TABLE IF NOT EXISTS bounty_attemp (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bounty_id INT NOT NULL,
+  attemp INT NOT NULL DEFAULT 0,
+  discord_id TEXT NOT NULL,
+  FOREIGN KEY (bounty_id) REFERENCES bounty(id),
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
+);
+
+CREATE TABLE IF NOT EXISTS title(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  trigger INT NOT NULL,
+  image TEXT NOT NULL,
+  setting TEXT NOT NULL,
+  role_id TEXT NOT NULL,
+  -- use bit flag for add benefit 0 => no trigger, 1 => bounty 10% etc ..
+  flag INT DEFAULT 0 CHECK (flag IN (0,1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024)),
+  FOREIGN KEY (trigger) REFERENCES bounty(id),
+  FOREIGN KEY (image) REFERENCES assets(name)
+);
+
+CREATE TABLE IF NOT EXISTS title_history(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title_id INT NOT NULL,
+  discord_id TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (title_id) REFERENCES title(id),
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
+);
+
+
+CREATE TABLE IF NOT EXISTS gacha(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  -- rarity number are more common so r1 are rarer than r2, sr is rarer than r
+  rarity TEXT NOT NULL CHECK (rarity IN ('r1','r2','sr1','sr2','sr3','ssr1','ssr2','ur')),
+  item TEXT NOT NULL
+);
+
+-- only store gacha with rarity ssr and up
+CREATE TABLE IF NOT EXISTS gacha_history(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  gacha_id INT NOT NULL,
+  discord_id TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (gacha_id) REFERENCES gacha(id),
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id) 
+);
+
+CREATE TABLE IF NOT EXISTS market_item(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  price INT NOT NULL,
+  item TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS market_meal(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  meal_id INT NOT NULL,
+  level INT NOT NULL CHECK (level IN (1,2,3)),
+  -- price per day
+  price INT NOT NULL
+);
+
+INSERT INTO bot_setting (name,json) VALUES
+  ('Transfer','{
+    "cooldown_hour": 168,
+    "autoaccept_countdown_mins": 60,
+    "allowed_file": {
+      "savedata": true,
+      "decomyset": true,
+      "hunternavi": true,
+      "otomoairou": true,
+      "partner": true,
+      "platedata": true,
+      "platebox": true,
+      "platemyset": true,
+      "rengokudata": true,
+      "savemercenary": true
+    }
+  }');
+
+COMMIT;

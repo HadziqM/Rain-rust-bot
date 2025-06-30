@@ -53,7 +53,7 @@ impl DbLite {
             .await?;
         if !exist {
             info!("Initialize New Sqlite Database with url: {url}");
-            let scheme = include_str!("../../query/table1.sql");
+            let scheme = include_str!("../../query/init.sql");
             sqlx::raw_sql(scheme).execute(&pool).await?;
         }
         info!("Sqlite Database Ready to use");
