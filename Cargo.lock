@@ -76,9 +76,6 @@ source = "git+https://github.com/HadziqM/myrustlib.git#91b84a2b6249607d32379ba84
 dependencies = [
  "indexmap",
  "log",
- "reqwest 0.12.20",
- "serde",
- "serde_json",
  "thiserror 2.0.12",
  "tokio",
 ]

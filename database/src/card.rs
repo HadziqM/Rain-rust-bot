@@ -1,101 +1,117 @@
-use common::database::raw::{DbCard, DbEvent, DbUserData};
+use chrono::{DateTime, Utc};
+use common::database::{formatted::FormattedUserData, raw::DbCard};
+use sqlx::{Row, prelude::FromRow};
 
 use crate::*;
 
+#[derive(Debug, FromRow, Clone)]
+pub struct DbDiscordEvent {
+    id: i32,
+    discord_id: String,
+    benefit: i32,
+    bounty_coin: i32,
+    gacha_ticket: i32,
+    gacha_pity: i32,
+    bounty_cd: DateTime<Utc>,
+    transfer_cd: DateTime<Utc>,
+}
+
 impl Db {
-    pub async fn fetch_event(&self, discord_id: impl ToString) -> DbResult<DbEvent> {
-        Ok(sqlx::query_as!(
-            DbEvent,
-            "SELECT
-                characters.name as name,char_id,bounty,gacha,pity,latest_bounty,latest_bounty_time,
-                title,bronze,silver,gold
-                FROM discord
-                JOIN characters on discord.char_id=characters.id
-                WHERE discord_id=$1",
-            discord_id.to_string()
+    /// fetch basic event data
+    pub async fn fetch_event(&self, discord_id: impl ToString) -> DbResult<DbDiscordEvent> {
+        Ok(
+            sqlx::query_as::<_, DbDiscordEvent>("SELECT * FROM event WHERE discord_id=$1")
+                .bind(discord_id.to_string())
+                .fetch_one(self.lite.pool())
+                .await?,
         )
-        .fetch_one(self.pool())
-        .await?)
     }
 
-    pub async fn update_event(&self, event: &DbEvent) -> DbResult<()> {
-        sqlx::query!(
+    /// update event
+    pub async fn update_event(&self, event: &DbDiscordEvent) -> DbResult<()> {
+        sqlx::query(
             "UPDATE discord SET
-            bounty = $1,
-            gacha = $2,
-            pity = $3,
-            latest_bounty = $4,
-            latest_bounty_time = $5,
-            title = $6,
-            bronze = $7,
-            silver = $8,
-            gold = $9
-        WHERE char_id = $10",
-            event.bounty,
-            event.gacha,
-            event.pity,
-            event.latest_bounty,
-            event.latest_bounty_time,
-            event.title,
-            event.bronze,
-            event.silver,
-            event.gold,
-            event.char_id
+            benefit = $1,
+            bounty_coin = $2,
+            gacha_ticket = $3,
+            gacha_pity = $4,
+            bounty_cd = $5,
+            transfer_cd = $6,
+        WHERE id = $7",
         )
-        .execute(self.pool())
+        .bind(event.benefit)
+        .bind(event.bounty_coin)
+        .bind(event.gacha_ticket)
+        .bind(event.gacha_pity)
+        .bind(event.bounty_cd)
+        .bind(event.transfer_cd)
+        .execute(self.lite.pool())
         .await?;
 
         Ok(())
     }
 
-    pub async fn fetch_card(&self, cid: i32) -> DbResult<DbCard> {
+    /// fetch all card
+    pub async fn fetch_cards(&self, cids: &[i32]) -> DbResult<Vec<DbCard>> {
+        if cids.is_empty() {
+            return Ok(vec![]);
+        }
+
         Ok(sqlx::query_as!(
             DbCard,
-            "SELECT characters.id as char_id, user_id,characters.name as name,gr,hrp,weapon_type,
-            characters.last_login as login,username,guild_id,guilds.name as guild_name
-            FROM characters
-            INNER JOIN users ON characters.user_id = users.id
-            LEFT OUTER JOIN guild_characters ON characters.id = guild_characters.character_id
-            LEFT OUTER JOIN guilds ON guild_characters.guild_id = guilds.id
-            WHERE characters.id=$1",
-            cid
+            r#"
+        SELECT
+            characters.id AS char_id,
+            characters.user_id,
+            characters.name,
+            characters.gr,
+            characters.hrp,
+            characters.weapon_type,
+            characters.last_login AS login,
+            users.username,
+            guilds.id AS guild_id,
+            guilds.name AS guild_name
+        FROM characters
+        INNER JOIN users ON characters.user_id = users.id
+        LEFT JOIN guild_characters ON characters.id = guild_characters.character_id
+        LEFT JOIN guilds ON guild_characters.guild_id = guilds.id
+        WHERE characters.id = ANY($1)
+        "#,
+            cids // &[i32]
         )
-        .fetch_one(self.pool())
+        .fetch_all(self.post.pool())
         .await?)
     }
 
     async fn fetch_all_character_id(&self, uid: i64) -> DbResult<Vec<i32>> {
-        let row = sqlx::query!("SELECT id FROM characters WHERE user_id=$1", uid)
-            .fetch_all(self.pool())
+        let rows = sqlx::query!("SELECT id FROM characters WHERE user_id = $1", uid)
+            .fetch_all(self.post.pool())
             .await?;
-        let mut cid = Vec::new();
-        for i in row {
-            cid.push(i.id)
-        }
-        Ok(cid)
+
+        Ok(rows.into_iter().map(|r| r.id).collect())
     }
 
+    /// fetch all card given uid
     pub async fn fetch_all_card(&self, user: i64) -> DbResult<Vec<DbCard>> {
         let cid = self.fetch_all_character_id(user).await?;
-        let mut card = Vec::new();
-        for i in cid {
-            card.push(self.fetch_card(i).await?);
-        }
-        Ok(card)
+        Ok(self.fetch_cards(&cid).await?)
     }
 
-    pub async fn fetch_user_data(&self, discord_id: impl ToString) -> DbResult<DbUserData> {
+    /// get account data
+    pub async fn fetch_user_data(&self, discord_id: impl ToString) -> DbResult<FormattedUserData> {
         let did = discord_id.to_string();
 
-        Ok(sqlx::query_as!(
-            DbUserData,
-            "SELECT user_id as uid, char_id as cid
-            FROM discord_register
-            LEFT OUTER JOIN discord ON discord_register.discord_id=discord.discord_id
-            WHERE discord.discord_id=$1",
-            did
+        let x = sqlx::query(
+            "SELECT user_id, char_id
+            FROM discord
+            WHERE discord_id=$1",
         )
-        .fetch_one(self.pool())
-        .await?)
+        .bind(did)
+        .fetch_one(self.post.pool())
+        .await?;
+        let uid = x.try_get::<i32, _>("user_id")?;
+        let cid = x.try_get::<i32, _>("char_id")?;
+
+        Ok(FormattedUserData { cid, uid })
     }
 }

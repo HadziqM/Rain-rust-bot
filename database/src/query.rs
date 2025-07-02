@@ -1,25 +1,45 @@
-use std::ops::Deref;
-
 use super::*;
-use chrono::*;
 use sqlx::postgres::PgRow;
-use sqlx::{Column, Decode, Postgres, Row, ValueRef};
+use sqlx::sqlite::SqliteRow;
+use sqlx::{Column, Row, TypeInfo};
+
+pub enum DatabaseType {
+    Postgres,
+    Sqlite,
+}
+
+enum DataTable {
+    PostGres(Vec<PgRow>),
+    Sqlite(Vec<SqliteRow>),
+}
 
 impl Db {
-    pub async fn query(&self, qry: &str) -> DbResult<String> {
-        match sqlx::query(qry).fetch_all(self.pool()).await {
-            Ok(fetch) => Ok(row_to_table(fetch)?),
-            Err(err) => Err(format!(" Query Error: {err}, fix your sql syntax").into()),
-        }
+    pub async fn query(&self, db: DatabaseType, qry: &str) -> DbResult<String> {
+        let data: DataTable = match db {
+            DatabaseType::Postgres => {
+                DataTable::PostGres(sqlx::raw_sql(qry).fetch_all(self.post.pool()).await?)
+            }
+            DatabaseType::Sqlite => {
+                DataTable::Sqlite(sqlx::raw_sql(qry).fetch_all(self.lite.pool()).await?)
+            }
+        };
+
+        row_to_table(data)
     }
-    pub async fn execute(&self, qry: &str) -> DbResult<()> {
-        match sqlx::query(qry).execute(self.pool()).await {
-            Ok(_) => Ok(()),
-            Err(err) => Err(format!(" Query Error: {err}, fix your sql syntax").into()),
+    pub async fn execute(&self, db: DatabaseType, qry: &str) -> DbResult<u64> {
+        match db {
+            DatabaseType::Postgres => {
+                let x = sqlx::raw_sql(qry).execute(self.post.pool()).await?;
+                return Ok(x.rows_affected());
+            }
+            DatabaseType::Sqlite => {
+                let x = sqlx::raw_sql(qry).execute(self.lite.pool()).await?;
+                return Ok(x.rows_affected());
+            }
         }
     }
 }
-fn get_name_type(row: &PgRow) -> DbResult<String> {
+fn get_name_type<R: Row>(row: &R) -> DbResult<String> {
     let mut string = vec!["|".to_string()];
     for i in row.columns() {
         let name = i.name();
@@ -35,66 +55,109 @@ fn get_name_type(row: &PgRow) -> DbResult<String> {
     }
     Ok(string.concat())
 }
-fn get_value(row: PgRow) -> DbResult<String> {
+
+pub fn get_value(row: PgRow) -> DbResult<String> {
     let mut string = vec!["|".to_string()];
 
-    for i in row.columns() {
-        let value = row.try_get_raw(i.ordinal())?;
-        let name = value.type_info().to_string();
+    for column in row.columns() {
+        let idx = column.ordinal();
+        let type_name = column.type_info().name();
 
-        let val = if value.is_null() {
-            "NULL".to_string()
-        } else {
-            match name.as_str() {
-                "INT" | "SERIAL" | "INT4" => <i32 as Decode<Postgres>>::decode(value)
-                    .unwrap()
-                    .to_string(),
-                "BIGINT" | "BIGSERIAL" | "INT8" => <i64 as Decode<Postgres>>::decode(value)
-                    .unwrap()
-                    .to_string(),
-                "VARCHAR" | "CHAR(N)" | "TEXT" | "NAME" => {
-                    <&str as Decode<Postgres>>::decode(value)
-                        .unwrap()
-                        .to_string()
-                }
-                "BOOL" => <bool as Decode<Postgres>>::decode(value)
-                    .unwrap()
-                    .to_string(),
-                "TIMESTAMPTZ" | "TIMESTAMP" => {
-                    let timestamp: NaiveDateTime =
-                        <NaiveDateTime as Decode<Postgres>>::decode(value).unwrap();
-                    timestamp.to_string()
-                }
-                "DATE" => {
-                    let date: NaiveDate = <NaiveDate as Decode<Postgres>>::decode(value).unwrap();
-                    date.to_string()
-                }
-                "TIME" => {
-                    let time: NaiveTime = <NaiveTime as Decode<Postgres>>::decode(value).unwrap();
-                    time.to_string()
-                }
-                _ => format!("[{name}]"),
-            }
+        let val = match type_name {
+            "INT" | "SERIAL" | "INT4" => row.try_get::<i32, _>(idx).map(|v| v.to_string()),
+            "BIGINT" | "BIGSERIAL" | "INT8" => row.try_get::<i64, _>(idx).map(|v| v.to_string()),
+            "VARCHAR" | "CHAR" | "TEXT" | "NAME" => row.try_get::<String, _>(idx),
+            "BOOL" => row.try_get::<bool, _>(idx).map(|v| v.to_string()),
+            "TIMESTAMP" | "TIMESTAMPTZ" => row
+                .try_get::<chrono::NaiveDateTime, _>(idx)
+                .map(|v| v.to_string()),
+            "DATE" => row
+                .try_get::<chrono::NaiveDate, _>(idx)
+                .map(|v| v.to_string()),
+            "TIME" => row
+                .try_get::<chrono::NaiveTime, _>(idx)
+                .map(|v| v.to_string()),
+            _ => Ok(format!("[{}]", type_name)),
         };
 
-        string.push(format!("{val}|"));
+        let formatted = match val {
+            Ok(v) => v,
+            Err(_) => "NULL".to_string(),
+        };
+
+        string.push(format!("{formatted}|"));
     }
 
     Ok(string.concat())
 }
-fn row_to_table(row: Vec<PgRow>) -> DbResult<String> {
-    let name = match row.first() {
-        Some(x) => get_name_type(x)?,
-        None => {
-            return Err(" There is no data in your query".into());
+
+pub fn get_value_sqlite(row: SqliteRow) -> DbResult<String> {
+    let mut string = vec!["|".to_string()];
+
+    for column in row.columns() {
+        let idx = column.ordinal();
+        let type_name = column.type_info().name();
+
+        let val = match type_name {
+            "INT" | "SERIAL" | "INT4" => row.try_get::<i32, _>(idx).map(|v| v.to_string()),
+            "BIGINT" | "BIGSERIAL" | "INT8" => row.try_get::<i64, _>(idx).map(|v| v.to_string()),
+            "VARCHAR" | "CHAR" | "TEXT" | "NAME" => row.try_get::<String, _>(idx),
+            "BOOL" => row.try_get::<bool, _>(idx).map(|v| v.to_string()),
+            "TIMESTAMP" | "TIMESTAMPTZ" => row
+                .try_get::<chrono::NaiveDateTime, _>(idx)
+                .map(|v| v.to_string()),
+            "DATE" => row
+                .try_get::<chrono::NaiveDate, _>(idx)
+                .map(|v| v.to_string()),
+            "TIME" => row
+                .try_get::<chrono::NaiveTime, _>(idx)
+                .map(|v| v.to_string()),
+            _ => Ok(format!("[{}]", type_name)),
+        };
+
+        let formatted = match val {
+            Ok(v) => v,
+            Err(_) => "NULL".to_string(),
+        };
+
+        string.push(format!("{formatted}|"));
+    }
+
+    Ok(string.concat())
+}
+
+fn row_to_table(tb: DataTable) -> DbResult<String> {
+    let mut res = vec!["```".to_string()];
+    match tb {
+        DataTable::Sqlite(row) => {
+            let name = match row.first() {
+                Some(x) => get_name_type(x)?,
+                None => {
+                    return Err(" There is no data in your query".into());
+                }
+            };
+            res.push(name);
+            for pat in row {
+                let data = get_value_sqlite(pat)?;
+                res.push("\n".to_string());
+                res.push(data)
+            }
+        }
+        DataTable::PostGres(row) => {
+            let name = match row.first() {
+                Some(x) => get_name_type(x)?,
+                None => {
+                    return Err(" There is no data in your query".into());
+                }
+            };
+            res.push(name);
+            for pat in row {
+                let data = get_value(pat)?;
+                res.push("\n".to_string());
+                res.push(data)
+            }
         }
     };
-    let mut res = vec!["```".to_string(), name];
-    for pat in row {
-        let data = get_value(pat)?;
-        res.push("\n".to_string());
-        res.push(data)
-    }
     res.push("```".to_string());
     Ok(res.concat())
 }

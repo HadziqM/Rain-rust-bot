@@ -33,15 +33,6 @@ impl Deref for MyApp {
 }
 
 impl Appflow for MyApp {
-    async fn update_config(self: Arc<Self>) -> appflow::GithubUpdater {
-        appflow::GithubUpdater {
-            repo: "Rain-rust-bot".to_string(),
-            owner: "HadziqM".to_string(),
-            token: None,
-            app_name: "rain-bot".to_string(),
-        }
-    }
-
     async fn main_process(self: Arc<Self>) {
         let setting = self.setting.read().await;
         Mylogger::webhook_url(&setting.main.discord.webhook, setting.main.discord.author)

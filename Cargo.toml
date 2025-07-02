@@ -8,9 +8,7 @@ resolver = "2"
 logger = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "logger", features = [
   "discord",
 ] }
-appflow = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "appflow", features = [
-  "update",
-] }
+appflow = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "appflow" }
 sysdir = { git = "https://github.com/HadziqM/myrustlib.git", subdir = "sysdir" }
 
 # async runtime
@@ -20,6 +18,8 @@ sqlx = { version = "0.8.2", default-features = false , features = [
   "sqlite",
   "chrono",
   "macros",
+  "derive",
+  "json",
   "migrate",
   "runtime-tokio-rustls",
 ] }

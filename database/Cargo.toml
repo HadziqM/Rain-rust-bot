@@ -10,7 +10,6 @@ log.workspace = true
 thiserror.workspace = true
 bcrypt.workspace = true
 chrono.workspace = true
-
-[dev-dependencies]
 tokio.workspace = true
+[dev-dependencies]
 logger.workspace = true

@@ -32,9 +32,12 @@
         # scriptFiles = builtins.attrNames (builtins.readDir ./scripts);
         # scripts = builtins.map (file: import (./scripts + "/${file}") { inherit pkgs; }) scriptFiles;
 
-        toolchain = pkgs.rust-bin.nightly.latest.complete.override {
-          targets = [
-            "wasm32-unknown-unknown"
+        toolchain = pkgs.rust-bin.nightly.latest.default.override {
+          extensions = [
+            "rust-src"
+            "clippy"
+            "rustfmt"
+            "rust-analyzer"
           ];
         };
 
@@ -131,12 +134,10 @@
 
             # Add dependencies here
             buildInputs = [
-              pkgs.nodejs
-              pkgs.yarn
               pkgs.sqlx-cli
               devCompose.config.outputs.package
-              # scripts
               toolchain
+              # pkgs.rust-analyzer
             ];
 
             # Set environment variables if needed

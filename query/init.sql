@@ -16,22 +16,20 @@ CREATE TABLE IF NOT EXISTS event (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   discord_id TEXT,
   benefit INT DEFAULT 0,
-  bounty_coin INT DEFAULT 0,
+  bounty_coin INT DEFAULT 100,
   gacha_ticket INT DEFAULT 0,
   gacha_pity INT DEFAULT 0,
   bounty_cd TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   transfer_cd TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS transfer_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  bounty_id INT NOT NULL,
   discord_id TEXT NOT NULL,
   message_url TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (bounty_id) REFERENCES bounty(id),
-  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS assets (
@@ -56,9 +54,9 @@ CREATE TABLE IF NOT EXISTS bounty (
   solo_reward TEXT NOT NULL,
   multi_reward TEXT NOT NULL,
   is_urgent BOOLEAN DEFAULT FALSE,
-  FOREIGN KEY (category_id) REFERENCES bounty_category(id),
-  FOREIGN KEY (thumbnail) REFERENCES assets(name),
-  FOREIGN KEY (icon) REFERENCES assets(name),
+  FOREIGN KEY (category_id) REFERENCES bounty_category(id) ON DELETE CASCADE,
+  FOREIGN KEY (thumbnail) REFERENCES assets(name) ON DELETE CASCADE,
+  FOREIGN KEY (icon) REFERENCES assets(name) ON DELETE CASCADE,
   UNIQUE (category_id, bbq)
 );
 
@@ -68,8 +66,8 @@ CREATE TABLE IF NOT EXISTS bounty_history (
   discord_id TEXT NOT NULL,
   message_url TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (bounty_id) REFERENCES bounty(id),
-  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
+  FOREIGN KEY (bounty_id) REFERENCES bounty(id) ON DELETE CASCADE,
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS bounty_progression (
@@ -77,8 +75,8 @@ CREATE TABLE IF NOT EXISTS bounty_progression (
   category_id INT NOT NULL,
   bbq INT NOT NULL DEFAULT 1,
   discord_id TEXT NOT NULL,
-  FOREIGN KEY (category_id) REFERENCES bounty_category(id),
-  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
+  FOREIGN KEY (category_id) REFERENCES bounty_category(id) ON DELETE CASCADE,
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS bounty_attemp (
@@ -86,8 +84,8 @@ CREATE TABLE IF NOT EXISTS bounty_attemp (
   bounty_id INT NOT NULL,
   attemp INT NOT NULL DEFAULT 0,
   discord_id TEXT NOT NULL,
-  FOREIGN KEY (bounty_id) REFERENCES bounty(id),
-  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
+  FOREIGN KEY (bounty_id) REFERENCES bounty(id) ON DELETE CASCADE,
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS title(
@@ -98,8 +96,8 @@ CREATE TABLE IF NOT EXISTS title(
   role_id TEXT NOT NULL,
   -- use bit flag for add benefit 0 => no trigger, 1 => bounty 10% etc ..
   flag INT DEFAULT 0 CHECK (flag IN (0,1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024)),
-  FOREIGN KEY (trigger) REFERENCES bounty(id),
-  FOREIGN KEY (image) REFERENCES assets(name)
+  FOREIGN KEY (trigger) REFERENCES bounty(id) ON DELETE CASCADE,
+  FOREIGN KEY (image) REFERENCES assets(name) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS title_history(
@@ -107,8 +105,8 @@ CREATE TABLE IF NOT EXISTS title_history(
   title_id INT NOT NULL,
   discord_id TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (title_id) REFERENCES title(id),
-  FOREIGN KEY (discord_id) REFERENCES discord(discord_id)
+  FOREIGN KEY (title_id) REFERENCES title(id) ON DELETE CASCADE,
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id) ON DELETE CASCADE
 );
 
 
@@ -126,7 +124,7 @@ CREATE TABLE IF NOT EXISTS gacha_history(
   discord_id TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (gacha_id) REFERENCES gacha(id),
-  FOREIGN KEY (discord_id) REFERENCES discord(discord_id) 
+  FOREIGN KEY (discord_id) REFERENCES discord(discord_id) ON DELETE CASCADE 
 );
 
 CREATE TABLE IF NOT EXISTS market_item(

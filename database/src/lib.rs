@@ -1,8 +1,8 @@
-use common::{setting::SettingAll, SYSDIR};
+use common::{SYSDIR, setting::SettingAll};
 use log::{debug, info};
 use sqlx::{
-    migrate::MigrateDatabase, postgres::PgPoolOptions, sqlite::SqlitePoolOptions, Pool, Postgres,
-    Sqlite,
+    Pool, Postgres, Sqlite, migrate::MigrateDatabase, postgres::PgPoolOptions,
+    sqlite::SqlitePoolOptions,
 };
 use thiserror::Error;
 
@@ -34,9 +34,26 @@ impl From<&str> for DbError {
 pub type DbResult<T> = Result<T, DbError>;
 
 #[derive(Clone, Debug)]
-pub struct Db(Pool<Postgres>);
+pub struct DbPost(Pool<Postgres>);
 #[derive(Clone, Debug)]
 pub struct DbLite(Pool<Sqlite>);
+
+#[derive(Clone, Debug)]
+pub struct Db {
+    pub lite: DbLite,
+    pub post: DbPost,
+}
+
+impl Db {
+    pub async fn connect(setting: &SettingAll) -> DbResult<Self> {
+        let (lite, post) = tokio::join!(DbLite::connect(), DbPost::connect(setting));
+
+        Ok(Self {
+            lite: lite?,
+            post: post?,
+        })
+    }
+}
 
 impl DbLite {
     pub async fn connect() -> DbResult<Self> {
@@ -64,7 +81,7 @@ impl DbLite {
     }
 }
 
-impl Db {
+impl DbPost {
     pub async fn connect(setting: &SettingAll) -> DbResult<Self> {
         let db = &setting.main.database;
         let url = format!(

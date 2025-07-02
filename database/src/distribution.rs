@@ -50,26 +50,7 @@ impl Db {
             &keys,
             &count
         )
-        .execute(self.pool())
-        .await?;
-
-        Ok(())
-    }
-
-    pub async fn send_event(&self, ids: &[i32], bounty_coin: i32, gacha: i32) -> DbResult<()> {
-        sqlx::query!(
-            "
-            UPDATE discord
-            SET
-                bounty = bounty + $1,
-                gacha = gacha + $2
-            WHERE char_id = ANY($3)
-        ",
-            bounty_coin,
-            gacha,
-            ids
-        )
-        .execute(self.pool())
+        .execute(self.post.pool())
         .await?;
 
         Ok(())
